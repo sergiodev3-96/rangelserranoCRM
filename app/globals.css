@@ -1,0 +1,99 @@
+@import "tailwindcss";
+@config "../tailwind.config.ts";
+
+/* Base styling overrides */
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-body-base), sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #464555;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #918fa1;
+}
+
+/* Kanban specific scrollbar */
+.kanban-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.kanban-scroll::-webkit-scrollbar-thumb {
+  background-color: #2A2F40;
+  border-radius: 4px;
+}
+
+/* Glass panels & cards */
+.glass-panel-leads {
+  background: rgba(27, 27, 36, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.glow-effect {
+  box-shadow: 0 0 20px rgba(70, 72, 212, 0.15);
+}
+.glass-card {
+  background: rgba(26, 29, 36, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.glass-panel {
+  background: rgba(27, 27, 36, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #2A2F40;
+}
+.glass-card-lead {
+  background: rgba(19, 18, 27, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+}
+.accent-glow-hover:hover {
+  box-shadow: 0 0 15px rgba(108, 99, 255, 0.3);
+  border-color: rgba(108, 99, 255, 0.5);
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Nav Link active states */
+.nav-link {
+  transition: all 0.2s;
+}
+.nav-link.active {
+  color: #c4c0ff !important;
+  background: rgba(135, 129, 255, 0.1);
+  border-right: 2px solid #c4c0ff;
+}
+.nav-link.active .nav-icon {
+  font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+.nav-link:not(.active) {
+  color: #8B90A8;
+  border-right: 2px solid transparent;
+}
+.nav-link:not(.active):hover {
+  color: #F0F2FF;
+  background: #2a2933;
+}
+
+/* Material Symbols Font configuration */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.fill {
+  font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}

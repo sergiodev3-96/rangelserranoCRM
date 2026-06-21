@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rangel &amp; Serrano CRM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hanken+Grotesk:wght@600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-error": "#690005", "lead-ordered-text": "#34D399", "lead-potential-text": "#818CF8",
+          "tertiary-container": "#db761f", "surface-dim": "#13121b", "surface-container-low": "#1b1b24",
+          "text-inverse": "#0A0B0F", "info": "#60A5FA", "border-strong": "#3D445A",
+          "on-primary-fixed": "#100069", "lead-asnef-bg": "#2D1A1A", "tertiary-fixed": "#ffdcc6",
+          "primary-fixed": "#e3dfff", "surface-container": "#1f1f28", "on-primary-container": "#1b0091",
+          "lead-waiting-bg": "#1E1128", "on-error-container": "#ffdad6", "on-tertiary-fixed": "#301400",
+          "text-primary": "#F0F2FF", "on-background": "#e4e1ee", "on-secondary-container": "#005669",
+          "lead-no-reply-bg": "#2D1D00", "lead-waiting-text": "#C084FC", "on-tertiary": "#502500",
+          "lead-rejected-text": "#DC2626", "danger": "#F87171", "error-container": "#93000a",
+          "success": "#34D399", "lead-unfinanceable-bg": "#1A1C22", "bg-input": "#13151C",
+          "on-tertiary-container": "#461f00", "text-secondary": "#8B90A8", "tertiary-fixed-dim": "#ffb785",
+          "text-disabled": "#2E3245", "lead-unfinanceable-text": "#6B7280", "lead-potential-bg": "#1A1F3A",
+          "bg-base": "#0A0B0F", "lead-quarantine-bg": "#2D2400", "outline": "#918fa1",
+          "lead-ordering-bg": "#001E28", "outline-variant": "#464555", "inverse-surface": "#e4e1ee",
+          "surface-container-highest": "#35343e", "border-default": "#2A2F40",
+          "surface-container-lowest": "#0e0d16", "on-surface": "#e4e1ee", "tertiary": "#ffb785",
+          "secondary": "#a2e7ff", "error": "#ffb4ab", "on-primary": "#2000a4",
+          "on-tertiary-fixed-variant": "#713700", "border-subtle": "#1F2330", "text-tertiary": "#4E5368",
+          "background": "#13121b", "lead-no-reply-text": "#FB923C", "secondary-fixed": "#b4ebff",
+          "on-secondary": "#003642", "surface": "#13121b", "surface-container-high": "#2a2933",
+          "bg-elevated": "#1A1D24", "surface-bright": "#393842", "lead-ordered-bg": "#0A2018",
+          "primary": "#c4c0ff", "secondary-container": "#00d2fd", "primary-container": "#8781ff",
+          "on-secondary-fixed": "#001f27", "accent-glow": "rgba(108, 99, 255, 0.2)",
+          "on-primary-fixed-variant": "#3622ca", "secondary-fixed-dim": "#3cd7ff",
+          "inverse-on-surface": "#302f39", "surface-tint": "#c4c0ff",
+          "on-secondary-fixed-variant": "#004e5f", "bg-surface": "#111318",
+          "lead-asnef-text": "#F87171", "lead-quarantine-text": "#FCD34D",
+          "surface-variant": "#35343e", "inverse-primary": "#4f44e2", "primary-fixed-dim": "#c4c0ff",
+          "warning": "#FCD34D", "on-surface-variant": "#c7c4d8", "lead-rejected-bg": "#200A0A",
+          "lead-ordering-text": "#22D3EE",
+          // Leads light mode compat
+          "lead-asnef-text-light": "#ef4444", "lead-potential-bg-light": "rgba(129,140,248,0.1)",
+          "lead-quarantine-bg-light": "rgba(252,211,77,0.1)", "lead-ordered-bg-light": "rgba(52,211,153,0.1)",
+          "lead-waiting-bg-light": "rgba(192,132,252,0.1)"
+        },
+        borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+        spacing: {
+          "unit": "4px", "gutter-sm": "16px", "max-width": "1440px", "header-height": "56px",
+          "sidebar-wide": "240px", "gutter-md": "24px", "sidebar-collapsed": "64px"
+        },
+        fontFamily: {
+          "display-welcome": ["Inter"], "body-base": ["Inter"], "kpi-headline": ["Inter"],
+          "label-xs": ["Inter"], "body-sm": ["Inter"], "page-title": ["Inter"],
+          "field-label": ["Inter"], "section-subtitle": ["Inter"], "data-mono": ["JetBrains Mono"],
+          "body-md": ["Inter"], "headline-lg": ["Hanken Grotesk"], "label-md": ["JetBrains Mono"],
+          "display-lg": ["Hanken Grotesk"]
+        },
+        fontSize: {
+          "display-welcome": ["36px", { lineHeight: "1.1", fontWeight: "700" }],
+          "body-base": ["15px", { lineHeight: "1.6", fontWeight: "400" }],
+          "kpi-headline": ["28px", { lineHeight: "1.2", fontWeight: "700" }],
+          "label-xs": ["11px", { lineHeight: "1.4", fontWeight: "400" }],
+          "body-sm": ["13px", { lineHeight: "1.5", fontWeight: "400" }],
+          "page-title": ["21px", { lineHeight: "1.3", fontWeight: "600" }],
+          "field-label": ["11px", { letterSpacing: "0.08em", fontWeight: "400" }],
+          "section-subtitle": ["17px", { lineHeight: "1.5", fontWeight: "500" }],
+          "data-mono": ["14px", { lineHeight: "1.4", fontWeight: "400" }]
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  .material-symbols-outlined.fill {
+    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #464555; border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #918fa1; }
+
+  /* Page sections — hidden by default */
+  .page-section { display: none; }
+  .page-section.active { display: flex; flex-direction: column; flex: 1; height: 100%; overflow: hidden; }
+
+  /* Leads page specific */
+  .glass-panel-leads { background: rgba(27,27,36,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .glow-effect { box-shadow: 0 0 20px rgba(70,72,212,0.15); }
+
+  /* Tareas kanban */
+  .kanban-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+  .kanban-scroll::-webkit-scrollbar-thumb { background-color: #2A2F40; border-radius: 4px; }
+  .glass-card { background: rgba(26,29,36,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+  /* Pedidos */
+  .glass-panel { background: rgba(27,27,36,0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid #2A2F40; }
+  .archive-grid {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* Lead detail page */
+  .glass-card-lead { background: rgba(19,18,27,0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 24px -1px rgba(0,0,0,0.2); }
+  .accent-glow-hover:hover { box-shadow: 0 0 15px rgba(108,99,255,0.3); border-color: rgba(108,99,255,0.5); }
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+  /* Nav active state */
+  .nav-link { transition: all 0.2s; }
+  .nav-link.active {
+    color: #c4c0ff !important;
+    background: rgba(135,129,255,0.1);
+    border-right: 2px solid #c4c0ff;
+  }
+  .nav-link.active .nav-icon { font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+  .nav-link:not(.active) { color: #8B90A8; border-right: 2px solid transparent; }
+  .nav-link:not(.active):hover { color: #F0F2FF; background: #2a2933; }
+
+  body { transition: background-color 0.3s ease, color 0.3s ease; }
+</style>
+</head>
+<body class="bg-bg-base text-text-primary font-body-base h-screen flex overflow-hidden">
+
+<!-- ═══════════════════════════════════════════════
+     SIDEBAR — shared across all sections
+     ═══════════════════════════════════════════════ -->
+<aside class="hidden md:flex flex-col h-screen sticky top-0 left-0 border-r border-border-default bg-surface w-[sidebar-wide] shrink-0 z-50">
+  <!-- Brand -->
+  <div class="h-[header-height] flex items-center px-gutter-sm border-b border-border-default bg-surface-container">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary-container text-sm fill">directions_car</span>
+      </div>
+      <div>
+        <h1 class="font-display-welcome text-[14px] text-primary tracking-tight leading-none">Rangel &amp; Serrano CRM</h1>
+        <span class="font-label-xs text-text-secondary leading-none text-[10px]">Automotive Financing</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="p-gutter-sm">
+    <button class="w-full bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] transition-shadow duration-300 rounded-lg py-2 px-4 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px]">
+      <span class="material-symbols-outlined text-[18px]">add</span>
+      New Simulation
+    </button>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto py-2 px-3 space-y-1">
+    <a class="nav-link active flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px]" onclick="navigate('leads')" data-page="leads">
+      <span class="material-symbols-outlined nav-icon text-[20px]">person_search</span>
+      <span>Leads</span>
+    </a>
+    <a class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px]" onclick="navigate('tareas')" data-page="tareas">
+      <span class="material-symbols-outlined nav-icon text-[20px]">assignment_turned_in</span>
+      <span>Tareas</span>
+    </a>
+    <a class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px]" onclick="navigate('simulaciones')" data-page="simulaciones">
+      <span class="material-symbols-outlined nav-icon text-[20px]">calculate</span>
+      <span>Simulaciones</span>
+    </a>
+    <a class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px]" onclick="navigate('pedidos')" data-page="pedidos">
+      <span class="material-symbols-outlined nav-icon text-[20px]">inventory_2</span>
+      <span>Pedidos Finalizados</span>
+    </a>
+  </nav>
+
+  <!-- Footer -->
+  <div class="mt-auto border-t border-border-default p-3 space-y-1 bg-surface-container">
+    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200 cursor-pointer">
+      <span class="material-symbols-outlined text-[20px]">settings</span>
+      <span class="font-body-sm text-[13px]">Settings</span>
+    </a>
+    <a class="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200 cursor-pointer">
+      <span class="material-symbols-outlined text-[20px]">help</span>
+      <span class="font-body-sm text-[13px]">Support</span>
+    </a>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════
+     MAIN CONTENT AREA
+     ═══════════════════════════════════════════════ -->
+<main class="flex-1 flex flex-col h-screen overflow-hidden bg-bg-base relative">
+  <!-- Atmospheric glow -->
+  <div class="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+
+  <!-- ───────── SHARED TOP BAR ───────── -->
+  <header class="flex justify-between items-center h-[header-height] px-gutter-md w-full bg-surface/80 backdrop-blur-md sticky top-0 z-40 border-b border-border-subtle shadow-sm shrink-0">
+    <div class="flex items-center gap-4">
+      <button class="md:hidden text-text-secondary hover:text-primary transition-all p-2">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <div class="hidden md:flex items-center bg-bg-input border border-border-default rounded-full px-4 py-1.5 focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all">
+        <span class="material-symbols-outlined text-text-secondary text-[18px] mr-2">search</span>
+        <input class="bg-transparent border-none focus:ring-0 text-body-sm text-text-primary placeholder-text-secondary w-64 p-0 outline-none text-[13px]" placeholder="Search leads, tasks, simulations..." type="text"/>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button class="text-text-secondary hover:text-primary transition-all relative p-2">
+        <span class="material-symbols-outlined">notifications</span>
+        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border border-surface"></span>
+      </button>
+      <button class="text-text-secondary hover:text-primary transition-all p-2">
+        <span class="material-symbols-outlined">account_circle</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════
+       PAGE: LEADS
+       ═══════════════════════════════════════════════ -->
+  <section class="page-section active z-10" id="page-leads">
+    <div class="flex-1 overflow-y-auto p-6 md:p-8">
+      <div class="max-w-[1440px] mx-auto w-full h-full flex flex-col">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-[32px] font-bold text-text-primary tracking-tight">Lead Directory</h2>
+            <p class="text-[15px] text-text-secondary mt-1">Manage and track your financing prospects.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button class="bg-surface-container border border-border-default hover:border-primary text-text-primary font-body-sm rounded-lg py-2 px-4 flex items-center gap-2 transition-all text-[13px]">
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">filter_list</span>Filter
+            </button>
+            <button class="bg-surface-container border border-border-default hover:border-primary text-text-primary font-body-sm rounded-lg py-2 px-4 flex items-center gap-2 transition-all text-[13px]">
+              <span class="material-symbols-outlined text-[18px] text-text-secondary">sort</span>Sort
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="bg-surface-container rounded-xl border border-border-default flex-1 flex flex-col overflow-hidden shadow-lg">
+          <!-- Header row -->
+          <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 bg-surface-container-low border-b border-border-default">
+            <div class="text-[11px] font-bold text-text-secondary uppercase tracking-wider">Nombre</div>
+            <div class="text-[11px] font-bold text-text-secondary uppercase tracking-wider">Campaña</div>
+            <div class="text-[11px] font-bold text-text-secondary uppercase tracking-wider">Registro</div>
+            <div class="text-[11px] font-bold text-text-secondary uppercase tracking-wider">Estado</div>
+            <div class="text-[11px] font-bold text-text-secondary uppercase tracking-wider text-right">Último contacto</div>
+          </div>
+          <!-- Body -->
+          <div class="flex-1 overflow-y-auto flex flex-col">
+            <!-- Row 1: Asnef -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(1)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-asnef-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">JG</div>
+                <span class="text-[15px] font-medium text-text-primary">Juan García</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-text-secondary">ads_click</span>
+                <span class="text-[13px] text-text-secondary">Search Q3</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">10/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-asnef-bg text-lead-asnef-text border border-lead-asnef-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-asnef-text mr-1.5"></span>Asnef
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">2h ago</div>
+            </div>
+            <!-- Row 2: Cliente potencial -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(2)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-potential-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">ER</div>
+                <span class="text-[15px] font-medium text-text-primary">Elena Rodríguez</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container-high border border-border-default text-text-primary text-[10px] flex items-center gap-1 font-bold">
+                  <span class="material-symbols-outlined text-[12px]">play_arrow</span>TikTok
+                </span>
+                <span class="text-[13px] text-text-secondary truncate">Promo Otoño</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">11/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-potential-bg text-lead-potential-text border border-lead-potential-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-potential-text mr-1.5"></span>Cliente potencial
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">Just now</div>
+            </div>
+            <!-- Row 3: Cuarentena -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(3)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-quarantine-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">CM</div>
+                <span class="text-[15px] font-medium text-text-primary">Carlos Martínez</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-text-secondary">mail</span>
+                <span class="text-[13px] text-text-secondary">Newsletter</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">08/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-quarantine-bg text-lead-quarantine-text border border-lead-quarantine-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-quarantine-text mr-1.5 animate-pulse"></span>Cuarentena
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">1d ago</div>
+            </div>
+            <!-- Row 4: Pedido -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(4)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-ordered-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">SL</div>
+                <span class="text-[15px] font-medium text-text-primary">Sofía López</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-text-secondary">group</span>
+                <span class="text-[13px] text-text-secondary">Referral</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">05/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-ordered-bg text-lead-ordered-text border border-lead-ordered-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-ordered-text mr-1.5"></span>Pedido
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">3d ago</div>
+            </div>
+            <!-- Row 5: Cliente potencial -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(5)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-potential-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">PF</div>
+                <span class="text-[15px] font-medium text-text-primary">Pablo Fernández</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="px-1.5 py-0.5 rounded bg-surface-container-high border border-border-default text-text-primary text-[10px] flex items-center gap-1 font-bold">
+                  <span class="material-symbols-outlined text-[12px]">play_arrow</span>TikTok
+                </span>
+                <span class="text-[13px] text-text-secondary truncate">Ad V2</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">12/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-potential-bg text-lead-potential-text border border-lead-potential-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-potential-text mr-1.5"></span>Cliente potencial
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">5h ago</div>
+            </div>
+            <!-- Row 6: Esperando docs -->
+            <div class="grid grid-cols-[2fr_1.5fr_1fr_1.2fr_1fr] items-center gap-4 py-3 px-6 border-b border-border-default hover:bg-surface-container-high transition-colors group relative cursor-pointer" onclick="openLead(6)">
+              <div class="absolute left-0 top-0 bottom-0 w-1 bg-transparent group-hover:bg-lead-waiting-text transition-colors"></div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary font-medium text-[13px]">LD</div>
+                <span class="text-[15px] font-medium text-text-primary">Laura Díaz</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px] text-text-secondary">language</span>
+                <span class="text-[13px] text-text-secondary">Organic Web</span>
+              </div>
+              <div class="font-data-mono text-[14px] text-text-secondary">01/Oct/23</div>
+              <div>
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-lead-waiting-bg text-lead-waiting-text border border-lead-waiting-text/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-lead-waiting-text mr-1.5"></span>Esperando docs
+                </span>
+              </div>
+              <div class="text-[13px] text-text-secondary text-right">4d ago</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-4 flex justify-between items-center text-text-secondary text-[13px]">
+          <span>Showing 10 of 245 leads</span>
+          <div class="flex items-center gap-2">
+            <button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_left</span></button>
+            <span class="px-2">Page 1 of 25</span>
+            <button class="p-1 hover:text-primary transition-colors"><span class="material-symbols-outlined text-[20px]">chevron_right</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- FAB -->
+    <button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:bg-primary-container transition-all hover:scale-105 active:scale-95 z-50 group">
+      <span class="material-symbols-outlined text-[28px] group-hover:rotate-90 transition-transform duration-300">add</span>
+    </button>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PAGE: TAREAS
+       ═══════════════════════════════════════════════ -->
+  <section class="page-section z-10" id="page-tareas">
+    <div class="flex-1 overflow-hidden flex flex-col p-gutter-md max-w-[1440px] mx-auto w-full">
+      <!-- Page Header -->
+      <div class="flex justify-between items-end mb-6 shrink-0">
+        <div>
+          <h2 class="text-[28px] font-bold text-text-primary">Tablero de Tareas</h2>
+          <p class="text-[13px] text-text-secondary mt-1">Gestiona tus seguimientos y actividades pendientes.</p>
+        </div>
+        <div class="flex gap-3">
+          <div class="flex items-center bg-surface-container-low rounded-lg p-1 border border-border-default">
+            <button class="px-3 py-1.5 rounded-md bg-surface-container-high text-text-primary text-[11px] shadow-sm">Board</button>
+            <button class="px-3 py-1.5 rounded-md text-text-secondary hover:text-text-primary text-[11px] transition-colors">List</button>
+          </div>
+          <button class="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 rounded-lg text-[13px] transition-all">
+            <span class="material-symbols-outlined text-[18px]">filter_list</span>Filtros
+          </button>
+        </div>
+      </div>
+      <!-- Kanban -->
+      <div class="flex-1 flex gap-4 overflow-x-auto kanban-scroll pb-4">
+        <!-- Col 1: Pendiente -->
+        <div class="flex flex-col w-[300px] shrink-0 bg-surface-container-low/50 rounded-xl border border-border-subtle">
+          <div class="p-4 border-b border-border-subtle flex justify-between items-center sticky top-0 bg-surface-container-low/80 backdrop-blur-sm rounded-t-xl z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-text-secondary"></div>
+              <h3 class="text-[17px] font-medium text-text-primary">Pendiente</h3>
+              <span class="bg-surface-container-high text-text-secondary text-[11px] px-2 py-0.5 rounded-full ml-1">3</span>
+            </div>
+            <button class="text-text-secondary hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[20px]">more_horiz</span>
+            </button>
+          </div>
+          <div class="flex-1 p-3 space-y-3 overflow-y-auto kanban-scroll">
+            <!-- Card 1 -->
+            <div class="glass-card rounded-lg border border-border-default p-4 cursor-grab hover:border-primary/50 transition-all hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)] group">
+              <div class="flex justify-between items-start mb-2">
+                <span class="bg-error-container/20 text-danger text-[11px] font-medium px-2 py-1 rounded-md border border-danger/20">Alta</span>
+                <button class="text-text-tertiary opacity-0 group-hover:opacity-100 transition-all"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1">Llamar a cliente por DNI</h4>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-lead-potential-text">Carlos Mendoza</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle">
+                <div class="flex items-center gap-1.5 text-danger">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">Hoy, 14:00</span>
+                </div>
+              </div>
+            </div>
+            <!-- Card 2 -->
+            <div class="glass-card rounded-lg border border-border-default p-4 cursor-grab hover:border-primary/50 transition-all group">
+              <div class="flex justify-between items-start mb-2">
+                <span class="bg-warning/10 text-warning text-[11px] font-medium px-2 py-1 rounded-md border border-warning/20">Media</span>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1">Revisar nóminas adjuntas</h4>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-lead-ordered-text">Laura Gómez</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle">
+                <div class="flex items-center gap-1.5 text-text-secondary">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">Mañana</span>
+                </div>
+              </div>
+            </div>
+            <!-- Card 3 -->
+            <div class="glass-card rounded-lg border border-border-default p-4 cursor-grab hover:border-primary/50 transition-all group">
+              <div class="flex justify-between items-start mb-2">
+                <span class="bg-surface-container-highest text-text-secondary text-[11px] font-medium px-2 py-1 rounded-md border border-border-strong">Baja</span>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1">Enviar catálogo SUVs</h4>
+              <div class="flex items-center gap-2 mb-3">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-text-secondary">Miguel Ruiz</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle">
+                <div class="flex items-center gap-1.5 text-text-secondary">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">15 Oct</span>
+                </div>
+              </div>
+            </div>
+            <button class="w-full py-2.5 border border-dashed border-border-strong rounded-lg text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all text-[13px] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">add</span>Añadir tarea
+            </button>
+          </div>
+        </div>
+
+        <!-- Col 2: En Proceso -->
+        <div class="flex flex-col w-[300px] shrink-0 bg-surface-container-low/50 rounded-xl border border-border-subtle">
+          <div class="p-4 border-b border-border-subtle flex justify-between items-center sticky top-0 bg-surface-container-low/80 backdrop-blur-sm rounded-t-xl z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-info shadow-[0_0_8px_rgba(96,165,250,0.6)]"></div>
+              <h3 class="text-[17px] font-medium text-text-primary">En proceso</h3>
+              <span class="bg-surface-container-high text-text-secondary text-[11px] px-2 py-0.5 rounded-full ml-1">2</span>
+            </div>
+          </div>
+          <div class="flex-1 p-3 space-y-3 overflow-y-auto kanban-scroll">
+            <!-- Card 4 -->
+            <div class="glass-card rounded-lg border border-info/30 p-4 cursor-grab hover:border-info transition-all group relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-1 h-full bg-info"></div>
+              <div class="flex justify-between items-start mb-2 pl-2">
+                <span class="bg-error-container/20 text-danger text-[11px] font-medium px-2 py-1 rounded-md border border-danger/20">Alta</span>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1 pl-2">Negociación tasa interés</h4>
+              <div class="flex items-center gap-2 mb-3 pl-2">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-lead-ordering-text">Ana Silva</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle ml-2">
+                <div class="flex items-center gap-1.5 text-warning">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">Vence hoy</span>
+                </div>
+              </div>
+            </div>
+            <!-- Card 5 -->
+            <div class="glass-card rounded-lg border border-info/30 p-4 cursor-grab hover:border-info transition-all group relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-1 h-full bg-info"></div>
+              <div class="flex justify-between items-start mb-2 pl-2">
+                <span class="bg-warning/10 text-warning text-[11px] font-medium px-2 py-1 rounded-md border border-warning/20">Media</span>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1 pl-2">Preparar contrato preliminar</h4>
+              <div class="flex items-center gap-2 mb-3 pl-2">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-lead-ordered-text">David Costa</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle ml-2">
+                <div class="flex items-center gap-1.5 text-text-secondary">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">Jueves</span>
+                </div>
+              </div>
+            </div>
+            <button class="w-full py-2.5 border border-dashed border-border-strong rounded-lg text-text-secondary hover:text-primary hover:border-primary hover:bg-primary/5 transition-all text-[13px] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">add</span>Añadir tarea
+            </button>
+          </div>
+        </div>
+
+        <!-- Col 3: Revisión -->
+        <div class="flex flex-col w-[300px] shrink-0 bg-surface-container-low/50 rounded-xl border border-border-subtle">
+          <div class="p-4 border-b border-border-subtle flex justify-between items-center sticky top-0 bg-surface-container-low/80 backdrop-blur-sm rounded-t-xl z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-lead-waiting-text shadow-[0_0_8px_rgba(192,132,252,0.6)]"></div>
+              <h3 class="text-[17px] font-medium text-text-primary">Revisión</h3>
+              <span class="bg-surface-container-high text-text-secondary text-[11px] px-2 py-0.5 rounded-full ml-1">1</span>
+            </div>
+          </div>
+          <div class="flex-1 p-3 space-y-3 overflow-y-auto kanban-scroll">
+            <!-- Card 6 -->
+            <div class="glass-card rounded-lg border border-lead-waiting-text/30 p-4 cursor-grab hover:border-lead-waiting-text transition-all group relative overflow-hidden">
+              <div class="absolute top-0 left-0 w-1 h-full bg-lead-waiting-text"></div>
+              <div class="flex justify-between items-start mb-2 pl-2">
+                <span class="bg-warning/10 text-warning text-[11px] font-medium px-2 py-1 rounded-md border border-warning/20">Media</span>
+                <span class="bg-lead-waiting-bg text-lead-waiting-text text-[11px] px-2 py-0.5 rounded-full border border-lead-waiting-text/30 flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px]">sync</span>Riesgos
+                </span>
+              </div>
+              <h4 class="text-[13px] text-text-primary font-medium mb-1 pl-2">Verificación de Avalista</h4>
+              <div class="flex items-center gap-2 mb-3 pl-2">
+                <span class="material-symbols-outlined text-text-tertiary text-[14px]">person</span>
+                <span class="text-[11px] text-lead-quarantine-text">Roberto Pires</span>
+              </div>
+              <div class="flex justify-between items-center pt-3 border-t border-border-subtle ml-2">
+                <div class="flex items-center gap-1.5 text-text-secondary">
+                  <span class="material-symbols-outlined text-[14px]">schedule</span>
+                  <span class="text-[11px]">Sin fecha</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Col 4: Completada -->
+        <div class="flex flex-col w-[300px] shrink-0 bg-surface-container-lowest/30 rounded-xl border border-border-subtle opacity-80">
+          <div class="p-4 border-b border-border-subtle flex justify-between items-center sticky top-0 bg-surface-container-lowest/80 backdrop-blur-sm rounded-t-xl z-10">
+            <div class="flex items-center gap-2">
+              <div class="w-2 h-2 rounded-full bg-success"></div>
+              <h3 class="text-[17px] font-medium text-text-secondary">Completada</h3>
+              <span class="bg-surface-container-high text-text-secondary text-[11px] px-2 py-0.5 rounded-full ml-1">2</span>
+            </div>
+          </div>
+          <div class="flex-1 p-3 space-y-3 overflow-y-auto kanban-scroll">
+            <div class="bg-surface-container-low rounded-lg border border-border-default p-4 opacity-70">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="text-[13px] text-text-secondary font-medium mb-1 line-through">Subir DNI a portal</h4>
+                <span class="material-symbols-outlined text-success text-[18px] fill">check_circle</span>
+              </div>
+              <span class="text-[11px] text-text-disabled">Elena Martín</span>
+            </div>
+            <div class="bg-surface-container-low rounded-lg border border-border-default p-4 opacity-70">
+              <div class="flex justify-between items-start mb-2">
+                <h4 class="text-[13px] text-text-secondary font-medium mb-1 line-through">Llamada bienvenida</h4>
+                <span class="material-symbols-outlined text-success text-[18px] fill">check_circle</span>
+              </div>
+              <span class="text-[11px] text-text-disabled">Carlos Mendoza</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PAGE: SIMULACIONES
+       ═══════════════════════════════════════════════ -->
+  <section class="page-section z-10" id="page-simulaciones">
+    <div class="flex-1 overflow-y-auto p-gutter-md">
+      <div class="max-w-[1440px] mx-auto space-y-6">
+        <!-- Header -->
+        <div>
+          <h2 class="text-[21px] font-semibold text-text-primary">Financial Calculator</h2>
+          <p class="text-[15px] text-text-secondary mt-1">Configure parameters to generate amortization tables across multiple terms.</p>
+        </div>
+        <!-- Bento Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Left: Inputs -->
+          <div class="lg:col-span-4 flex flex-col gap-6">
+            <!-- Input Card -->
+            <div class="bg-surface-container border border-border-default rounded-xl p-5 relative overflow-hidden group">
+              <div class="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500 pointer-events-none"></div>
+              <h3 class="text-[17px] font-medium text-text-primary mb-4 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-xl">settings_applications</span>Parameters
+              </h3>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-[11px] font-medium text-text-secondary uppercase tracking-wider mb-1">Vehicle Price (€)</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">euro</span>
+                    <input class="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right" type="text" value="32,500"/>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-medium text-text-secondary uppercase tracking-wider mb-1">Initial Deposit (€)</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">payments</span>
+                    <input class="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right" type="text" value="6,500"/>
+                  </div>
+                  <div class="mt-1 flex justify-between items-center text-xs text-text-tertiary">
+                    <span>Min 10% required</span>
+                    <span class="text-success">20% selected</span>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-medium text-text-secondary uppercase tracking-wider mb-1">Financing Entity</label>
+                  <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">account_balance</span>
+                    <select class="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none">
+                      <option>BBVA (TIN 5.99%)</option>
+                      <option selected>Santander Consumer (TIN 6.49%)</option>
+                      <option>Cetelem Auto (TIN 7.15%)</option>
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none">expand_more</span>
+                  </div>
+                </div>
+                <button class="w-full bg-primary-container text-on-primary-container rounded-lg py-2.5 text-[15px] font-semibold hover:bg-primary-container/80 transition-all mt-2 flex justify-center items-center gap-2 shadow-[0_0_10px_rgba(108,99,255,0.2)]">
+                  <span class="material-symbols-outlined text-sm">autorenew</span>Update Simulation
+                </button>
+              </div>
+            </div>
+            <!-- Summary Card -->
+            <div class="bg-bg-elevated/80 backdrop-blur-md border border-border-subtle rounded-xl p-5 flex flex-col gap-4">
+              <div>
+                <span class="text-[11px] font-medium text-text-secondary uppercase tracking-wider">Capital Financiado</span>
+                <div class="text-[28px] font-bold text-text-primary mt-1 font-data-mono tracking-tight">€26,000.00</div>
+              </div>
+              <div class="flex gap-4">
+                <div class="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default">
+                  <span class="text-[11px] text-text-secondary">TIN</span>
+                  <div class="text-[15px] text-text-primary font-data-mono font-medium mt-0.5">6.49%</div>
+                </div>
+                <div class="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default relative overflow-hidden">
+                  <div class="absolute top-0 right-0 w-1 h-full bg-warning"></div>
+                  <span class="text-[11px] text-text-secondary">TAE <span class="text-text-tertiary">(+0.3%)</span></span>
+                  <div class="text-[15px] text-warning font-data-mono font-medium mt-0.5">6.79%</div>
+                </div>
+              </div>
+              <div class="pt-2 border-t border-border-subtle">
+                <div class="flex justify-between items-end">
+                  <span class="text-[11px] font-medium text-text-secondary uppercase tracking-wider">Total Intereses (Avg)</span>
+                  <span class="text-[17px] font-medium text-danger font-data-mono">~€6,240.00</span>
+                </div>
+              </div>
+            </div>
+            <!-- Formula -->
+            <div class="bg-surface-container-lowest border border-border-default border-dashed rounded-lg p-4 flex items-center justify-center">
+              <div class="font-data-mono text-text-secondary text-xs tracking-wider opacity-60">
+                PMT = P × (r / n) / [1 - (1 + r/n)<sup>-nt</sup>]
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Results -->
+          <div class="lg:col-span-8 flex flex-col gap-4">
+            <div class="flex justify-between items-end mb-2">
+              <h3 class="text-[17px] font-medium text-text-primary">Amortization Options</h3>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
+                <span class="text-[11px] text-text-secondary">Recommended Term</span>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- 60m -->
+              <div class="bg-surface-container border border-border-default rounded-xl p-4 hover:border-border-strong transition-colors cursor-pointer">
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[15px] text-text-primary font-medium">60 Meses</div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">5 Años</div>
+                </div>
+                <div class="text-[24px] font-bold text-text-primary font-data-mono mb-3">€508.64<span class="text-[13px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="flex justify-between text-xs font-data-mono text-text-tertiary">
+                  <span>Int: €4,518.40</span><span>Total: €30,518.40</span>
+                </div>
+              </div>
+              <!-- 72m -->
+              <div class="bg-surface-container border border-border-default rounded-xl p-4 hover:border-border-strong transition-colors cursor-pointer">
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[15px] text-text-primary font-medium">72 Meses</div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">6 Años</div>
+                </div>
+                <div class="text-[24px] font-bold text-text-primary font-data-mono mb-3">€436.85<span class="text-[13px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="flex justify-between text-xs font-data-mono text-text-tertiary">
+                  <span>Int: €5,453.20</span><span>Total: €31,453.20</span>
+                </div>
+              </div>
+              <!-- 84m — HIGHLIGHTED -->
+              <div class="bg-surface-container-low border-2 border-primary rounded-xl p-5 shadow-[0_0_20px_rgba(108,99,255,0.1)] relative overflow-hidden md:scale-[1.02] z-10">
+                <div class="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+                <div class="absolute top-0 right-0 bg-primary text-on-primary text-[11px] px-3 py-1 rounded-bl-lg font-medium">Optimal Mix</div>
+                <div class="flex justify-between items-center mb-3 relative z-10">
+                  <div class="text-[15px] text-primary font-semibold flex items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">verified</span>84 Meses
+                  </div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container rounded-full mt-6 md:mt-0">7 Años</div>
+                </div>
+                <div class="text-[28px] font-bold text-text-primary font-data-mono mb-4 relative z-10">€385.75<span class="text-[15px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="bg-surface-container-lowest rounded-lg p-3 space-y-2 relative z-10">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-text-secondary">Principal</span><span class="font-data-mono text-text-primary">€26,000.00</span>
+                  </div>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-text-secondary">Total Intereses</span><span class="font-data-mono text-danger">€6,403.00</span>
+                  </div>
+                  <div class="border-t border-border-default pt-2 flex justify-between text-sm font-medium">
+                    <span class="text-text-primary">Total a Pagar</span><span class="font-data-mono text-text-primary">€32,403.00</span>
+                  </div>
+                </div>
+              </div>
+              <!-- 96m -->
+              <div class="bg-surface-container border border-border-default rounded-xl p-4 hover:border-border-strong transition-colors cursor-pointer">
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[15px] text-text-primary font-medium">96 Meses</div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">8 Años</div>
+                </div>
+                <div class="text-[24px] font-bold text-text-primary font-data-mono mb-3">€347.59<span class="text-[13px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="flex justify-between text-xs font-data-mono text-text-tertiary">
+                  <span>Int: €7,368.64</span><span>Total: €33,368.64</span>
+                </div>
+              </div>
+              <!-- 108m -->
+              <div class="bg-surface-container border border-border-default rounded-xl p-4 hover:border-border-strong transition-colors cursor-pointer opacity-80">
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[15px] text-text-primary font-medium">108 Meses</div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">9 Años</div>
+                </div>
+                <div class="text-[24px] font-bold text-text-primary font-data-mono mb-3">€318.06<span class="text-[13px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="flex justify-between text-xs font-data-mono text-text-tertiary">
+                  <span>Int: €8,350.48</span><span>Total: €34,350.48</span>
+                </div>
+              </div>
+              <!-- 120m -->
+              <div class="bg-surface-container border border-border-default rounded-xl p-4 hover:border-border-strong transition-colors cursor-pointer opacity-60">
+                <div class="flex justify-between items-center mb-3">
+                  <div class="text-[15px] text-text-primary font-medium flex items-center gap-1">
+                    120 Meses <span class="material-symbols-outlined text-[14px] text-warning">warning</span>
+                  </div>
+                  <div class="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">10 Años</div>
+                </div>
+                <div class="text-[24px] font-bold text-text-primary font-data-mono mb-3">€294.55<span class="text-[13px] text-text-secondary font-body-base">/mo</span></div>
+                <div class="flex justify-between text-xs font-data-mono text-text-tertiary">
+                  <span>Int: €9,346.00</span><span>Total: €35,346.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PAGE: PEDIDOS FINALIZADOS
+       ═══════════════════════════════════════════════ -->
+  <section class="page-section z-10" id="page-pedidos">
+    <div class="flex-1 overflow-y-auto p-gutter-md">
+      <div class="max-w-[1440px] mx-auto space-y-6">
+        <!-- Header & Actions -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 class="text-[21px] font-semibold text-text-primary">Pedidos Finalizados</h2>
+            <p class="text-[13px] text-text-secondary mt-1">Archivo histórico de operaciones y simulaciones cerradas.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="bg-bg-input border border-border-default rounded-lg px-3 py-1.5 flex items-center focus-within:border-primary transition-colors">
+              <span class="material-symbols-outlined text-text-secondary text-[16px] mr-2">filter_list</span>
+              <select class="bg-transparent border-none focus:ring-0 text-[13px] text-text-primary p-0 cursor-pointer pr-6">
+                <option>Todos los estados</option>
+                <option>Aprobado</option>
+                <option>Denegado</option>
+              </select>
+            </div>
+            <button class="flex items-center gap-2 bg-surface-container-high border border-border-default text-text-disabled rounded-lg px-4 py-1.5 text-[13px] opacity-50 cursor-not-allowed" disabled>
+              <span class="material-symbols-outlined text-[18px]">download</span>Export CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- Data Grid -->
+        <div class="space-y-2">
+          <!-- Header -->
+          <div class="archive-grid px-4 py-2 text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+            <div>Nombre Cliente</div><div>Vehículo</div><div>Precio</div>
+            <div>Banco</div><div>Cuota</div><div>Estado</div><div class="text-right">Fecha Cierre</div>
+          </div>
+          <!-- Row 1: Aprobado -->
+          <div class="archive-grid glass-panel rounded-lg px-4 py-4 hover:bg-surface-container-high transition-colors duration-200">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-medium">CM</div>
+              <span class="text-[15px] font-medium text-text-primary">Carlos Mendoza</span>
+            </div>
+            <div class="text-[13px] text-text-secondary">Tesla Model 3 Long Range</div>
+            <div class="font-data-mono text-[14px] text-text-primary">45,000 €</div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded-full bg-primary/20"></div>
+              <span class="text-[13px] text-text-primary">BBVA</span>
+            </div>
+            <div class="font-data-mono text-[14px] text-text-secondary">450 €/m</div>
+            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] bg-lead-ordered-bg text-lead-ordered-text border border-lead-ordered-text/20">Aprobado</span></div>
+            <div class="text-right font-data-mono text-[13px] text-text-tertiary">24/10/2023</div>
+          </div>
+          <!-- Row 2: Denegado -->
+          <div class="archive-grid glass-panel rounded-lg px-4 py-4 hover:bg-surface-container-high transition-colors duration-200">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-medium">LG</div>
+              <span class="text-[15px] font-medium text-text-primary">Laura Gómez</span>
+            </div>
+            <div class="text-[13px] text-text-secondary">BMW Serie 1 M Sport</div>
+            <div class="font-data-mono text-[14px] text-text-primary">32,000 €</div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded-full bg-danger/20"></div>
+              <span class="text-[13px] text-text-primary">Santander</span>
+            </div>
+            <div class="font-data-mono text-[14px] text-text-secondary">380 €/m</div>
+            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] bg-lead-rejected-bg text-lead-rejected-text border border-lead-rejected-text/20">Denegado</span></div>
+            <div class="text-right font-data-mono text-[13px] text-text-tertiary">22/10/2023</div>
+          </div>
+          <!-- Row 3: Aprobado -->
+          <div class="archive-grid glass-panel rounded-lg px-4 py-4 hover:bg-surface-container-high transition-colors duration-200">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-medium">JP</div>
+              <span class="text-[15px] font-medium text-text-primary">Juan Pérez</span>
+            </div>
+            <div class="text-[13px] text-text-secondary">Audi Q3 Advanced</div>
+            <div class="font-data-mono text-[14px] text-text-primary">41,000 €</div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded-full bg-primary/20"></div>
+              <span class="text-[13px] text-text-primary">CaixaBank</span>
+            </div>
+            <div class="font-data-mono text-[14px] text-text-secondary">420 €/m</div>
+            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] bg-lead-ordered-bg text-lead-ordered-text border border-lead-ordered-text/20">Aprobado</span></div>
+            <div class="text-right font-data-mono text-[13px] text-text-tertiary">20/10/2023</div>
+          </div>
+          <!-- Row 4: En revisión -->
+          <div class="archive-grid glass-panel rounded-lg px-4 py-4 hover:bg-surface-container-high transition-colors duration-200 opacity-75">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-medium">MT</div>
+              <span class="text-[15px] font-medium text-text-primary">María Torres</span>
+            </div>
+            <div class="text-[13px] text-text-secondary">Seat León FR</div>
+            <div class="font-data-mono text-[14px] text-text-primary">28,000 €</div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded-full bg-warning/20"></div>
+              <span class="text-[13px] text-text-primary">Sabadell</span>
+            </div>
+            <div class="font-data-mono text-[14px] text-text-secondary">310 €/m</div>
+            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] bg-lead-waiting-bg text-lead-waiting-text border border-lead-waiting-text/20">En revisión</span></div>
+            <div class="text-right font-data-mono text-[13px] text-text-tertiary">19/10/2023</div>
+          </div>
+          <!-- Row 5: Aprobado -->
+          <div class="archive-grid glass-panel rounded-lg px-4 py-4 hover:bg-surface-container-high transition-colors duration-200">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-medium">PR</div>
+              <span class="text-[15px] font-medium text-text-primary">Pedro Ruiz</span>
+            </div>
+            <div class="text-[13px] text-text-secondary">Mercedes Clase A 200</div>
+            <div class="font-data-mono text-[14px] text-text-primary">39,000 €</div>
+            <div class="flex items-center gap-2">
+              <div class="w-4 h-4 rounded-full bg-primary/20"></div>
+              <span class="text-[13px] text-text-primary">ING</span>
+            </div>
+            <div class="font-data-mono text-[14px] text-text-secondary">400 €/m</div>
+            <div><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] bg-lead-ordered-bg text-lead-ordered-text border border-lead-ordered-text/20">Aprobado</span></div>
+            <div class="text-right font-data-mono text-[13px] text-text-tertiary">15/10/2023</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       PAGE: LEAD DETAIL
+       ═══════════════════════════════════════════════ -->
+  <section class="page-section z-10" id="page-lead-detail">
+    <div class="flex-1 p-gutter-md overflow-y-auto scrollbar-hide">
+      <!-- Breadcrumbs & Actions -->
+      <div class="flex items-center justify-between mb-8">
+        <nav class="flex items-center gap-2 text-text-secondary text-[13px]">
+          <a class="hover:text-primary transition-colors flex items-center gap-1 cursor-pointer" onclick="navigate('leads')">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>Leads
+          </a>
+          <span>/</span>
+          <span class="text-text-primary" id="lead-detail-breadcrumb">María del Loreto Rodríguez González</span>
+        </nav>
+        <div class="flex gap-2">
+          <button class="flex items-center gap-2 px-4 py-2 bg-surface-container border border-border-default rounded-lg text-[13px] font-medium hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-sm">edit</span>Edit Details
+          </button>
+          <button class="flex items-center gap-2 px-4 py-2 bg-lead-ordered-bg text-lead-ordered-text rounded-lg text-[13px] font-medium border border-lead-ordered-text/20">
+            <span class="material-symbols-outlined text-sm fill">check_circle</span>Convert to Client
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Header -->
+      <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="flex items-start gap-6">
+          <div class="relative">
+            <div class="w-24 h-24 rounded-2xl bg-primary-container/20 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
+              <span class="material-symbols-outlined text-primary text-5xl fill">person</span>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-lead-potential-bg border-4 border-bg-base flex items-center justify-center">
+              <span class="material-symbols-outlined text-[14px] text-lead-potential-text fill">star</span>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-3 mb-1">
+              <h2 class="text-[28px] font-bold text-text-primary tracking-tight" id="lead-detail-name">María del Loreto Rodríguez González</h2>
+              <div class="px-3 py-1 rounded-full bg-lead-potential-bg text-lead-potential-text text-[11px] font-bold uppercase tracking-widest border border-lead-potential-text/20" id="lead-detail-status-badge">
+                Cliente Potencial
+              </div>
+            </div>
+            <p class="text-text-secondary flex items-center gap-2 mb-4">
+              <span class="material-symbols-outlined text-primary">directions_car</span>
+              Interesada en <span class="text-primary font-bold">Renault Clio</span>
+            </p>
+            <div class="flex flex-wrap gap-6 text-[13px]">
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase text-text-secondary tracking-widest font-semibold">Registration Date</span>
+                <span class="text-text-primary">20 de mayo de 2026</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase text-text-secondary tracking-widest font-semibold">Source</span>
+                <span class="flex items-center gap-1.5 text-text-primary">
+                  <span class="material-symbols-outlined text-xs">campaign</span>TikTok - Septiembre 2024
+                </span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[10px] uppercase text-text-secondary tracking-widest font-semibold">Current State</span>
+                <div class="relative group cursor-pointer">
+                  <span class="flex items-center gap-1.5 text-lead-ordering-text font-bold">
+                    Realizando pedido<span class="material-symbols-outlined text-xs">expand_more</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-md">
+        <!-- Left Column: Actions & Contact -->
+        <div class="lg:col-span-5 space-y-gutter-md">
+          <!-- Contact Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="glass-card-lead p-5 rounded-2xl flex flex-col justify-between h-40 group transition-all accent-glow-hover">
+              <div class="flex justify-between items-start">
+                <div class="p-2.5 bg-primary/10 rounded-xl">
+                  <span class="material-symbols-outlined text-primary">phone</span>
+                </div>
+                <span class="text-[11px] text-text-secondary font-medium">+34 612 345 678</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-text-primary mb-3">Llamada Directa</h4>
+                <button class="w-full py-2 bg-primary/10 hover:bg-primary text-primary hover:text-on-primary border border-primary/20 rounded-lg text-[13px] font-bold transition-all flex items-center justify-center gap-2">
+                  <span class="material-symbols-outlined text-sm">call</span>Llamar ahora
+                </button>
+              </div>
+            </div>
+            <div class="glass-card-lead p-5 rounded-2xl flex flex-col justify-between h-40 group transition-all accent-glow-hover">
+              <div class="flex justify-between items-start">
+                <div class="p-2.5 bg-success/10 rounded-xl">
+                  <span class="material-symbols-outlined text-success">chat</span>
+                </div>
+                <span class="text-[11px] text-text-secondary font-medium">WhatsApp</span>
+              </div>
+              <div>
+                <h4 class="font-semibold text-text-primary mb-3">Mensaje WhatsApp</h4>
+                <button class="w-full py-2 bg-success/10 hover:bg-success text-success hover:text-white border border-success/20 rounded-lg text-[13px] font-bold transition-all flex items-center justify-center gap-2" onclick="document.getElementById('whatsapp-modal').classList.remove('hidden')">
+                  <span class="material-symbols-outlined text-sm">send</span>Enviar Template
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Details Bento -->
+          <div class="glass-card-lead rounded-2xl overflow-hidden">
+            <div class="p-5 border-b border-border-subtle bg-surface-container-low/50">
+              <h3 class="text-[17px] font-medium text-text-primary">Detalles de Campaña</h3>
+            </div>
+            <div class="p-6 grid grid-cols-2 gap-y-6 gap-x-4">
+              <div>
+                <p class="text-[11px] text-text-secondary mb-1 uppercase tracking-wider">AGENCIA</p>
+                <p class="text-[15px] text-text-primary">Rangel y Serrano</p>
+              </div>
+              <div>
+                <p class="text-[11px] text-text-secondary mb-1 uppercase tracking-wider">HORA REGISTRO</p>
+                <p class="text-[15px] text-text-primary">12:24</p>
+              </div>
+              <div class="col-span-2">
+                <p class="text-[11px] text-text-secondary mb-1 uppercase tracking-wider">PROYECTO INTERÉS</p>
+                <div class="p-3 bg-bg-input border border-border-default rounded-xl flex items-center gap-3">
+                  <div class="w-12 h-12 rounded-lg bg-surface-container overflow-hidden flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary">directions_car</span>
+                  </div>
+                  <div>
+                    <p class="text-[13px] font-bold text-text-primary">Renault Clio E-Tech</p>
+                    <p class="text-[11px] text-text-secondary">Hybrid 145cv | Techno</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Status Selector -->
+          <div class="glass-card-lead rounded-2xl p-5">
+            <h3 class="text-[17px] font-medium text-text-primary mb-4">Actualizar Estado</h3>
+            <div class="flex flex-wrap gap-2">
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-border-default hover:bg-lead-waiting-bg hover:text-lead-waiting-text transition-colors">No responde</button>
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-border-default hover:bg-lead-potential-bg hover:text-lead-potential-text transition-colors">Seguir insistiendo</button>
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold bg-lead-ordering-bg text-lead-ordering-text border border-lead-ordering-text/30">Realizando pedido</button>
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-border-default hover:bg-lead-ordered-bg hover:text-lead-ordered-text transition-colors">Pedido realizado</button>
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-border-default hover:bg-lead-asnef-bg hover:text-lead-asnef-text transition-colors">Asnef</button>
+              <button class="px-3 py-1.5 rounded-full text-[11px] font-bold border border-border-default hover:bg-lead-rejected-bg hover:text-lead-rejected-text transition-colors">Operación rechazada</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Timeline & Tasks -->
+        <div class="lg:col-span-7 space-y-gutter-md">
+          <!-- Notes & Timeline -->
+          <div class="glass-card-lead rounded-2xl flex flex-col h-[400px]">
+            <div class="p-5 border-b border-border-subtle bg-surface-container-low/50 flex justify-between items-center">
+              <h3 class="text-[17px] font-medium text-text-primary">Notas &amp; Seguimiento</h3>
+              <div class="flex gap-2">
+                <button class="p-2 text-text-secondary hover:text-primary transition-colors">
+                  <span class="material-symbols-outlined text-[20px]">sort</span>
+                </button>
+              </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+              <!-- Note Item -->
+              <div class="flex gap-4 group">
+                <div class="flex flex-col items-center">
+                  <div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center border border-primary/30 z-10">
+                    <span class="material-symbols-outlined text-[16px] text-primary">edit_note</span>
+                  </div>
+                  <div class="w-px h-full bg-border-subtle mt-2 group-last:hidden"></div>
+                </div>
+                <div class="flex-1 pb-6">
+                  <div class="flex justify-between items-baseline mb-1">
+                    <h5 class="text-[13px] font-bold text-text-primary">Juan Carlos (Asesor)</h5>
+                    <span class="text-[11px] text-text-secondary">Hoy, 10:15 AM</span>
+                  </div>
+                  <div class="p-4 bg-bg-input border border-border-default rounded-xl">
+                    <p class="text-[13px] text-text-primary">Llamar por la tarde. El cliente está esperando a que su pareja regrese del trabajo para confirmar el color. Parece muy interesada en el acabado Techno.</p>
+                  </div>
+                </div>
+              </div>
+              <!-- Timeline Event -->
+              <div class="flex gap-4 group">
+                <div class="flex flex-col items-center">
+                  <div class="w-8 h-8 rounded-full bg-lead-potential-bg flex items-center justify-center border border-lead-potential-text/30 z-10">
+                    <span class="material-symbols-outlined text-[16px] text-lead-potential-text">auto_fix_high</span>
+                  </div>
+                  <div class="w-px h-full bg-border-subtle mt-2 group-last:hidden"></div>
+                </div>
+                <div class="flex-1 pb-6">
+                  <div class="flex justify-between items-baseline mb-1">
+                    <h5 class="text-[13px] font-bold text-lead-potential-text">Estado Cambiado</h5>
+                    <span class="text-[11px] text-text-secondary">Ayer, 16:40 PM</span>
+                  </div>
+                  <p class="text-[13px] text-text-secondary">Estado actualizado de <span class="text-text-primary">"Seguir insistiendo"</span> a <span class="text-lead-ordering-text font-bold">"Realizando pedido"</span></p>
+                </div>
+              </div>
+              <!-- Note Item -->
+              <div class="flex gap-4 group">
+                <div class="flex flex-col items-center">
+                  <div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center border border-border-default z-10">
+                    <span class="material-symbols-outlined text-[16px] text-text-secondary">chat</span>
+                  </div>
+                  <div class="w-px h-full bg-border-subtle mt-2 group-last:hidden"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-baseline mb-1">
+                    <h5 class="text-[13px] font-bold text-text-primary">Nota inicial</h5>
+                    <span class="text-[11px] text-text-secondary">20 Mayo 2026</span>
+                  </div>
+                  <div class="p-4 bg-surface-container border border-border-default rounded-xl border-dashed">
+                    <p class="text-[13px] text-text-primary italic">Interesada en color gris. Viene de campaña TikTok E-Tech.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="p-4 border-t border-border-subtle bg-surface-container-low/30">
+              <div class="relative">
+                <input class="w-full bg-bg-input border border-border-default rounded-xl py-3 pl-4 pr-12 text-[13px] focus:outline-none focus:border-primary transition-colors" placeholder="Escribe una nota rápida..." type="text"/>
+                <button class="absolute right-3 top-1/2 -translate-y-1/2 text-primary p-1 hover:bg-primary/10 rounded-lg transition-colors">
+                  <span class="material-symbols-outlined">send</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tasks Panel -->
+          <div class="glass-card-lead rounded-2xl">
+            <div class="p-5 border-b border-border-subtle bg-surface-container-low/50 flex justify-between items-center">
+              <div class="flex items-center gap-3">
+                <h3 class="text-[17px] font-medium text-text-primary">Tareas Pendientes</h3>
+                <span class="px-2 py-0.5 rounded-full bg-error/10 text-error text-[10px] font-bold">2 VENCIDAS</span>
+              </div>
+              <button class="px-3 py-1.5 bg-primary text-on-primary rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-transform" onclick="document.getElementById('task-modal').classList.remove('hidden')">
+                <span class="material-symbols-outlined text-sm">add_task</span>Nueva Tarea
+              </button>
+            </div>
+            <div class="p-5 space-y-3">
+              <div class="group flex items-center justify-between p-4 bg-surface-container-low border border-border-default rounded-xl hover:border-primary/30 transition-all">
+                <div class="flex items-center gap-4">
+                  <button class="w-6 h-6 rounded-md border-2 border-border-strong flex items-center justify-center hover:border-primary transition-colors">
+                    <span class="material-symbols-outlined text-[14px] text-transparent group-hover:text-primary/50">check</span>
+                  </button>
+                  <div>
+                    <h6 class="text-[13px] font-semibold text-text-primary">Enviar presupuesto PDF</h6>
+                    <div class="flex items-center gap-3 mt-1">
+                      <span class="flex items-center gap-1 text-[11px] text-error font-medium">
+                        <span class="material-symbols-outlined text-[12px]">schedule</span>Hoy, 09:00 AM
+                      </span>
+                      <span class="px-1.5 py-0.5 rounded-md bg-error/10 text-error text-[10px] font-bold">ALTA</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="p-2 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                </button>
+              </div>
+              <div class="group flex items-center justify-between p-4 bg-surface-container-low border border-border-default rounded-xl hover:border-primary/30 transition-all">
+                <div class="flex items-center gap-4">
+                  <button class="w-6 h-6 rounded-md border-2 border-border-strong flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[14px] text-transparent">check</span>
+                  </button>
+                  <div>
+                    <h6 class="text-[13px] font-semibold text-text-primary">Llamar para prueba de conducción</h6>
+                    <div class="flex items-center gap-3 mt-1">
+                      <span class="flex items-center gap-1 text-[11px] text-text-secondary">
+                        <span class="material-symbols-outlined text-[12px]">calendar_month</span>Mañana, 11:30 AM
+                      </span>
+                      <span class="px-1.5 py-0.5 rounded-md bg-warning/10 text-warning text-[10px] font-bold">MEDIA</span>
+                    </div>
+                  </div>
+                </div>
+                <button class="p-2 text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- WhatsApp Templates Modal -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden" id="whatsapp-modal">
+  <div class="glass-card-lead w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl">
+    <div class="p-6 border-b border-border-subtle flex justify-between items-center bg-surface-container-high/50">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-success/20 flex items-center justify-center">
+          <span class="material-symbols-outlined text-success">chat</span>
+        </div>
+        <div>
+          <h3 class="text-[17px] font-medium text-text-primary">Plantillas WhatsApp</h3>
+          <p class="text-[11px] text-text-secondary uppercase tracking-widest font-medium">Lead: <span id="whatsapp-lead-name">María del Loreto</span></p>
+        </div>
+      </div>
+      <button class="p-2 text-text-secondary hover:bg-surface-container rounded-lg transition-colors" onclick="document.getElementById('whatsapp-modal').classList.add('hidden')">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div class="p-6 space-y-4 max-h-[614px] overflow-y-auto scrollbar-hide">
+      <button class="w-full text-left p-4 bg-bg-input border border-border-default rounded-2xl hover:border-success/50 transition-all">
+        <p class="text-[10px] text-success font-bold uppercase mb-2">Contacto Inicial</p>
+        <p class="text-[13px] text-text-primary leading-relaxed">Hola <span class="text-success font-bold">María</span>, le contactamos desde HOMA - Rangel &amp; Serrano por su interés en el Renault Clio. ¿Podemos hablar 5 minutos?</p>
+      </button>
+      <button class="w-full text-left p-4 bg-bg-input border border-border-default rounded-2xl hover:border-success/50 transition-all">
+        <p class="text-[10px] text-warning font-bold uppercase mb-2">Seguimiento Financiación</p>
+        <p class="text-[13px] text-text-primary leading-relaxed">¿Sigue interesado en financiar su próximo vehículo? Tenemos una oferta especial para el Clio que le puede interesar.</p>
+      </button>
+      <button class="w-full text-left p-4 bg-bg-input border border-border-default rounded-2xl hover:border-success/50 transition-all">
+        <p class="text-[10px] text-primary font-bold uppercase mb-2">Cita Confirmada</p>
+        <p class="text-[13px] text-text-primary leading-relaxed">Confirmamos su cita para mañana a las 11:30h en nuestra exposición de Calle Mayor. ¡Le esperamos!</p>
+      </button>
+      <button class="w-full text-left p-4 bg-bg-input border border-border-default rounded-2xl hover:border-success/50 transition-all">
+        <p class="text-[10px] text-error font-bold uppercase mb-2">Operación Rechazada</p>
+        <p class="text-[13px] text-text-primary leading-relaxed">Sentimos comunicarle que por el momento no podemos avanzar con la financiación solicitada. Quedamos a su disposición.</p>
+      </button>
+    </div>
+    <div class="p-6 border-t border-border-subtle flex justify-end gap-3 bg-surface-container-lowest">
+      <button class="px-6 py-2.5 text-[13px] font-bold text-text-secondary hover:text-text-primary transition-colors" onclick="document.getElementById('whatsapp-modal').classList.add('hidden')">Cancelar</button>
+      <button class="px-6 py-2.5 bg-success text-white rounded-xl text-[13px] font-bold active:scale-95 transition-all">Enviar Mensaje Personalizado</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task Modal -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden" id="task-modal">
+  <div class="glass-card-lead w-full max-w-md rounded-3xl p-8">
+    <h3 class="text-[21px] font-semibold text-text-primary mb-6">Añadir Nueva Tarea</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="text-[11px] text-text-secondary block mb-1.5 uppercase tracking-wider">TÍTULO TAREA</label>
+        <input class="w-full bg-bg-input border border-border-default rounded-xl py-3 px-4 focus:outline-none focus:border-primary text-text-primary" type="text"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="text-[11px] text-text-secondary block mb-1.5 uppercase tracking-wider">FECHA VENCIMIENTO</label>
+          <input class="w-full bg-bg-input border border-border-default rounded-xl py-3 px-4 focus:outline-none focus:border-primary text-text-primary" type="date"/>
+        </div>
+        <div>
+          <label class="text-[11px] text-text-secondary block mb-1.5 uppercase tracking-wider">PRIORIDAD</label>
+          <select class="w-full bg-bg-input border border-border-default rounded-xl py-3 px-4 focus:outline-none focus:border-primary appearance-none text-text-primary">
+            <option>Baja</option><option>Media</option><option>Alta</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mt-8 flex justify-end gap-4">
+      <button class="px-6 py-3 font-bold text-text-secondary" onclick="document.getElementById('task-modal').classList.add('hidden')">Cancelar</button>
+      <button class="px-8 py-3 bg-primary text-on-primary font-bold rounded-xl active:scale-95 transition-transform shadow-lg shadow-primary/20" onclick="document.getElementById('task-modal').classList.add('hidden')">Guardar Tarea</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pages = {
+    leads:        { section: 'page-leads',        label: 'Leads' },
+    tareas:       { section: 'page-tareas',       label: 'Tareas' },
+    simulaciones: { section: 'page-simulaciones', label: 'Simulaciones' },
+    pedidos:      { section: 'page-pedidos',      label: 'Pedidos Finalizados' },
+    'lead-detail':{ section: 'page-lead-detail',  label: 'Lead Detail' }
+  };
+
+  // Lead data keyed by row order in the Leads table (1-6)
+  const leadData = {
+    1: { name: 'Juan García', status: 'Asnef', statusClass: 'bg-lead-asnef-bg text-lead-asnef-text border-lead-asnef-text/20', interest: 'Search Q3' },
+    2: { name: 'Elena Rodríguez', status: 'Cliente Potencial', statusClass: 'bg-lead-potential-bg text-lead-potential-text border-lead-potential-text/20', interest: 'Promo Otoño' },
+    3: { name: 'Carlos Martínez', status: 'Cuarentena', statusClass: 'bg-lead-quarantine-bg text-lead-quarantine-text border-lead-quarantine-text/20', interest: 'Newsletter' },
+    4: { name: 'Sofía López', status: 'Pedido', statusClass: 'bg-lead-ordered-bg text-lead-ordered-text border-lead-ordered-text/20', interest: 'Referral' },
+    5: { name: 'Pablo Fernández', status: 'Cliente Potencial', statusClass: 'bg-lead-potential-bg text-lead-potential-text border-lead-potential-text/20', interest: 'Ad V2' },
+    6: { name: 'Laura Díaz', status: 'Esperando docs', statusClass: 'bg-lead-waiting-bg text-lead-waiting-text border-lead-waiting-text/20', interest: 'Organic Web' }
+  };
+
+  function navigate(pageKey) {
+    // Hide all sections
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    // Deactivate all nav links
+    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+
+    // Show target section
+    document.getElementById(pages[pageKey].section).classList.add('active');
+    // Activate nav link if this page has one (lead-detail does not)
+    const navEl = document.querySelector(`[data-page="${pageKey}"]`);
+    if (navEl) navEl.classList.add('active');
+    else if (pageKey === 'lead-detail') {
+      // Keep "Leads" highlighted in the sidebar while viewing a lead detail
+      document.querySelector('[data-page="leads"]').classList.add('active');
+    }
+
+    // Update title in search bar placeholder
+    document.querySelector('input[type="text"]').placeholder = `Search in ${pages[pageKey].label}...`;
+  }
+
+  function openLead(leadId) {
+    const lead = leadData[leadId];
+    if (lead) {
+      document.getElementById('lead-detail-name').textContent = lead.name;
+      document.getElementById('lead-detail-breadcrumb').textContent = lead.name;
+      const badge = document.getElementById('lead-detail-status-badge');
+      badge.textContent = lead.status;
+      badge.className = 'px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest border ' + lead.statusClass;
+      document.getElementById('whatsapp-lead-name').textContent = lead.name.split(' ')[0];
+    }
+    navigate('lead-detail');
+  }
+
+  // Drag visual for kanban cards
+  document.querySelectorAll('.cursor-grab').forEach(card => {
+    card.addEventListener('mousedown', () => card.classList.add('cursor-grabbing', 'scale-[0.98]', 'opacity-90'));
+    card.addEventListener('mouseup',   () => card.classList.remove('cursor-grabbing', 'scale-[0.98]', 'opacity-90'));
+    card.addEventListener('mouseleave',() => card.classList.remove('cursor-grabbing', 'scale-[0.98]', 'opacity-90'));
+  });
+</script>
+</body>
+</html>
