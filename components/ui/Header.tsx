@@ -59,6 +59,7 @@ export default function Header({ profile }: HeaderProps) {
           {/* User Avatar */}
           <div className="w-9 h-9 rounded-full bg-border-strong flex items-center justify-center text-text-primary font-medium text-sm border border-border-default select-none">
             {profile.avatar_url ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={profile.avatar_url}
                 alt={profile.full_name}
