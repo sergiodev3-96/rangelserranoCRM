@@ -13,85 +13,62 @@ export async function middleware(request: NextRequest) {
 
   let supabaseResponse = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
+  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-    }
-  );
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) =>
+          request.cookies.set(name, value)
+        );
+        supabaseResponse = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, options)
+        );
+      },
+    },
+  });
 
+  // Refresh session — IMPORTANT: do not add any logic between createServerClient
+  // and supabase.auth.getUser(). A simple mistake could make it very hard to debug
+  // issues with users being randomly logged out.
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Rutas públicas
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
-  const isWebhookRoute = request.nextUrl.pathname.startsWith("/api/webhooks");
+  const pathname = request.nextUrl.pathname;
 
-  // Webhooks no requieren autenticación de usuario (usan service_role internamente)
-  if (isWebhookRoute) {
+  // Webhooks: no auth required
+  if (pathname.startsWith("/api/webhooks")) {
     return supabaseResponse;
   }
 
-  // Si no está autenticado y no está en login, redirigir a login
+  const isAuthRoute = pathname.startsWith("/login");
+
+  // Not authenticated → redirect to login
   if (!user && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Si está autenticado y está en login, redirigir a leads
+  // Authenticated + on login page → redirect to leads
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/leads";
     return NextResponse.redirect(url);
   }
 
-  // Verificar que el usuario está activo
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("active, role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile && !profile.active) {
-      // Usuario desactivado: cerrar sesión y redirigir a login
-      await supabase.auth.signOut();
-      const url = request.nextUrl.clone();
-      url.pathname = "/login";
-      url.searchParams.set("error", "account_disabled");
-      return NextResponse.redirect(url);
-    }
-
-    // Rutas de Admin: verificar rol
-    if (request.nextUrl.pathname.startsWith("/admin") && profile?.role !== "admin") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/leads";
-      return NextResponse.redirect(url);
-    }
-  }
+  // NOTE: Role and active checks are handled in the dashboard layout
+  // server component to avoid DB queries in the Edge Runtime.
 
   return supabaseResponse;
 }
 
 export const config = {
   matcher: [
-    // Excluir archivos estáticos y Next.js internals
+    // Exclude static files and Next.js internals
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
