@@ -44,6 +44,9 @@ export default function LeadTable({ leads }: LeadTableProps) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-border-default bg-surface-container-low select-none">
+            <th className="px-4 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider pl-6 w-[80px]">
+              Nº
+            </th>
             <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
               Nombre Cliente
             </th>
@@ -76,6 +79,11 @@ export default function LeadTable({ leads }: LeadTableProps) {
               key={lead.id}
               className="hover:bg-surface-container-high/40 transition-colors"
             >
+              {/* Lead Number */}
+              <td className="px-4 py-4 font-data-mono text-text-secondary font-medium pl-6 text-[12px]">
+                #{lead.lead_number || "—"}
+              </td>
+
               {/* Name */}
               <td className="px-6 py-4">
                 <Link

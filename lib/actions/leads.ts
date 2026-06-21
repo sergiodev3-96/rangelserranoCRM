@@ -115,7 +115,7 @@ export async function createLead(
       source: input.source,
       campaign_name: input.campaign_name || null,
       vehicle_interest: input.vehicle_interest || null,
-      assigned_to: input.assigned_to || null,
+      assigned_to: input.assigned_to || "e0db4f49-4ce2-4acd-80a9-c0addd6ade21",
       status: "cliente_potencial",
       archived: false,
     };

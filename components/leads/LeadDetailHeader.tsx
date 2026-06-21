@@ -84,8 +84,13 @@ export default function LeadDetailHeader({
           </span>
           Volver a Leads
         </Link>
-        <h1 className="font-headline-lg text-[24px] text-text-primary tracking-tight leading-none">
+        <h1 className="font-headline-lg text-[24px] text-text-primary tracking-tight leading-none flex items-center gap-2">
           {lead.full_name}
+          {lead.lead_number && (
+            <span className="text-[13px] bg-surface-container-highest text-text-secondary border border-border-default px-2 py-0.5 rounded font-data-mono font-medium select-none">
+              #{lead.lead_number}
+            </span>
+          )}
         </h1>
         <p className="font-body-sm text-[13px] text-text-secondary">
           Interés:{" "}

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         source: "tiktok_lead_ads",
         campaign_name: campaignName,
         vehicle_interest: vehicleInterest || null,
-        assigned_to: null, // Lead sin asignar
+        assigned_to: "e0db4f49-4ce2-4acd-80a9-c0addd6ade21", // Asignar por defecto a info@rangelyserrano.com
         archived: false,
         raw_webhook_payload: payload,
       })

@@ -29,6 +29,7 @@ export type Lead = {
   vehicle_interest: string | null;
   assigned_to: string | null;
   archived: boolean;
+  lead_number?: number;
   raw_webhook_payload: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
