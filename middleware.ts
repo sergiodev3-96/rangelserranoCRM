@@ -1,6 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// Force Node.js runtime — @supabase/ssr uses __dirname which is unavailable in Edge Runtime
+export const runtime = "nodejs";
+
 export async function middleware(request: NextRequest) {
   // Guard: if env vars are missing, skip middleware gracefully
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
