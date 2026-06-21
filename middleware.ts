@@ -1,72 +1,45 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Force Node.js runtime — @supabase/ssr uses __dirname which is unavailable in Edge Runtime
-export const runtime = "nodejs";
-
-export async function middleware(request: NextRequest) {
-  // Guard: if env vars are missing, skip middleware gracefully
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("Missing Supabase environment variables in middleware");
-    return NextResponse.next({ request });
-  }
-
-  let supabaseResponse = NextResponse.next({ request });
-
-  const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
-        );
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
-        );
-      },
-    },
-  });
-
-  // Refresh session — IMPORTANT: do not add any logic between createServerClient
-  // and supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
+/**
+ * IMPORTANT: Next.js middleware ALWAYS runs in the Edge Runtime (V8 isolate).
+ * `@supabase/ssr` uses __dirname internally which is unavailable in Edge Runtime.
+ * Therefore, we do NOT import @supabase/ssr here.
+ *
+ * We perform a lightweight cookie presence check to handle redirects.
+ * The actual auth validation (session integrity, active status, role) is
+ * enforced in the dashboard layout Server Component (Node.js runtime).
+ */
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   // Webhooks: no auth required
   if (pathname.startsWith("/api/webhooks")) {
-    return supabaseResponse;
+    return NextResponse.next();
   }
 
   const isAuthRoute = pathname.startsWith("/login");
 
+  // Detect Supabase session by looking for the auth token cookie.
+  // @supabase/ssr stores it as: sb-<projectRef>-auth-token[.0, .1, ...]
+  const hasSession = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("auth-token"));
+
   // Not authenticated → redirect to login
-  if (!user && !isAuthRoute) {
+  if (!hasSession && !isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Authenticated + on login page → redirect to leads
-  if (user && isAuthRoute) {
+  // Authenticated + visiting login → redirect to leads
+  if (hasSession && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/leads";
     return NextResponse.redirect(url);
   }
 
-  // NOTE: Role and active checks are handled in the dashboard layout
-  // server component to avoid DB queries in the Edge Runtime.
-
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {
