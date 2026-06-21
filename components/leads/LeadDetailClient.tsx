@@ -12,6 +12,7 @@ import LeadDetailHeader from "./LeadDetailHeader";
 import LeadNoteInput from "./LeadNoteInput";
 import LeadTimeline from "./LeadTimeline";
 import TaskCreateModal from "../tasks/TaskCreateModal";
+import WhatsAppTemplatesModal from "./WhatsAppTemplatesModal";
 import { updateTaskStatus, deleteTask } from "@/lib/actions/tasks";
 import { deleteSimulation } from "@/lib/actions/simulations";
 
@@ -35,6 +36,7 @@ export default function LeadDetailClient({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
   const handleRefresh = () => {
     router.refresh();
@@ -153,17 +155,17 @@ export default function LeadDetailClient({
                             call
                           </span>
                         </a>
-                        <a
-                          href={`https://wa.me/${lead.phone.replace(/\D/g, "")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-success/20 hover:text-success transition-all flex items-center justify-center border border-border-default hover:border-success/20"
+                        <button
+                          type="button"
+                          onClick={() => setIsWhatsAppModalOpen(true)}
+                          disabled={!canEdit}
+                          className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-success/20 hover:text-success transition-all flex items-center justify-center border border-border-default hover:border-success/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Enviar WhatsApp"
                         >
                           <span className="material-symbols-outlined text-[16px]">
                             chat
                           </span>
-                        </a>
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -507,6 +509,18 @@ export default function LeadDetailClient({
           onSuccess={handleRefresh}
           initialLeadId={lead.id}
           currentUserId={currentUser.id}
+        />
+      )}
+
+      {/* WhatsApp Templates Modal */}
+      {canEdit && (
+        <WhatsAppTemplatesModal
+          isOpen={isWhatsAppModalOpen}
+          onClose={() => setIsWhatsAppModalOpen(false)}
+          onSuccess={handleRefresh}
+          leadId={lead.id}
+          leadName={lead.full_name}
+          leadVehicle={lead.vehicle_interest}
         />
       )}
     </div>
