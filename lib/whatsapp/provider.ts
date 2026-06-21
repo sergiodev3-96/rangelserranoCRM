@@ -1,10 +1,8 @@
 import { createClient } from "../supabase/server";
-import { WHATSAPP_TEMPLATES } from "./templates";
-import type { WhatsAppTemplateName } from "./templates";
 
 type SendWhatsAppParams = {
   leadId: string;
-  templateName: WhatsAppTemplateName;
+  templateName: string; // Dynamic label or name
   customBody?: string;
 };
 
@@ -25,10 +23,10 @@ async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
     throw new Error("No autorizado");
   }
 
-  // 1. Obtener datos del lead
+  // 1. Obtener datos del lead (incluido el teléfono)
   const { data: lead, error: leadError } = await supabase
     .from("leads")
-    .select("full_name, vehicle_interest")
+    .select("full_name, vehicle_interest, phone")
     .eq("id", params.leadId)
     .single();
 
@@ -36,13 +34,22 @@ async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
     throw new Error(leadError?.message || "Lead no encontrado");
   }
 
+  if (!lead.phone) {
+    throw new Error("El lead no tiene un número de teléfono registrado para enviar WhatsApp.");
+  }
+
   // 2. Formular cuerpo del mensaje reemplazando variables
   let body = params.customBody || "";
 
   if (!body) {
-    const template = WHATSAPP_TEMPLATES.find((t) => t.name === params.templateName);
-    if (!template) {
-      throw new Error("Plantilla no encontrada");
+    const { data: template, error: tmplError } = await supabase
+      .from("whatsapp_templates")
+      .select("body")
+      .eq("label", params.templateName)
+      .single();
+
+    if (tmplError || !template) {
+      throw new Error("Plantilla no encontrada en la base de datos");
     }
 
     body = template.body
@@ -76,5 +83,19 @@ async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
     content: body,
   });
 
-  return msg;
+  // 5. Generar enlace de WhatsApp (Deep Link)
+  // Limpiar caracteres no numéricos del teléfono
+  const cleanPhone = lead.phone.replace(/\D/g, "");
+  // Asegurar que comience con código de país si es necesario (ej. de España 34 si tiene 9 dígitos)
+  let formattedPhone = cleanPhone;
+  if (cleanPhone.length === 9 && (cleanPhone.startsWith("6") || cleanPhone.startsWith("7") || cleanPhone.startsWith("9"))) {
+    formattedPhone = "34" + cleanPhone;
+  }
+  
+  const deepLinkUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(body)}`;
+
+  return {
+    ...msg,
+    deepLinkUrl,
+  };
 }

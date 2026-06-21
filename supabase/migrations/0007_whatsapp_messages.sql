@@ -2,8 +2,7 @@ CREATE TABLE public.whatsapp_messages (
   id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   lead_id             uuid NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
   sent_by             uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  template_name       text NOT NULL
-                      CHECK (template_name IN ('contacto_inicial', 'seguimiento_financiacion', 'cita_confirmada', 'operacion_rechazada', 'custom')),
+  template_name       text NOT NULL,
   message_body        text NOT NULL,
   provider            text NOT NULL DEFAULT 'mock'
                       CHECK (provider IN ('mock', 'meta_cloud_api', 'twilio')),

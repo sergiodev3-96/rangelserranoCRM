@@ -1,19 +1,18 @@
 "use server";
 
 import type { ActionResult } from "@/types/database";
-import type { WhatsAppTemplateName } from "@/lib/whatsapp/templates";
 import { sendWhatsAppMessage } from "@/lib/whatsapp/provider";
 import { revalidatePath } from "next/cache";
 
 export async function sendTemplateMessageAction(params: {
   leadId: string;
-  templateName: WhatsAppTemplateName;
+  templateName: string;
   customBody?: string;
-}): Promise<ActionResult<void>> {
+}): Promise<ActionResult<{ deepLinkUrl: string }>> {
   try {
-    await sendWhatsAppMessage(params);
+    const result = await sendWhatsAppMessage(params);
     revalidatePath(`/leads/${params.leadId}`);
-    return { success: true, data: undefined, error: null };
+    return { success: true, data: { deepLinkUrl: result.deepLinkUrl }, error: null };
   } catch (err) {
     return {
       success: false,

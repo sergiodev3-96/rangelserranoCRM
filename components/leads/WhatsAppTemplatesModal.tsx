@@ -2,8 +2,8 @@
 
 import React, { useState, useTransition, useEffect } from "react";
 import Modal from "../ui/Modal";
-import { WHATSAPP_TEMPLATES } from "@/lib/whatsapp/templates";
-import type { WhatsAppTemplateName, WhatsAppTemplate } from "@/lib/whatsapp/templates";
+import type { WhatsAppTemplate } from "@/types/whatsapp";
+import { getWhatsAppTemplates } from "@/lib/actions/whatsapp-templates";
 import { sendTemplateMessageAction } from "@/lib/actions/whatsapp";
 
 type WhatsAppTemplatesModalProps = {
@@ -23,9 +23,11 @@ export default function WhatsAppTemplatesModal({
   leadName,
   leadVehicle,
 }: WhatsAppTemplatesModalProps) {
-  const [selectedTemplateName, setSelectedTemplateName] = useState<WhatsAppTemplateName>("contacto_inicial");
+  const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [customBody, setCustomBody] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const vehicleName = leadVehicle || "vehículo";
@@ -37,16 +39,35 @@ export default function WhatsAppTemplatesModal({
       .replace(/{vehicle}/g, vehicleName);
   };
 
-  // Sync preview when template selection changes
+  // Fetch templates from database when modal opens
   useEffect(() => {
     if (isOpen) {
-      const template = WHATSAPP_TEMPLATES.find((t) => t.name === selectedTemplateName);
-      if (template) {
-        setCustomBody(compileTemplate(template));
-      }
+      setIsLoadingTemplates(true);
+      setErrorMessage(null);
+      getWhatsAppTemplates().then((res) => {
+        setIsLoadingTemplates(false);
+        if (res.success && res.data) {
+          setTemplates(res.data);
+          if (res.data.length > 0) {
+            setSelectedTemplate(res.data[0]);
+          } else {
+            setSelectedTemplate(null);
+            setCustomBody("");
+          }
+        } else {
+          setErrorMessage(res.error || "No se pudieron cargar las plantillas.");
+        }
+      });
+    }
+  }, [isOpen]);
+
+  // Sync preview when template selection changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      setCustomBody(compileTemplate(selectedTemplate));
       setErrorMessage(null);
     }
-  }, [isOpen, selectedTemplateName, leadName, vehicleName]);
+  }, [selectedTemplate, leadName, vehicleName]);
 
   const handleSend = () => {
     if (!customBody.trim()) {
@@ -58,14 +79,16 @@ export default function WhatsAppTemplatesModal({
     startTransition(async () => {
       const result = await sendTemplateMessageAction({
         leadId,
-        templateName: selectedTemplateName,
+        templateName: selectedTemplate ? selectedTemplate.label : "Mensaje Personalizado",
         customBody: customBody.trim(),
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         onSuccess();
         onClose();
-        alert("Mensaje de WhatsApp simulado enviado y registrado en el historial.");
+        
+        // Abrir el Deep Link de WhatsApp generado automáticamente
+        window.open(result.data.deepLinkUrl, "_blank");
       } else {
         setErrorMessage(result.error || "Error al enviar WhatsApp.");
       }
@@ -115,33 +138,51 @@ export default function WhatsAppTemplatesModal({
           Cliente: <span className="text-text-primary">{leadName}</span>
         </div>
 
-        {/* Template Selectors */}
-        <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
-          {WHATSAPP_TEMPLATES.map((tmpl) => {
-            const isSelected = selectedTemplateName === tmpl.name;
-            const borderClass = getCategoryBorderColor(tmpl.category);
-            const textBadgeClass = getCategoryBadgeClass(tmpl.category);
+        {/* Loading Indicator */}
+        {isLoadingTemplates && (
+          <div className="py-8 flex flex-col items-center justify-center text-text-secondary gap-2">
+            <span className="material-symbols-outlined animate-spin text-2xl">sync</span>
+            <span className="text-[12px]">Cargando plantillas...</span>
+          </div>
+        )}
 
-            return (
-              <button
-                key={tmpl.name}
-                type="button"
-                onClick={() => setSelectedTemplateName(tmpl.name)}
-                disabled={isPending}
-                className={`w-full text-left p-3.5 bg-bg-input rounded-xl border transition-all cursor-pointer ${borderClass} ${
-                  isSelected ? "ring-1 ring-primary border-primary bg-surface-container-high/40" : ""
-                }`}
-              >
-                <p className={`text-[10px] font-bold uppercase mb-1.5 ${textBadgeClass}`}>
-                  {tmpl.label}
-                </p>
-                <p className="text-[12px] text-text-primary leading-normal line-clamp-2">
-                  {compileTemplate(tmpl)}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        {/* Empty State */}
+        {!isLoadingTemplates && templates.length === 0 && (
+          <div className="py-6 border border-dashed border-border-default rounded-xl text-center text-text-disabled">
+            <span className="material-symbols-outlined text-3xl mb-1 block">chat_bubble_outline</span>
+            <span className="text-[12px]">No hay plantillas de WhatsApp creadas en el sistema.</span>
+          </div>
+        )}
+
+        {/* Template Selectors */}
+        {!isLoadingTemplates && templates.length > 0 && (
+          <div className="space-y-2 max-h-[250px] overflow-y-auto pr-1">
+            {templates.map((tmpl) => {
+              const isSelected = selectedTemplate?.id === tmpl.id;
+              const borderClass = getCategoryBorderColor(tmpl.category);
+              const textBadgeClass = getCategoryBadgeClass(tmpl.category);
+
+              return (
+                <button
+                  key={tmpl.id}
+                  type="button"
+                  onClick={() => setSelectedTemplate(tmpl)}
+                  disabled={isPending}
+                  className={`w-full text-left p-3.5 bg-bg-input rounded-xl border transition-all cursor-pointer ${borderClass} ${
+                    isSelected ? "ring-1 ring-primary border-primary bg-surface-container-high/40" : ""
+                  }`}
+                >
+                  <p className={`text-[10px] font-bold uppercase mb-1.5 ${textBadgeClass}`}>
+                    {tmpl.label}
+                  </p>
+                  <p className="text-[12px] text-text-primary leading-normal line-clamp-2">
+                    {compileTemplate(tmpl)}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Message Editor / Custom Body */}
         <div className="space-y-1 pt-2">
@@ -152,7 +193,7 @@ export default function WhatsAppTemplatesModal({
             rows={4}
             value={customBody}
             onChange={(e) => setCustomBody(e.target.value)}
-            disabled={isPending}
+            disabled={isPending || isLoadingTemplates}
             className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-4 py-3 font-body-sm text-[13px] focus:outline-none focus:border-primary resize-none"
           />
         </div>
@@ -171,7 +212,7 @@ export default function WhatsAppTemplatesModal({
           <button
             type="button"
             onClick={handleSend}
-            disabled={isPending || !customBody.trim()}
+            disabled={isPending || isLoadingTemplates || !customBody.trim()}
             className="px-5 py-2 bg-success text-inverse-on-surface hover:shadow-[0_0_15px_rgba(52,211,153,0.3)] disabled:opacity-50 disabled:hover:shadow-none transition-all rounded-lg text-[13px] font-medium cursor-pointer flex items-center gap-1.5"
           >
             {isPending ? (

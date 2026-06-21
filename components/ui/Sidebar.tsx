@@ -23,6 +23,11 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
       label: "Usuarios",
       icon: "manage_accounts",
     });
+    navItems.push({
+      href: "/admin/plantillas",
+      label: "Plantillas WA",
+      icon: "chat",
+    });
   }
 
   return (
