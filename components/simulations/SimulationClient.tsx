@@ -12,7 +12,6 @@ type LeadSummary = {
 };
 
 type SimulationClientProps = {
-  currentUser: { id: string; role: "admin" | "comercial" };
   leads: LeadSummary[];
   initialLeadId?: string | null;
 };
@@ -25,7 +24,6 @@ const ENTITIES_CONFIG = [
 ];
 
 export default function SimulationClient({
-  currentUser,
   leads,
   initialLeadId,
 }: SimulationClientProps) {

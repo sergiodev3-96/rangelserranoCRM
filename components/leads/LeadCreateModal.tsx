@@ -5,6 +5,7 @@ import Modal from "../ui/Modal";
 import { createLead } from "@/lib/actions/leads";
 import { getActiveComerciales } from "@/lib/actions/users";
 import type { ProfileSummary } from "@/types/profiles";
+import type { LeadSource } from "@/types/leads";
 
 type LeadCreateModalProps = {
   isOpen: boolean;
@@ -157,7 +158,7 @@ export default function LeadCreateModal({
             </label>
             <select
               value={source}
-              onChange={(e) => setSource(e.target.value as any)}
+              onChange={(e) => setSource(e.target.value as LeadSource)}
               className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               disabled={isPending}
             >

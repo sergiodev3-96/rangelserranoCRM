@@ -51,18 +51,22 @@ export async function updateOrderStatus(
       return { success: false, data: null, error: "Usuario no autenticado" };
     }
 
-    const updateData: any = {
+    const updateData: {
+      status: OrderStatus;
+      updated_at: string;
+      closed_at: string | null;
+      closed_by: string | null;
+    } = {
       status,
       updated_at: new Date().toISOString(),
+      closed_at: null,
+      closed_by: null,
     };
 
     // Si se cierra (aprobado o denegado), registrar datos de cierre
     if (status === "aprobado" || status === "denegado") {
       updateData.closed_at = new Date().toISOString();
       updateData.closed_by = user.id;
-    } else {
-      updateData.closed_at = null;
-      updateData.closed_by = null;
     }
 
     const { data, error } = await supabase

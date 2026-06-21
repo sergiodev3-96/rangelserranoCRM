@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import type { LeadWithAssignee } from "@/types/leads";
 import type { ProfileSummary } from "@/types/profiles";
@@ -16,7 +16,6 @@ export default function UnassignedLeadsPanel({
   comerciales,
 }: UnassignedLeadsPanelProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
 
   if (unassignedLeads.length === 0) return null;
 

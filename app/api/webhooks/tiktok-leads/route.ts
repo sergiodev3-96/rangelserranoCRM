@@ -25,10 +25,28 @@ export async function GET(request: Request) {
   return new Response("Invalid verify token", { status: 403 });
 }
 
+interface TikTokField {
+  name?: string;
+  key?: string;
+  value?: unknown;
+}
+
+interface UserAnswer {
+  field_key?: string;
+  field_name?: string;
+  value?: unknown;
+}
+
+interface WebhookPayload {
+  [key: string]: unknown;
+  fields?: TikTokField[];
+  user_answers?: UserAnswer[];
+}
+
 // POST Webhook Lead Ads processing
 export async function POST(request: Request) {
   const supabase = createServiceClient();
-  let payload: any = null;
+  let payload: WebhookPayload | null = null;
   let logId: string | null = null;
 
   try {
@@ -119,7 +137,7 @@ export async function POST(request: Request) {
 }
 
 // Helper to look up values inside the payload properties or arrays
-function getFieldValue(payload: any, keys: string[]): string | null {
+function getFieldValue(payload: WebhookPayload | null | undefined, keys: string[]): string | null {
   if (!payload) return null;
 
   // Direct check
@@ -130,18 +148,16 @@ function getFieldValue(payload: any, keys: string[]): string | null {
   // Check inside "fields" array (TikTok layout)
   if (Array.isArray(payload.fields)) {
     for (const f of payload.fields) {
-      if (keys.includes(f.name) || keys.includes(f.key)) {
-        return String(f.value);
-      }
+      if (f.name && keys.includes(f.name)) return String(f.value);
+      if (f.key && keys.includes(f.key)) return String(f.value);
     }
   }
 
   // Check inside "user_answers" array (Ad leads API layout)
   if (Array.isArray(payload.user_answers)) {
     for (const ans of payload.user_answers) {
-      if (keys.includes(ans.field_key) || keys.includes(ans.field_name)) {
-        return String(ans.value);
-      }
+      if (ans.field_key && keys.includes(ans.field_key)) return String(ans.value);
+      if (ans.field_name && keys.includes(ans.field_name)) return String(ans.value);
     }
   }
 

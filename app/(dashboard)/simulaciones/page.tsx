@@ -20,11 +20,6 @@ export default async function SimulacionesPage({
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
-  const currentUser = {
-    id: profileResult.data.id,
-    role: profileResult.data.role as "admin" | "comercial",
-  };
-
   // 2. Obtener lista de leads para el selector
   const leadsResult = await getLeads({ pageSize: 150 });
   const leads = leadsResult.success && leadsResult.data ? leadsResult.data.leads : [];
@@ -37,7 +32,6 @@ export default async function SimulacionesPage({
 
   return (
     <SimulationClient
-      currentUser={currentUser}
       leads={mappedLeads}
       initialLeadId={leadId}
     />

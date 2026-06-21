@@ -64,8 +64,12 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
   return (
     <div className="relative pl-6 space-y-6 before:absolute before:left-3 before:top-2 before:bottom-2 before:w-[1px] before:bg-border-default">
       {events.map((event) => {
+        type EventMetadata = {
+          from_status?: string;
+          to_status?: string;
+        };
         const isStatusChange = event.event_type === "status_change";
-        const metadata = event.metadata as any;
+        const metadata = event.metadata as EventMetadata | null;
 
         return (
           <div key={event.id} className="relative flex flex-col gap-1 text-left">

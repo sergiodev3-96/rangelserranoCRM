@@ -22,7 +22,7 @@ const COLUMNS: { id: TaskStatus; label: string; dotClass: string; borderClass: s
 
 export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanbanProps) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState("");

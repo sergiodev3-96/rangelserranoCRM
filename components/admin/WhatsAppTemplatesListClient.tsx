@@ -188,7 +188,7 @@ export default function WhatsAppTemplatesListClient({
           <div className="col-span-full py-16 border border-dashed border-border-default rounded-xl text-center text-text-disabled/40 select-none">
             <span className="material-symbols-outlined text-5xl mb-2">sms_failed</span>
             <p className="font-body-md font-semibold text-text-secondary">No hay plantillas creadas</p>
-            <p className="font-body-sm text-[12px] mt-1">Crea tu primera plantilla utilizando el botón "Nueva Plantilla".</p>
+            <p className="font-body-sm text-[12px] mt-1">Crea tu primera plantilla utilizando el botón &quot;Nueva Plantilla&quot;.</p>
           </div>
         )}
       </div>

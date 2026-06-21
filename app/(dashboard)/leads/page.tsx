@@ -7,6 +7,9 @@ import LeadFilters from "@/components/leads/LeadFilters";
 import LeadPagination from "@/components/leads/LeadPagination";
 import UnassignedLeadsPanel from "@/components/leads/UnassignedLeadsPanel";
 
+import type { LeadWithAssignee } from "@/types/leads";
+import type { ProfileSummary } from "@/types/profiles";
+
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 export default async function LeadsPage({
@@ -48,8 +51,8 @@ export default async function LeadsPage({
   const profileResult = await getCurrentProfile();
   const isAdmin = profileResult.success && profileResult.data?.role === "admin";
 
-  let unassignedLeads: any[] = [];
-  let comerciales: any[] = [];
+  let unassignedLeads: LeadWithAssignee[] = [];
+  let comerciales: ProfileSummary[] = [];
 
   if (isAdmin) {
     // Obtener leads sin asignar

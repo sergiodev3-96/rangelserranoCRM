@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useCallback } from "react";
 import Modal from "../ui/Modal";
 import type { WhatsAppTemplate } from "@/types/whatsapp";
 import { getWhatsAppTemplates } from "@/lib/actions/whatsapp-templates";
@@ -33,11 +33,11 @@ export default function WhatsAppTemplatesModal({
   const vehicleName = leadVehicle || "vehículo";
 
   // Pre-compile template preview
-  const compileTemplate = (template: WhatsAppTemplate) => {
+  const compileTemplate = useCallback((template: WhatsAppTemplate) => {
     return template.body
       .replace(/{name}/g, leadName)
       .replace(/{vehicle}/g, vehicleName);
-  };
+  }, [leadName, vehicleName]);
 
   // Fetch templates from database when modal opens
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function WhatsAppTemplatesModal({
       setCustomBody(compileTemplate(selectedTemplate));
       setErrorMessage(null);
     }
-  }, [selectedTemplate, leadName, vehicleName]);
+  }, [selectedTemplate, compileTemplate]);
 
   const handleSend = () => {
     if (!customBody.trim()) {
