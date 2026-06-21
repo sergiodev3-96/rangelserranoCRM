@@ -22,7 +22,7 @@ export default function LeadCreateModal({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [vehicleInterest, setVehicleInterest] = useState("");
-  const [source, setSource] = useState<"manual" | "referral">("manual");
+  const [source, setSource] = useState<LeadSource>("manual");
   const [assignedTo, setAssignedTo] = useState("");
   const [comerciales, setComerciales] = useState<ProfileSummary[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
