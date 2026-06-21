@@ -1,63 +1,92 @@
-import { getCurrentProfile } from "@/lib/actions/auth";
+import React, { Suspense } from "react";
+import { getLeads } from "@/lib/actions/leads";
+import LeadTable from "@/components/leads/LeadTable";
+import LeadFilters from "@/components/leads/LeadFilters";
+import LeadPagination from "@/components/leads/LeadPagination";
 
-export default async function LeadsPage() {
-  const result = await getCurrentProfile();
-  const profile = result.data;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+export default async function LeadsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const page =
+    typeof resolvedSearchParams.page === "string"
+      ? parseInt(resolvedSearchParams.page)
+      : 1;
+  const status =
+    typeof resolvedSearchParams.status === "string"
+      ? resolvedSearchParams.status
+      : null;
+  const unassigned = resolvedSearchParams.unassigned === "true";
+  const search =
+    typeof resolvedSearchParams.search === "string"
+      ? resolvedSearchParams.search
+      : "";
+
+  const pageSize = 20;
+
+  const result = await getLeads({
+    page,
+    pageSize,
+    status,
+    unassignedOnly: unassigned,
+    search,
+  });
+
+  const leads = result.success && result.data ? result.data.leads : [];
+  const total = result.success && result.data ? result.data.total : 0;
+  const error = !result.success ? result.error : null;
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
+    <div className="flex-1 flex flex-col h-full overflow-hidden p-6 space-y-6">
+      {/* Page Title */}
+      <div className="shrink-0">
         <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
           Pipeline de Leads
         </h1>
         <p className="font-body-sm text-[13px] text-text-secondary">
-          Panel de gestión comercial y seguimiento de solicitudes de financiación
+          Gestiona y asigna las solicitudes entrantes y realiza simulaciones de
+          financiación
         </p>
       </div>
 
-      <div className="glass-panel p-6 rounded-xl border border-border-default max-w-2xl glow-effect space-y-4">
-        <div className="flex items-center gap-3">
-          <span className="material-symbols-outlined text-success text-[24px]">
-            verified_user
-          </span>
-          <h2 className="font-section-subtitle text-[17px] text-text-primary">
-            ¡Autenticación de Fase 1 Verificada!
-          </h2>
-        </div>
+      {/* Filters Area */}
+      <div className="shrink-0">
+        <Suspense
+          fallback={
+            <div className="h-16 bg-surface border border-border-default rounded-xl animate-pulse" />
+          }
+        >
+          <LeadFilters />
+        </Suspense>
+      </div>
 
-        <p className="font-body-sm text-[13px] text-text-secondary leading-relaxed">
-          Has iniciado sesión correctamente. Este panel está protegido mediante
-          middleware de Next.js y requiere un perfil de usuario activo con rol de{" "}
-          <strong>
-            {profile?.role === "admin" ? "Administrador" : "Comercial"}
-          </strong>
-          .
-        </p>
-
-        <div className="bg-surface-container border border-border-subtle rounded-lg p-4 space-y-2">
-          <div className="flex justify-between text-[13px]">
-            <span className="text-text-secondary">Usuario actual:</span>
-            <span className="text-text-primary font-medium">
-              {profile?.full_name}
-            </span>
-          </div>
-          <div className="flex justify-between text-[13px]">
-            <span className="text-text-secondary">Email:</span>
-            <span className="text-text-primary font-medium">
-              {profile?.email}
-            </span>
-          </div>
-          <div className="flex justify-between text-[13px]">
-            <span className="text-text-secondary">Rol asignado:</span>
-            <span className="text-text-primary font-medium capitalize">
-              {profile?.role}
-            </span>
-          </div>
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-4 font-body-sm text-[13px] shrink-0">
+          Error al cargar los leads de la base de datos: {error}. Asegúrate de
+          haber ejecutado las migraciones SQL `0002_leads.sql` en tu panel de
+          Supabase.
         </div>
+      )}
 
-        <div className="text-[11px] font-label-xs text-text-disabled uppercase tracking-widest pt-2">
-          Listo para Fase 2 — Base de datos y Pipeline Kanban de Leads
-        </div>
+      {/* Leads Table Container */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <LeadTable leads={leads} />
+      </div>
+
+      {/* Pagination Footer */}
+      <div className="shrink-0">
+        <Suspense
+          fallback={
+            <div className="h-12 bg-surface border-t border-border-default animate-pulse" />
+          }
+        >
+          <LeadPagination totalItems={total} pageSize={pageSize} />
+        </Suspense>
       </div>
     </div>
   );
