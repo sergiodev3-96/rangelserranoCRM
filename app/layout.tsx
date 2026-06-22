@@ -38,7 +38,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} antialiased bg-bg-base text-text-primary font-body-base h-screen flex overflow-hidden`}
+        className={`${inter.variable} ${hankenGrotesk.variable} ${jetbrainsMono.variable} antialiased bg-bg-base text-text-primary font-body-base h-screen h-dvh flex overflow-hidden`}
       >
         {children}
       </body>

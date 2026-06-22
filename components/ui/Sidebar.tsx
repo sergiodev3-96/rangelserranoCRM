@@ -34,7 +34,7 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
 
   return (
     <aside 
-      className={`fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-border-default bg-surface transition-transform duration-300 ease-in-out h-screen md:sticky md:top-0 md:left-0 md:shrink-0 md:translate-x-0 ${
+      className={`fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-border-default bg-surface transition-transform duration-300 ease-in-out h-dvh md:sticky md:top-0 md:left-0 md:shrink-0 md:translate-x-0 ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >

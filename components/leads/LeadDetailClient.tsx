@@ -107,7 +107,7 @@ export default function LeadDetailClient({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-bg-base text-left">
+    <div className="flex-1 flex flex-col md:h-full md:overflow-hidden bg-bg-base text-left">
       {/* Detail Header */}
       <LeadDetailHeader
         lead={lead}

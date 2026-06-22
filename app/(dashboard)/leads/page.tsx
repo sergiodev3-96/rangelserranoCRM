@@ -69,7 +69,7 @@ export default async function LeadsPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-6 space-y-6">
+    <div className="flex-1 flex flex-col md:h-full md:overflow-hidden p-6 space-y-6">
       {/* Page Title */}
       <div className="shrink-0">
         <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">

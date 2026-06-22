@@ -17,7 +17,7 @@ export default function DashboardShell({ profile, children }: DashboardShellProp
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="flex w-screen h-screen overflow-hidden bg-bg-base text-text-primary">
+    <div className="flex w-screen h-dvh overflow-hidden bg-bg-base text-text-primary">
       {/* Sidebar Navigation */}
       <Sidebar 
         isAdmin={profile.role === "admin"} 
@@ -42,7 +42,7 @@ export default function DashboardShell({ profile, children }: DashboardShellProp
         <Header profile={profile} onToggleSidebar={toggleSidebar} />
 
         {/* Content Area */}
-        <main className="flex-1 overflow-hidden relative z-10 flex flex-col">
+        <main className="flex-1 overflow-y-auto md:overflow-hidden relative z-10 flex flex-col">
           {children}
         </main>
       </div>

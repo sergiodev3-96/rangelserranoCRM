@@ -143,7 +143,7 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden p-6 space-y-6 text-left">
+    <div className="flex-1 flex flex-col md:h-full md:overflow-hidden p-6 space-y-6 text-left">
       {/* Header Area */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shrink-0">
         <div>
