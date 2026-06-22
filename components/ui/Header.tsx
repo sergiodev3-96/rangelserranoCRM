@@ -7,9 +7,10 @@ import type { Profile } from "@/types/profiles";
 
 type HeaderProps = {
   profile: Profile;
+  onToggleSidebar?: () => void;
 };
 
-export default function Header({ profile }: HeaderProps) {
+export default function Header({ profile, onToggleSidebar }: HeaderProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -26,15 +27,26 @@ export default function Header({ profile }: HeaderProps) {
   return (
     <header className="h-[56px] border-b border-border-default bg-surface flex items-center justify-between px-6 z-30 shrink-0">
       {/* Search Input */}
-      <div className="w-[320px] relative hidden sm:block">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">
-          search
-        </span>
-        <input
-          type="text"
-          placeholder="Buscar leads por nombre..."
-          className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg pl-10 pr-4 py-1.5 font-body-sm text-[13px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
-        />
+      <div className="flex items-center gap-3">
+        {onToggleSidebar && (
+          <button
+            onClick={onToggleSidebar}
+            className="md:hidden text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="Abrir menú"
+          >
+            <span className="material-symbols-outlined text-[24px]">menu</span>
+          </button>
+        )}
+        <div className="w-[320px] relative hidden sm:block">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar leads por nombre..."
+            className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg pl-10 pr-4 py-1.5 font-body-sm text-[13px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
+          />
+        </div>
       </div>
 
       {/* User Actions */}

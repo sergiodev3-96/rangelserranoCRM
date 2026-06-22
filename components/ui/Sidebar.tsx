@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 
 type SidebarProps = {
   isAdmin: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
 };
 
-export default function Sidebar({ isAdmin }: SidebarProps) {
+export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const navItems = [
@@ -31,9 +33,13 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
   }
 
   return (
-    <aside className="hidden md:flex flex-col h-screen sticky top-0 left-0 border-r border-border-default bg-surface w-[240px] shrink-0 z-50">
+    <aside 
+      className={`fixed inset-y-0 left-0 z-50 flex w-[240px] flex-col border-r border-border-default bg-surface transition-transform duration-300 ease-in-out h-screen md:sticky md:top-0 md:left-0 md:shrink-0 md:translate-x-0 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       {/* Brand */}
-      <div className="h-[56px] flex items-center px-4 border-b border-border-default bg-surface-container">
+      <div className="h-[56px] flex items-center justify-between px-4 border-b border-border-default bg-surface-container">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
             <span className="material-symbols-outlined text-on-primary-container text-sm fill">
@@ -49,12 +55,22 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
             </span>
           </div>
         </div>
+        {onClose && (
+          <button 
+            onClick={onClose}
+            className="md:hidden text-text-secondary hover:text-text-primary p-1 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer"
+            title="Cerrar menú"
+          >
+            <span className="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        )}
       </div>
 
       {/* CTA */}
       <div className="p-4">
         <Link
           href="/simulaciones"
+          onClick={onClose}
           className="w-full bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] transition-all duration-300 rounded-lg py-2 px-4 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px]"
         >
           <span className="material-symbols-outlined text-[18px]">add</span>
@@ -71,6 +87,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onClose}
               className={`nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px] ${
                 isActive ? "active" : ""
               }`}
@@ -88,6 +105,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
       <div className="mt-auto border-t border-border-default p-3 space-y-1 bg-surface-container">
         <Link
           href="/settings"
+          onClick={onClose}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200"
         >
           <span className="material-symbols-outlined text-[20px]">
@@ -97,6 +115,7 @@ export default function Sidebar({ isAdmin }: SidebarProps) {
         </Link>
         <Link
           href="/support"
+          onClick={onClose}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200"
         >
           <span className="material-symbols-outlined text-[20px]">help</span>
