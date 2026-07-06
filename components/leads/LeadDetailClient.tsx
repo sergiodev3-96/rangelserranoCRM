@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition, useEffect } from "react";
+import React, { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { LeadWithAssignee } from "@/types/leads";
@@ -90,7 +90,7 @@ export default function LeadDetailClient({
   }, [lead]);
 
   // Load documents
-  const loadDocs = async () => {
+  const loadDocs = useCallback(async () => {
     setLoadingDocs(true);
     const res = await listLeadDocuments(lead.id);
     if (res.success && res.data) {
@@ -99,13 +99,13 @@ export default function LeadDetailClient({
       console.error("Error loading docs:", res.error);
     }
     setLoadingDocs(false);
-  };
+  }, [lead.id]);
 
   useEffect(() => {
     if (activeTab === "pedido") {
       loadDocs();
     }
-  }, [activeTab, lead.id]);
+  }, [activeTab, lead.id, loadDocs]);
 
   const handleRefresh = () => {
     router.refresh();
@@ -184,13 +184,13 @@ export default function LeadDetailClient({
       } else {
         alert(res.error || "No se pudo cargar la vista previa.");
       }
-    } catch (err) {
+    } catch {
       alert("Error al cargar la vista previa.");
     }
   };
 
   // Download handler
-  const handleDownload = async (path: string, filename: string) => {
+  const handleDownload = async (path: string) => {
     try {
       const res = await getDownloadUrl(path);
       if (res.success && res.data) {
@@ -198,7 +198,7 @@ export default function LeadDetailClient({
       } else {
         alert(res.error || "No se pudo descargar el archivo.");
       }
-    } catch (err) {
+    } catch {
       alert("Error al descargar archivo.");
     }
   };
@@ -213,7 +213,7 @@ export default function LeadDetailClient({
       } else {
         alert(res.error || "No se pudo eliminar el documento.");
       }
-    } catch (err) {
+    } catch {
       alert("Error al eliminar documento.");
     }
   };
@@ -248,7 +248,7 @@ export default function LeadDetailClient({
       } else {
         alert(res.error || "Error al actualizar los datos.");
       }
-    } catch (err) {
+    } catch {
       alert("Ocurrió un error inesperado al guardar los datos.");
     } finally {
       setIsSavingOps(false);
@@ -1056,7 +1056,7 @@ export default function LeadDetailClient({
                                     </button>
                                     <button
                                       type="button"
-                                      onClick={() => handleDownload(file.path, file.name)}
+                                      onClick={() => handleDownload(file.path)}
                                       className="w-7 h-7 rounded-lg bg-surface-container-high hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center border border-border-default hover:border-primary/20 cursor-pointer"
                                       title="Descargar"
                                     >
@@ -1211,7 +1211,7 @@ export default function LeadDetailClient({
                     La vista previa directa en el navegador no está soportada para este formato de archivo (Word/Excel).
                   </p>
                   <button
-                    onClick={() => handleDownload(previewFile.path, previewFile.name)}
+                    onClick={() => handleDownload(previewFile.path)}
                     className="mx-auto bg-primary text-inverse-on-surface hover:shadow-lg transition-all rounded-lg py-2 px-4 flex items-center justify-center gap-1.5 font-body-sm font-semibold text-[13px] cursor-pointer"
                   >
                     <span className="material-symbols-outlined text-[16px]">download</span>

@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import type { LeadWithAssignee } from "@/types/leads";
 import type { ProfileSummary } from "@/types/profiles";
 import LeadAssignDropdown from "./LeadAssignDropdown";
-import LeadStatusSelector from "./LeadStatusSelector";
 import { convertLeadToClient, archiveLead } from "@/lib/actions/leads";
 
 type LeadDetailHeaderProps = {

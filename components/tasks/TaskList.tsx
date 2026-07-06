@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { TaskWithDetails, TaskStatus, TaskPriority } from "@/types/tasks";
+import type { TaskWithDetails, TaskStatus } from "@/types/tasks";
 import type { ProfileSummary } from "@/types/profiles";
 import { updateTaskStatus, deleteTask } from "@/lib/actions/tasks";
 import TaskCreateModal from "./TaskCreateModal";
@@ -51,7 +51,7 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
   const getDueDateLabel = (task: TaskWithDetails) => {
     if (!task.due_date) return "Sin fecha";
     
-    const [year, month, day] = task.due_date.split("-").map(Number);
+    const [, month, day] = task.due_date.split("-").map(Number);
     const months = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -199,19 +199,6 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
     setSelectedTaskToEdit(null);
     setActiveModalStatus("pendiente");
     setIsModalOpen(true);
-  };
-
-  const getPriorityClass = (priority: TaskPriority) => {
-    switch (priority) {
-      case "alta":
-        return "bg-error-container/20 text-danger border-danger/25";
-      case "media":
-        return "bg-warning/10 text-warning border-warning/20";
-      case "baja":
-        return "bg-surface-container-highest text-text-secondary border-border-strong";
-      default:
-        return "bg-surface-container text-text-secondary border-border-default";
-    }
   };
 
   const getStatusDotClass = (status: TaskStatus) => {

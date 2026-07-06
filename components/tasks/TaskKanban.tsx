@@ -13,7 +13,7 @@ type TaskKanbanProps = {
   comerciales: ProfileSummary[];
 };
 
-const COLUMNS: { id: any; label: string; dotClass: string; borderClass: string }[] = [
+const COLUMNS: { id: TaskStatus; label: string; dotClass: string; borderClass: string }[] = [
   { id: "pendiente", label: "Pendiente", dotClass: "bg-warning", borderClass: "border-warning/20" },
   { id: "en_proceso", label: "En Proceso", dotClass: "bg-primary", borderClass: "border-primary/20" },
   { id: "revision", label: "Revisión", dotClass: "bg-lead-waiting-text", borderClass: "border-lead-waiting-text/20" },
