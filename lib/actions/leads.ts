@@ -7,7 +7,7 @@ import type {
   UpdateLeadStatusInput,
   AssignLeadInput,
 } from "@/lib/validations/leads";
-import { createClient } from "../supabase/server";
+import { createClient, createServiceClient } from "../supabase/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "./auth";
 
@@ -116,7 +116,7 @@ export async function createLead(
       campaign_name: input.campaign_name || null,
       vehicle_interest: input.vehicle_interest || null,
       assigned_to: input.assigned_to || "e0db4f49-4ce2-4acd-80a9-c0addd6ade21",
-      status: "cliente_potencial",
+      status: "nuevo",
       archived: false,
     };
 
@@ -433,6 +433,200 @@ export async function convertLeadToClient(
       data: null,
       error:
         err instanceof Error ? err.message : "Error al convertir lead a cliente",
+    };
+  }
+}
+
+// Actualizar datos de operación del lead
+export async function updateLeadOperationDetails(
+  leadId: string,
+  input: {
+    full_name?: string | null;
+    first_surname?: string | null;
+    second_surname?: string | null;
+    dni_nie?: string | null;
+    nationality?: string | null;
+    birth_country?: string | null;
+    vehicle_brand?: string | null;
+    vehicle_model?: string | null;
+    vehicle_year?: number | null;
+    vehicle_plate?: string | null;
+    vehicle_price?: number | null;
+    down_payment?: number | null;
+  }
+): Promise<ActionResult<Lead>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+
+    const { data, error } = await supabase
+      .from("leads")
+      .update(input)
+      .eq("id", leadId)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    // Registrar evento de actualización
+    await supabase.from("lead_events").insert({
+      lead_id: leadId,
+      author_id: user.id,
+      event_type: "note",
+      content: "Datos de operación actualizados en la ficha del lead.",
+    });
+
+    revalidatePath(`/leads/${leadId}`);
+    return { success: true, data: data as Lead, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error:
+        err instanceof Error
+          ? err.message
+          : "Error al actualizar los datos de la operación",
+    };
+  }
+}
+
+// Obtener URL firmada para subir documentos
+export async function getUploadUrl(
+  leadId: string,
+  category: string,
+  filename: string
+): Promise<ActionResult<{ signedUrl: string; path: string }>> {
+  try {
+    const supabase = createServiceClient();
+    
+    // Asegurar que existe el bucket 'documents'
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.some((b) => b.name === "documents")) {
+      await supabase.storage.createBucket("documents", {
+        public: false,
+        fileSizeLimit: 10485760, // 10MB
+      });
+    }
+
+    const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
+    const path = `leads/${leadId}/${category}/${cleanFilename}`;
+    
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUploadUrl(path);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return { success: true, data: { signedUrl: data.signedUrl, path }, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al obtener URL de subida",
+    };
+  }
+}
+
+// Obtener URL firmada de descarga
+export async function getDownloadUrl(path: string): Promise<ActionResult<string>> {
+  try {
+    const supabase = createServiceClient();
+    const { data, error } = await supabase.storage
+      .from("documents")
+      .createSignedUrl(path, 60);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return { success: true, data: data.signedUrl, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al obtener URL de descarga",
+    };
+  }
+}
+
+// Eliminar documento
+export async function deleteLeadDocument(path: string): Promise<ActionResult<void>> {
+  try {
+    const supabase = createServiceClient();
+    const { error } = await supabase.storage.from("documents").remove([path]);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return { success: true, data: undefined, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al eliminar documento",
+    };
+  }
+}
+
+// Listar documentos de un lead
+export async function listLeadDocuments(
+  leadId: string
+): Promise<
+  ActionResult<
+    Record<string, { name: string; size: number; path: string; created_at: string }[]>
+  >
+> {
+  try {
+    const supabase = createServiceClient();
+    
+    // Asegurar que existe el bucket 'documents'
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.some((b) => b.name === "documents")) {
+      await supabase.storage.createBucket("documents", {
+        public: false,
+        fileSizeLimit: 10485760, // 10MB
+      });
+    }
+
+    const categories = ["dni_nie", "dni_nie_2", "nomina", "vida_laboral", "banco", "otros"];
+    const filesMap: Record<string, { name: string; size: number; path: string; created_at: string }[]> = {};
+
+    for (const cat of categories) {
+      const { data, error } = await supabase.storage
+        .from("documents")
+        .list(`leads/${leadId}/${cat}`);
+
+      if (error) {
+        filesMap[cat] = [];
+        continue;
+      }
+
+      filesMap[cat] = (data || [])
+        .filter((f) => f.name !== ".emptyFolderPlaceholder")
+        .map((f) => ({
+          name: f.name,
+          size: f.metadata?.size || 0,
+          path: `leads/${leadId}/${cat}/${f.name}`,
+          created_at: f.created_at || "",
+        }));
+    }
+
+    return { success: true, data: filesMap, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al listar documentos",
     };
   }
 }

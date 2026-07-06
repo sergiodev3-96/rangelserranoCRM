@@ -22,13 +22,14 @@ export const createLeadSchema = z.object({
 export const updateLeadStatusSchema = z.object({
   lead_id: z.string().uuid(),
   status: z.enum([
-    "no_responde",
+    "nuevo",
     "cliente_potencial",
-    "cuarentena",
+    "esperando_docs",
     "realizando_pedido",
     "pedido",
+    "no_responde",
+    "cuarentena",
     "asnef",
-    "esperando_docs",
     "rechazado",
   ]),
 });

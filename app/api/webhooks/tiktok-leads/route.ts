@@ -89,7 +89,7 @@ export async function POST(request: Request) {
         full_name: fullName,
         phone: phone || null,
         email: email || null,
-        status: "cliente_potencial",
+        status: "nuevo",
         source: "tiktok_lead_ads",
         campaign_name: campaignName,
         vehicle_interest: vehicleInterest || null,

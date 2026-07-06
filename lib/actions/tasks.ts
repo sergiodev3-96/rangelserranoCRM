@@ -2,10 +2,11 @@
 
 import type { ActionResult } from "@/types/database";
 import type { Task, TaskWithDetails } from "@/types/tasks";
-import type { CreateTaskInput, UpdateTaskStatusInput } from "@/lib/validations/tasks";
+import type { CreateTaskInput, UpdateTaskStatusInput, UpdateTaskInput } from "@/lib/validations/tasks";
 import { createClient } from "../supabase/server";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "./auth";
+
 
 // Obtener todas las tareas
 export async function getTasks(): Promise<ActionResult<TaskWithDetails[]>> {
@@ -233,3 +234,78 @@ export async function deleteTask(taskId: string): Promise<ActionResult<void>> {
     };
   }
 }
+
+// Actualizar detalles completos de una tarea
+export async function updateTask(input: UpdateTaskInput): Promise<ActionResult<Task>> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+
+    // 1. Obtener la tarea para verificar quién es el asignado originalmente
+    const { data: currentTask } = await supabase
+      .from("tasks")
+      .select("assigned_to, lead_id, title")
+      .eq("id", input.id)
+      .single();
+
+    // 2. Verificar permisos: es Admin o es el Comercial asignado originalmente
+    const profileResult = await getCurrentProfile();
+    const isAdmin = profileResult.success && profileResult.data.role === "admin";
+    const isAssigned = currentTask && currentTask.assigned_to === user.id;
+
+    if (!isAdmin && !isAssigned) {
+      return {
+        success: false,
+        data: null,
+        error: "No tienes permiso para modificar esta tarea.",
+      };
+    }
+
+    const completed_at = input.status === "completada" ? new Date().toISOString() : null;
+
+    const { data, error } = await supabase
+      .from("tasks")
+      .update({
+        title: input.title,
+        description: input.description || null,
+        lead_id: input.lead_id || null,
+        assigned_to: input.assigned_to,
+        status: input.status,
+        priority: input.priority,
+        due_date: input.due_date || null,
+        due_time: input.due_time || null,
+        completed_at,
+      })
+      .eq("id", input.id)
+      .select()
+      .single();
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    // Registrar evento de actualización si está vinculada a un lead
+    if (data.lead_id) {
+      await supabase.from("lead_events").insert({
+        lead_id: data.lead_id,
+        author_id: user.id,
+        event_type: "note",
+        content: `Tarea modificada: "${data.title}".`,
+      });
+      revalidatePath(`/leads/${data.lead_id}`);
+    }
+
+    revalidatePath("/tareas");
+    return { success: true, data: data as Task, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al actualizar tarea",
+    };
+  }
+}
+

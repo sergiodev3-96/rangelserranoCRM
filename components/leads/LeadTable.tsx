@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LeadWithAssignee } from "@/types/leads";
 import LeadStatusBadge from "./LeadStatusBadge";
 
@@ -8,6 +11,7 @@ type LeadTableProps = {
 };
 
 export default function LeadTable({ leads }: LeadTableProps) {
+  const router = useRouter();
   if (leads.length === 0) {
     return (
       <div className="flex-1 flex flex-col justify-center items-center py-12 text-center bg-surface border border-border-default rounded-xl">
@@ -68,16 +72,14 @@ export default function LeadTable({ leads }: LeadTableProps) {
             <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
               Fecha Registro
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right">
-              Acciones
-            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border-subtle font-body-sm text-[13px]">
           {leads.map((lead) => (
             <tr
               key={lead.id}
-              className="hover:bg-surface-container-high/40 transition-colors"
+              onClick={() => router.push(`/leads/${lead.id}`)}
+              className="hover:bg-surface-container-high/40 transition-colors cursor-pointer"
             >
               {/* Lead Number */}
               <td className="px-4 py-4 font-data-mono text-text-secondary font-medium pl-6 text-[12px]">
@@ -148,19 +150,6 @@ export default function LeadTable({ leads }: LeadTableProps) {
               {/* Date */}
               <td className="px-6 py-4 text-text-secondary">
                 {formatDate(lead.created_at)}
-              </td>
-
-              {/* Actions */}
-              <td className="px-6 py-4 text-right">
-                <Link
-                  href={`/leads/${lead.id}`}
-                  className="inline-flex items-center justify-center text-primary hover:text-on-primary hover:bg-primary border border-primary/20 px-3 py-1.5 rounded-lg transition-all font-medium gap-1 text-[12px]"
-                >
-                  Ver Ficha
-                  <span className="material-symbols-outlined text-[14px]">
-                    arrow_forward
-                  </span>
-                </Link>
               </td>
             </tr>
           ))}

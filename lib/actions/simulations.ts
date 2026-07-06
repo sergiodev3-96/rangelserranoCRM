@@ -61,6 +61,37 @@ export async function getSimulationsByLeadId(
   }
 }
 
+// Obtener una simulación por ID
+export async function getSimulationById(
+  id: string
+): Promise<ActionResult<Simulation>> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+
+    const { data, error } = await supabase
+      .from("simulations")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return { success: true, data: data as Simulation, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al obtener la simulación",
+    };
+  }
+}
+
 // Guardar una simulación
 export async function createSimulation(
   input: CreateSimulationInput

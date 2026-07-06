@@ -2,11 +2,11 @@
 
 import React, { useState, useTransition, useEffect } from "react";
 import Modal from "../ui/Modal";
-import { createTask } from "@/lib/actions/tasks";
+import { createTask, updateTask } from "@/lib/actions/tasks";
 import { getActiveComerciales } from "@/lib/actions/users";
 import { getLeads } from "@/lib/actions/leads";
 import type { ProfileSummary } from "@/types/profiles";
-import type { TaskStatus, TaskPriority } from "@/types/tasks";
+import type { TaskStatus, TaskPriority, TaskWithDetails } from "@/types/tasks";
 
 type TaskCreateModalProps = {
   isOpen: boolean;
@@ -15,6 +15,7 @@ type TaskCreateModalProps = {
   initialLeadId?: string | null;
   initialStatus?: TaskStatus;
   currentUserId: string;
+  taskToEdit?: TaskWithDetails | null;
 };
 
 export default function TaskCreateModal({
@@ -24,6 +25,7 @@ export default function TaskCreateModal({
   initialLeadId = null,
   initialStatus = "pendiente",
   currentUserId,
+  taskToEdit = null,
 }: TaskCreateModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -63,18 +65,29 @@ export default function TaskCreateModal({
 
       loadData();
 
-      // Reset form fields
-      setTitle("");
-      setDescription("");
-      setLeadId(initialLeadId || "");
-      setAssignedTo(currentUserId);
-      setStatus(initialStatus);
-      setPriority("media");
-      setDueDate("");
-      setDueTime("");
+      if (taskToEdit) {
+        setTitle(taskToEdit.title);
+        setDescription(taskToEdit.description || "");
+        setLeadId(taskToEdit.lead_id || "");
+        setAssignedTo(taskToEdit.assigned_to);
+        setStatus(taskToEdit.status);
+        setPriority(taskToEdit.priority);
+        setDueDate(taskToEdit.due_date || "");
+        setDueTime(taskToEdit.due_time || "");
+      } else {
+        // Reset form fields
+        setTitle("");
+        setDescription("");
+        setLeadId(initialLeadId || "");
+        setAssignedTo(currentUserId);
+        setStatus(initialStatus);
+        setPriority("media");
+        setDueDate("");
+        setDueTime("");
+      }
       setErrorMessage(null);
     }
-  }, [isOpen, initialLeadId, initialStatus, currentUserId]);
+  }, [isOpen, initialLeadId, initialStatus, currentUserId, taskToEdit]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,28 +104,43 @@ export default function TaskCreateModal({
     }
 
     startTransition(async () => {
-      const result = await createTask({
-        title: title.trim(),
-        description: description.trim() || "",
-        lead_id: leadId || null,
-        assigned_to: assignedTo,
-        status,
-        priority,
-        due_date: dueDate || null,
-        due_time: dueTime || null,
-      });
+      let result;
+      if (taskToEdit) {
+        result = await updateTask({
+          id: taskToEdit.id,
+          title: title.trim(),
+          description: description.trim() || "",
+          lead_id: leadId || null,
+          assigned_to: assignedTo,
+          status,
+          priority,
+          due_date: dueDate || null,
+          due_time: dueTime || null,
+        });
+      } else {
+        result = await createTask({
+          title: title.trim(),
+          description: description.trim() || "",
+          lead_id: leadId || null,
+          assigned_to: assignedTo,
+          status,
+          priority,
+          due_date: dueDate || null,
+          due_time: dueTime || null,
+        });
+      }
 
       if (result.success) {
         onSuccess();
         onClose();
       } else {
-        setErrorMessage(result.error || "Ocurrió un error al crear la tarea.");
+        setErrorMessage(result.error || `Ocurrió un error al ${taskToEdit ? 'actualizar' : 'crear'} la tarea.`);
       }
     });
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Crear Nueva Tarea">
+    <Modal isOpen={isOpen} onClose={onClose} title={taskToEdit ? "Modificar Tarea" : "Crear Nueva Tarea"}>
       <form onSubmit={handleSubmit} className="space-y-4 text-left">
         {errorMessage && (
           <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-3 font-body-sm text-[13px]">
@@ -239,7 +267,6 @@ export default function TaskCreateModal({
           </div>
         </div>
 
-        {/* Acciones */}
         <div className="flex justify-end gap-3 pt-4 border-t border-border-default mt-6">
           <button
             type="button"
@@ -262,7 +289,7 @@ export default function TaskCreateModal({
             ) : (
               <>
                 <span className="material-symbols-outlined text-[16px]">save</span>
-                Guardar Tarea
+                {taskToEdit ? "Guardar Cambios" : "Guardar Tarea"}
               </>
             )}
           </button>

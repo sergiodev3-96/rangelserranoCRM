@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/actions/auth";
 import { getTasks } from "@/lib/actions/tasks";
 import { getActiveComerciales } from "@/lib/actions/users";
-import TaskKanban from "@/components/tasks/TaskKanban";
+import TaskList from "@/components/tasks/TaskList";
 
 export default async function TareasPage() {
   // 1. Obtener perfil del usuario actual y validar sesión
@@ -25,7 +25,7 @@ export default async function TareasPage() {
   const comerciales = comercialesResult.success && comercialesResult.data ? comercialesResult.data : [];
 
   return (
-    <TaskKanban
+    <TaskList
       tasks={tasks}
       currentUser={currentUser}
       comerciales={comerciales}

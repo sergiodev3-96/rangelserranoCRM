@@ -1,13 +1,14 @@
 import type { Profile } from "./profiles";
 
 export type LeadStatus =
-  | "no_responde"
+  | "nuevo"
   | "cliente_potencial"
-  | "cuarentena"
+  | "esperando_docs"
   | "realizando_pedido"
   | "pedido"
+  | "no_responde"
+  | "cuarentena"
   | "asnef"
-  | "esperando_docs"
   | "rechazado";
 
 export type LeadSource =
@@ -31,6 +32,17 @@ export type Lead = {
   archived: boolean;
   lead_number?: number;
   raw_webhook_payload: Record<string, unknown> | null;
+  first_surname?: string | null;
+  second_surname?: string | null;
+  dni_nie?: string | null;
+  nationality?: string | null;
+  birth_country?: string | null;
+  vehicle_brand?: string | null;
+  vehicle_model?: string | null;
+  vehicle_year?: number | null;
+  vehicle_plate?: string | null;
+  vehicle_price?: number | null;
+  down_payment?: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -51,12 +63,12 @@ export const LEAD_STATUS_CONFIG: Record<
     dotClass: string;
   }
 > = {
-  no_responde: {
-    label: "No responde",
-    bgClass: "bg-lead-no-reply-bg",
-    textClass: "text-lead-no-reply-text",
-    borderClass: "border-lead-no-reply-text/20",
-    dotClass: "bg-lead-no-reply-text",
+  nuevo: {
+    label: "Nuevo",
+    bgClass: "bg-primary/10",
+    textClass: "text-primary",
+    borderClass: "border-primary/20",
+    dotClass: "bg-primary",
   },
   cliente_potencial: {
     label: "Cliente potencial",
@@ -65,12 +77,12 @@ export const LEAD_STATUS_CONFIG: Record<
     borderClass: "border-lead-potential-text/20",
     dotClass: "bg-lead-potential-text",
   },
-  cuarentena: {
-    label: "Cuarentena",
-    bgClass: "bg-lead-quarantine-bg",
-    textClass: "text-lead-quarantine-text",
-    borderClass: "border-lead-quarantine-text/20",
-    dotClass: "bg-lead-quarantine-text",
+  esperando_docs: {
+    label: "Esperando docs",
+    bgClass: "bg-lead-waiting-bg",
+    textClass: "text-lead-waiting-text",
+    borderClass: "border-lead-waiting-text/20",
+    dotClass: "bg-lead-waiting-text",
   },
   realizando_pedido: {
     label: "Realizando pedido",
@@ -86,19 +98,26 @@ export const LEAD_STATUS_CONFIG: Record<
     borderClass: "border-lead-ordered-text/20",
     dotClass: "bg-lead-ordered-text",
   },
+  no_responde: {
+    label: "No responde",
+    bgClass: "bg-lead-no-reply-bg",
+    textClass: "text-lead-no-reply-text",
+    borderClass: "border-lead-no-reply-text/20",
+    dotClass: "bg-lead-no-reply-text",
+  },
+  cuarentena: {
+    label: "Cuarentena",
+    bgClass: "bg-lead-quarantine-bg",
+    textClass: "text-lead-quarantine-text",
+    borderClass: "border-lead-quarantine-text/20",
+    dotClass: "bg-lead-quarantine-text",
+  },
   asnef: {
     label: "Asnef",
     bgClass: "bg-lead-asnef-bg",
     textClass: "text-lead-asnef-text",
     borderClass: "border-lead-asnef-text/20",
     dotClass: "bg-lead-asnef-text",
-  },
-  esperando_docs: {
-    label: "Esperando docs",
-    bgClass: "bg-lead-waiting-bg",
-    textClass: "text-lead-waiting-text",
-    borderClass: "border-lead-waiting-text/20",
-    dotClass: "bg-lead-waiting-text",
   },
   rechazado: {
     label: "Rechazado",

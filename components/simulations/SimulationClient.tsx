@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { calculateAmortization } from "@/lib/finance/calculator";
 import { createSimulation } from "@/lib/actions/simulations";
 import type { CreateSimulationInput } from "@/lib/validations/simulations";
+import type { Simulation } from "@/types/simulations";
 
 type LeadSummary = {
   id: string;
@@ -14,6 +15,7 @@ type LeadSummary = {
 type SimulationClientProps = {
   leads: LeadSummary[];
   initialLeadId?: string | null;
+  initialSimulation?: Simulation | null;
 };
 
 const ENTITIES_CONFIG = [
@@ -26,21 +28,57 @@ const ENTITIES_CONFIG = [
 export default function SimulationClient({
   leads,
   initialLeadId,
+  initialSimulation,
 }: SimulationClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  // Find entity index from initialSimulation
+  const initialEntityIdx = initialSimulation
+    ? ENTITIES_CONFIG.findIndex((e) => e.name === initialSimulation.entity_name)
+    : 0;
+
+  // Compute initial insurance monthly if we have an initial simulation
+  const getInitialInsurance = () => {
+    if (!initialSimulation) return 0;
+    const price = Number(initialSimulation.vehicle_price);
+    const down = Number(initialSimulation.down_payment);
+    const tin = Number(initialSimulation.tin_rate);
+    const term = Number(initialSimulation.term_months);
+    const savedMonthly = Number(initialSimulation.monthly_payment);
+
+    const { options: initialOpts } = calculateAmortization(price, down, tin);
+    const baseOpt = initialOpts.find((o) => o.termMonths === term);
+    if (!baseOpt) return 0;
+    
+    return Math.max(0, Math.round((savedMonthly - baseOpt.monthlyPayment) * 100) / 100);
+  };
+
   // Input states
-  const [vehiclePrice, setVehiclePrice] = useState<number>(32500);
-  const [downPayment, setDownPayment] = useState<number>(6500);
-  const [entityIndex, setEntityIndex] = useState<number>(0); // Default to Santander
-  const [customTin, setCustomTin] = useState<number>(6.5);
-  const [selectedLeadId, setSelectedLeadId] = useState<string>(initialLeadId || "");
-  const [selectedTerm, setSelectedTerm] = useState<number>(84); // Default to 84 months (recommended)
+  const [vehiclePrice, setVehiclePrice] = useState<number>(
+    initialSimulation ? Number(initialSimulation.vehicle_price) : 32500
+  );
+  const [downPayment, setDownPayment] = useState<number>(
+    initialSimulation ? Number(initialSimulation.down_payment) : 6500
+  );
+  const [entityIndex, setEntityIndex] = useState<number>(
+    initialEntityIdx === -1 ? ENTITIES_CONFIG.length - 1 : initialEntityIdx
+  );
+  const [customTin, setCustomTin] = useState<number>(
+    initialSimulation ? Number(initialSimulation.tin_rate) : 6.5
+  );
+  const [selectedLeadId, setSelectedLeadId] = useState<string>(
+    initialSimulation?.lead_id || initialLeadId || ""
+  );
+  const [selectedTerm, setSelectedTerm] = useState<number>(
+    initialSimulation ? Number(initialSimulation.term_months) : 84
+  );
 
   // Feedback states
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [optionsViewMode, setOptionsViewMode] = useState<"cards" | "list">("cards");
+  const [insuranceMonthly, setInsuranceMonthly] = useState<number>(getInitialInsurance());
 
   // Sync selectedLeadId if initialLeadId changes
   useEffect(() => {
@@ -90,9 +128,9 @@ export default function SimulationClient({
         tin_rate: tinRate,
         tae_rate: taeRate,
         term_months: selectedTerm,
-        monthly_payment: selectedOption.monthlyPayment,
+        monthly_payment: selectedOption.monthlyPayment + insuranceMonthly,
         total_interest: selectedOption.totalInterest,
-        total_payable: selectedOption.totalPayable,
+        total_payable: selectedOption.totalPayable + (insuranceMonthly * selectedTerm),
         is_draft: !selectedLeadId, // If lead selected, not draft. Otherwise, draft.
       };
 
@@ -253,6 +291,24 @@ export default function SimulationClient({
                   />
                 </div>
               )}
+
+              {/* Seguro */}
+              <div className="space-y-1">
+                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                  Seguro Mensual (€)
+                </label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                    shield
+                  </span>
+                  <input
+                    type="number"
+                    value={insuranceMonthly || ""}
+                    onChange={(e) => setInsuranceMonthly(Math.max(0, parseFloat(e.target.value) || 0))}
+                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -310,103 +366,203 @@ export default function SimulationClient({
         <div className="lg:col-span-8 flex flex-col gap-4">
           <div className="flex justify-between items-end mb-2 select-none">
             <h3 className="text-[17px] font-medium text-text-primary">Opciones de Amortización</h3>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
-              <span className="text-[11px] text-text-secondary">Plazo Recomendado</span>
+            <div className="flex items-center gap-3 select-none">
+              <div className="flex items-center gap-1.5 mr-1.5">
+                <span className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
+                <span className="text-[11px] text-text-secondary">Plazo Recomendado</span>
+              </div>
+              
+              {/* View Switcher Toggle */}
+              <div className="flex bg-surface-container-high/85 p-1 rounded-lg border border-border-default select-none shrink-0 text-[13px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setOptionsViewMode("cards")}
+                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${
+                    optionsViewMode === "cards"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  Tarjetas
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOptionsViewMode("list")}
+                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${
+                    optionsViewMode === "list"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  Listado
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Options Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {options.map((opt) => {
-              const isSelected = selectedTerm === opt.termMonths;
-              
-              if (opt.isRecommended) {
-                // Highly visual highlighted optimal card
+          {/* Options Grid or List */}
+          {optionsViewMode === "cards" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {options.map((opt) => {
+                const isSelected = selectedTerm === opt.termMonths;
+                
+                if (opt.isRecommended) {
+                  // Highly visual highlighted optimal card
+                  return (
+                    <div
+                      key={opt.termMonths}
+                      onClick={() => setSelectedTerm(opt.termMonths)}
+                      className={`bg-surface-container-low border-2 rounded-xl p-5 shadow-[0_0_20px_rgba(108,99,255,0.1)] relative overflow-hidden md:scale-[1.02] z-10 cursor-pointer transition-all duration-300 ${
+                        isSelected ? "border-primary shadow-[0_0_20px_rgba(108,99,255,0.3)]" : "border-primary/40 hover:border-primary"
+                      }`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+                      <div className="absolute top-0 right-0 bg-primary text-on-primary text-[11px] px-3 py-1 rounded-bl-lg font-medium select-none">
+                        Optimal Mix
+                      </div>
+                      <div className="flex justify-between items-center mb-3 relative z-10 select-none">
+                        <div className="text-[15px] text-primary font-semibold flex items-center gap-2">
+                          <span className="material-symbols-outlined text-sm">verified</span>
+                          {opt.termMonths} Meses
+                        </div>
+                        <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container rounded-full">
+                          {opt.termMonths / 12} Años
+                        </div>
+                      </div>
+                      <div className="text-[28px] font-bold text-text-primary font-data-mono mb-4 relative z-10">
+                        {opt.monthlyPayment.toLocaleString("es-ES", {
+                          style: "currency",
+                          currency: "EUR",
+                        })}
+                        <span className="text-[15px] text-text-secondary font-body-base font-normal">/mes</span>
+                      </div>
+                      <div className="bg-surface-container-lowest rounded-lg p-3 space-y-2 relative z-10 select-none">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-text-secondary">Capital</span>
+                          <span className="font-data-mono text-text-primary">
+                            {financedCapital.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-text-secondary">Total Intereses</span>
+                          <span className="font-data-mono text-danger">
+                            {opt.totalInterest.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          </span>
+                        </div>
+                        <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
+                          <span className="text-text-primary">Total a Pagar</span>
+                          <span className="font-data-mono text-text-primary">
+                            {opt.totalPayable.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Standard card
                 return (
                   <div
                     key={opt.termMonths}
                     onClick={() => setSelectedTerm(opt.termMonths)}
-                    className={`bg-surface-container-low border-2 rounded-xl p-5 shadow-[0_0_20px_rgba(108,99,255,0.1)] relative overflow-hidden md:scale-[1.02] z-10 cursor-pointer transition-all duration-300 ${
-                      isSelected ? "border-primary shadow-[0_0_20px_rgba(108,99,255,0.3)]" : "border-primary/40 hover:border-primary"
+                    className={`bg-surface-container border rounded-xl p-4 transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-primary ring-1 ring-primary bg-surface-container-high"
+                        : "border-border-default hover:border-strong"
                     }`}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
-                    <div className="absolute top-0 right-0 bg-primary text-on-primary text-[11px] px-3 py-1 rounded-bl-lg font-medium select-none">
-                      Optimal Mix
-                    </div>
-                    <div className="flex justify-between items-center mb-3 relative z-10 select-none">
-                      <div className="text-[15px] text-primary font-semibold flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sm">verified</span>
-                        {opt.termMonths} Meses
-                      </div>
-                      <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container rounded-full">
+                    <div className="flex justify-between items-center mb-3 select-none">
+                      <div className="text-[15px] text-text-primary font-medium">{opt.termMonths} Meses</div>
+                      <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">
                         {opt.termMonths / 12} Años
                       </div>
                     </div>
-                    <div className="text-[28px] font-bold text-text-primary font-data-mono mb-4 relative z-10">
+                    <div className="text-[24px] font-bold text-text-primary font-data-mono mb-3">
                       {opt.monthlyPayment.toLocaleString("es-ES", {
                         style: "currency",
                         currency: "EUR",
                       })}
-                      <span className="text-[15px] text-text-secondary font-body-base font-normal">/mes</span>
+                      <span className="text-[13px] text-text-secondary font-body-base font-normal">/mes</span>
                     </div>
-                    <div className="bg-surface-container-lowest rounded-lg p-3 space-y-2 relative z-10 select-none">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Capital</span>
-                        <span className="font-data-mono text-text-primary">
-                          {financedCapital.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Total Intereses</span>
-                        <span className="font-data-mono text-danger">
-                          {opt.totalInterest.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
-                      <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
-                        <span className="text-text-primary">Total a Pagar</span>
-                        <span className="font-data-mono text-text-primary">
-                          {opt.totalPayable.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
+                    <div className="flex justify-between text-xs font-data-mono text-text-tertiary select-none">
+                      <span>Int: {opt.totalInterest.toLocaleString("es-ES")} €</span>
+                      <span>Total: {opt.totalPayable.toLocaleString("es-ES")} €</span>
                     </div>
                   </div>
                 );
-              }
+              })}
+            </div>
+          ) : (
+            // List/Table View
+            <div className="overflow-x-auto bg-surface border border-border-default rounded-xl p-4">
+              <table className="w-full text-left text-[12px] border-collapse min-w-[500px]">
+                <thead>
+                  <tr className="border-b border-border-default/60 text-text-secondary select-none">
+                    <th className="py-2.5 px-2 font-semibold">Plazo</th>
+                    <th className="py-2.5 px-2 font-semibold">Cuota Mensual</th>
+                    <th className="py-2.5 px-2 font-semibold">Seguro</th>
+                    <th className="py-2.5 px-2 font-semibold">Cuota Total</th>
+                    <th className="py-2.5 px-2 text-right font-semibold">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {options.map((opt) => {
+                    const isSelected = selectedTerm === opt.termMonths;
+                    const totalPaymentWithInsurance = opt.monthlyPayment + insuranceMonthly;
 
-              // Standard card
-              return (
-                <div
-                  key={opt.termMonths}
-                  onClick={() => setSelectedTerm(opt.termMonths)}
-                  className={`bg-surface-container border rounded-xl p-4 transition-all cursor-pointer ${
-                    isSelected
-                      ? "border-primary ring-1 ring-primary bg-surface-container-high"
-                      : "border-border-default hover:border-border-strong"
-                  }`}
-                >
-                  <div className="flex justify-between items-center mb-3 select-none">
-                    <div className="text-[15px] text-text-primary font-medium">{opt.termMonths} Meses</div>
-                    <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">
-                      {opt.termMonths / 12} Años
-                    </div>
-                  </div>
-                  <div className="text-[24px] font-bold text-text-primary font-data-mono mb-3">
-                    {opt.monthlyPayment.toLocaleString("es-ES", {
-                      style: "currency",
-                      currency: "EUR",
-                    })}
-                    <span className="text-[13px] text-text-secondary font-body-base font-normal">/mes</span>
-                  </div>
-                  <div className="flex justify-between text-xs font-data-mono text-text-tertiary select-none">
-                    <span>Int: {opt.totalInterest.toLocaleString("es-ES")} €</span>
-                    <span>Total: {opt.totalPayable.toLocaleString("es-ES")} €</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                    return (
+                      <tr
+                        key={opt.termMonths}
+                        onClick={() => setSelectedTerm(opt.termMonths)}
+                        className={`border-b border-border-default/30 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-primary/10 hover:bg-primary/15 font-semibold text-primary"
+                            : "hover:bg-surface-container-high/40 text-text-secondary"
+                        }`}
+                      >
+                        <td className="py-3 px-2 flex items-center gap-2">
+                          {opt.isRecommended && (
+                            <span className="material-symbols-outlined text-[15px] text-primary" title="Plazo recomendado">
+                              verified
+                            </span>
+                          )}
+                          <span className={isSelected ? "text-primary font-bold" : "text-text-primary"}>
+                            {opt.termMonths} Meses ({opt.termMonths / 12} Años)
+                          </span>
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
+                            {opt.monthlyPayment.toLocaleString("es-ES", {
+                              style: "currency",
+                              currency: "EUR",
+                            })}
+                          </span>
+                          <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
+                        </td>
+                        <td className="py-3 px-2 font-data-mono text-text-secondary">
+                          {insuranceMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}/mes
+                        </td>
+                        <td className="py-3 px-2">
+                          <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
+                            {totalPaymentWithInsurance.toLocaleString("es-ES", {
+                              style: "currency",
+                              currency: "EUR",
+                            })}
+                          </span>
+                          <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <div className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-current">
+                            {isSelected && <span className="w-2.5 h-2.5 bg-current rounded-full" />}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Action Alert Message */}
           {errorMsg && (

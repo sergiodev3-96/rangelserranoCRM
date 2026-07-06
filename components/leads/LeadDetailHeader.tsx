@@ -111,13 +111,7 @@ export default function LeadDetailHeader({
           onSuccess={onRefresh}
         />
 
-        {/* Status */}
-        <LeadStatusSelector
-          leadId={lead.id}
-          currentStatus={lead.status}
-          disabled={!canEdit}
-          onSuccess={onRefresh}
-        />
+
 
         {/* Convert CTA */}
         {lead.status !== "pedido" && (

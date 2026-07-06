@@ -1,7 +1,7 @@
 import type { Profile } from "./profiles";
 import type { Lead } from "./leads";
 
-export type TaskStatus = "pendiente" | "en_proceso" | "revision" | "completada";
+export type TaskStatus = "pendiente" | "completada";
 export type TaskPriority = "baja" | "media" | "alta";
 
 export type Task = {
