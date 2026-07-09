@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import LeadCreateModal from "./LeadCreateModal";
+import TikTokConfigModal from "./TikTokConfigModal";
 import type { LeadStatus } from "@/types/leads";
 import { LEAD_STATUS_CONFIG } from "@/types/leads";
 
@@ -18,11 +19,29 @@ export default function LeadFilters() {
   // Local input state for search input to prevent lag
   const [searchInput, setSearchInput] = useState(currentSearch);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTikTokModalOpen, setIsTikTokModalOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Sync input value with URL when url changes
   useEffect(() => {
     setSearchInput(currentSearch);
   }, [currentSearch]);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      startTransition(() => {
+        router.refresh();
+      });
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [router]);
+
+  const handleManualRefresh = () => {
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
   const updateFilters = (updates: {
     search?: string;
@@ -123,7 +142,26 @@ export default function LeadFilters() {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center">
+      <div className="flex flex-col sm:flex-row items-center gap-3">
+        <button
+          onClick={handleManualRefresh}
+          disabled={isPending}
+          className="w-full sm:w-auto bg-surface hover:bg-bg-input text-text-primary border border-border-default transition-all duration-300 rounded-lg py-2 px-3.5 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer disabled:opacity-50"
+          title="Actualizar listado"
+        >
+          <span className={`material-symbols-outlined text-[18px] ${isPending ? "animate-spin" : ""}`}>
+            refresh
+          </span>
+        </button>
+
+        <button
+          onClick={() => setIsTikTokModalOpen(true)}
+          className="w-full sm:w-auto bg-surface hover:bg-bg-input text-text-primary border border-border-default transition-all duration-300 rounded-lg py-2 px-4 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">campaign</span>
+          Configurar TikTok
+        </button>
+
         <button
           onClick={() => setIsModalOpen(true)}
           className="w-full sm:w-auto bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] transition-all duration-300 rounded-lg py-2 px-4 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer"
@@ -140,6 +178,11 @@ export default function LeadFilters() {
           // Refresca la ruta actual del servidor para mostrar el nuevo lead
           router.refresh();
         }}
+      />
+
+      <TikTokConfigModal 
+        isOpen={isTikTokModalOpen}
+        onClose={() => setIsTikTokModalOpen(false)}
       />
     </div>
   );
