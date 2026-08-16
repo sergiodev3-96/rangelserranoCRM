@@ -399,6 +399,7 @@ export default function SimulationClient({
               {options.map((opt) => {
                 const isSelected = selectedTerm === opt.termMonths;
                 const { isRecommended } = opt;
+                const totalMonthly = opt.monthlyPayment + insuranceMonthly;
 
                 return (
                   <div
@@ -427,7 +428,7 @@ export default function SimulationClient({
                       </div>
 
                       <div className="text-[26px] font-bold text-text-primary font-data-mono mb-4">
-                        {opt.monthlyPayment.toLocaleString("es-ES", {
+                        {totalMonthly.toLocaleString("es-ES", {
                           style: "currency",
                           currency: "EUR",
                         })}
@@ -437,21 +438,21 @@ export default function SimulationClient({
 
                     <div className="bg-surface-container-lowest rounded-lg p-3 space-y-2 select-none mt-auto">
                       <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Capital</span>
+                        <span className="text-text-secondary">Cuota mensual</span>
                         <span className="font-data-mono text-text-primary">
-                          {financedCapital.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          {opt.monthlyPayment.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Total Intereses</span>
-                        <span className="font-data-mono text-danger">
-                          {opt.totalInterest.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                        <span className="text-text-secondary">Seguro de vida</span>
+                        <span className="font-data-mono text-text-primary">
+                          {insuranceMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                         </span>
                       </div>
                       <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
-                        <span className="text-text-primary">Total a Pagar</span>
-                        <span className="font-data-mono text-text-primary">
-                          {opt.totalPayable.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                        <span className="text-text-primary font-semibold">Cuota + Seguro</span>
+                        <span className="font-data-mono text-primary font-bold">
+                          {totalMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                         </span>
                       </div>
                     </div>

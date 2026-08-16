@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Order, OrderStatus } from "@/types/orders";
 import { ORDER_STATUS_CONFIG } from "@/types/orders";
@@ -152,7 +153,12 @@ export default function OrdersListClient({
               return (
                 <tr
                   key={order.id}
-                  className="hover:bg-surface-container-high/40 transition-colors"
+                  onClick={() => {
+                    if (order.lead_id) {
+                      router.push(`/leads/${order.lead_id}`);
+                    }
+                  }}
+                  className="hover:bg-surface-container-high/40 transition-colors cursor-pointer"
                 >
                   {/* Client Initials & Name */}
                   <td className="px-6 py-4">
@@ -160,9 +166,13 @@ export default function OrdersListClient({
                       <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[12px] font-bold select-none shrink-0">
                         {getInitials(order.client_name)}
                       </div>
-                      <span className="font-semibold text-text-primary font-body-md block">
+                      <Link
+                        href={order.lead_id ? `/leads/${order.lead_id}` : "#"}
+                        onClick={(e) => e.stopPropagation()}
+                        className="font-semibold text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
+                      >
                         {order.client_name}
-                      </span>
+                      </Link>
                     </div>
                   </td>
 
@@ -187,7 +197,7 @@ export default function OrdersListClient({
                   </td>
 
                   {/* Status Dropdown/Badge */}
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                     {isAdmin ? (
                       <select
                         value={order.status}
