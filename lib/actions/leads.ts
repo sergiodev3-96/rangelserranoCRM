@@ -631,3 +631,62 @@ export async function listLeadDocuments(
     };
   }
 }
+
+// Eliminar un lead permanentemente
+export async function deleteLead(leadId: string): Promise<ActionResult<void>> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success) {
+      return { success: false, data: null, error: "No se pudo verificar el perfil del usuario" };
+    }
+
+    // Usamos el cliente con privilegios de servicio para eliminar el lead y sus relaciones
+    const serviceClient = createServiceClient();
+
+    // Si no es admin, verificar que el lead esté asignado al usuario
+    if (profileResult.data.role !== "admin") {
+      const { data: lead } = await supabase
+        .from("leads")
+        .select("id, assigned_to")
+        .eq("id", leadId)
+        .single();
+
+      if (!lead || lead.assigned_to !== user.id) {
+        return {
+          success: false,
+          data: null,
+          error: "No tienes permiso para eliminar este lead.",
+        };
+      }
+    }
+
+    const { error } = await serviceClient
+      .from("leads")
+      .delete()
+      .eq("id", leadId);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    revalidatePath("/leads");
+    revalidatePath("/dashboard");
+    revalidatePath("/tareas");
+    revalidatePath("/pedidos");
+    return { success: true, data: undefined, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al eliminar lead",
+    };
+  }
+}

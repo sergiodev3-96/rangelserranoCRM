@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LeadWithAssignee } from "@/types/leads";
 import LeadStatusBadge from "./LeadStatusBadge";
+import { deleteLead } from "@/lib/actions/leads";
 
 type LeadTableProps = {
   leads: LeadWithAssignee[];
@@ -12,6 +13,8 @@ type LeadTableProps = {
 
 export default function LeadTable({ leads }: LeadTableProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
   if (leads.length === 0) {
     return (
       <div className="flex-1 flex flex-col justify-center items-center py-12 text-center bg-surface border border-border-default rounded-xl">
@@ -43,6 +46,21 @@ export default function LeadTable({ leads }: LeadTableProps) {
     });
   };
 
+  const handleDeleteLead = (id: string, name: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente el lead "${name}"?\n\nEsta acción borrará todos sus datos asociados y no se puede deshacer.`)) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await deleteLead(id);
+      if (result.success) {
+        router.refresh();
+      } else {
+        alert(result.error || "No se pudo eliminar el lead.");
+      }
+    });
+  };
+
   return (
     <div className="w-full overflow-x-auto border border-border-default rounded-xl bg-surface">
       <table className="w-full border-collapse text-left">
@@ -71,6 +89,9 @@ export default function LeadTable({ leads }: LeadTableProps) {
             </th>
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Fecha Registro
+            </th>
+            <th className="py-3.5 pr-4 pl-1 text-right w-[44px]">
+              <span className="sr-only">Acciones</span>
             </th>
           </tr>
         </thead>
@@ -154,6 +175,18 @@ export default function LeadTable({ leads }: LeadTableProps) {
               {/* Date */}
               <td className="px-6 py-4 text-text-secondary text-[13px] font-data-mono">
                 {formatDate(lead.created_at)}
+              </td>
+
+              {/* Actions: Borrar Lead */}
+              <td className="py-4 pr-4 pl-1 text-right w-[44px]" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => handleDeleteLead(lead.id, lead.full_name)}
+                  disabled={isPending}
+                  className="text-text-secondary hover:text-danger rounded-lg p-1.5 hover:bg-surface-container-high transition-all inline-flex items-center justify-center cursor-pointer disabled:opacity-50"
+                  title={`Eliminar lead ${lead.full_name}`}
+                >
+                  <span className="material-symbols-outlined text-[19px]">delete</span>
+                </button>
               </td>
             </tr>
           ))}
