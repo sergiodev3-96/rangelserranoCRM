@@ -428,7 +428,7 @@ export default function SimulationClient({
                       </div>
 
                       <div className="text-[26px] font-bold text-text-primary font-data-mono mb-4">
-                        {totalMonthly.toLocaleString("es-ES", {
+                        {opt.monthlyPayment.toLocaleString("es-ES", {
                           style: "currency",
                           currency: "EUR",
                         })}

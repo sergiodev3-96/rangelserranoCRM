@@ -245,7 +245,7 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
                       {/* Header row (Priority & Actions) */}
                       <div className="flex justify-between items-start mb-2 pl-2">
                         <span
-                          className={`text-[10px] font-medium px-2 py-0.5 rounded-md border uppercase select-none ${getPriorityClass(
+                          className={`text-[11px] font-bold px-2.5 py-0.5 rounded-md border uppercase select-none ${getPriorityClass(
                             task.priority
                           )}`}
                         >
@@ -255,24 +255,24 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
                         {canManage && (
                           <button
                             onClick={(e) => handleDeleteTask(task.id, e)}
-                            className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-danger rounded p-0.5 hover:bg-surface-container-high transition-all flex items-center justify-center cursor-pointer"
+                            className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-danger rounded p-1 hover:bg-surface-container-high transition-all flex items-center justify-center cursor-pointer"
                             title="Eliminar tarea"
                           >
-                            <span className="material-symbols-outlined text-[15px]">delete</span>
+                            <span className="material-symbols-outlined text-[17px]">delete</span>
                           </button>
                         )}
                       </div>
 
                       {/* Title */}
-                      <h4 className="text-[13px] text-text-primary font-medium mb-2 pl-2 leading-snug">
+                      <h4 className="text-[15px] text-text-primary font-semibold mb-2 pl-2 leading-snug">
                         {task.title}
                       </h4>
 
                       {/* Associated Lead */}
                       {task.lead && (
                         <div className="flex items-center gap-1.5 mb-3 pl-2 select-none">
-                          <span className="material-symbols-outlined text-text-secondary text-[14px]">person</span>
-                          <span className="text-[11px] text-primary font-medium truncate">
+                          <span className="material-symbols-outlined text-text-secondary text-[16px]">person</span>
+                          <span className="text-[13px] text-primary font-semibold truncate">
                             {task.lead.full_name}
                           </span>
                         </div>
@@ -281,17 +281,17 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
                       {/* Footer Row (Due date & Assignee initials) */}
                       <div className="flex justify-between items-center pt-3 border-t border-border-subtle ml-2 select-none">
                         <div
-                          className={`flex items-center gap-1 text-[11px] font-medium ${
+                          className={`flex items-center gap-1.5 text-[12px] font-medium ${
                             taskOverdue ? "text-danger" : "text-text-secondary"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[13px]">schedule</span>
+                          <span className="material-symbols-outlined text-[15px]">schedule</span>
                           <span>{getDueDateLabel(task)}</span>
                         </div>
 
                         {task.assignee && (
                           <div
-                            className="w-5 h-5 rounded-full bg-border-strong flex items-center justify-center text-[10px] font-bold text-text-primary border border-border-default"
+                            className="w-6 h-6 rounded-full bg-border-strong flex items-center justify-center text-[11px] font-bold text-text-primary border border-border-default"
                             title={`Asignado a: ${task.assignee.full_name}`}
                           >
                             {task.assignee.full_name.charAt(0).toUpperCase()}

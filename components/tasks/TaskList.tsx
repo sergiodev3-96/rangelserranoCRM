@@ -284,30 +284,30 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-border-default bg-surface-container-low select-none">
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider pl-6">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider pl-6">
                   Tarea / Descripción
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider w-[180px]">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider w-[190px]">
                   Estado
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                   Cliente Asoc.
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider w-[225px]">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider w-[235px]">
                   Vencimiento
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                   Asignado A
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider w-[150px]">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider w-[160px]">
                   Creada el
                 </th>
-                <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right pr-6 w-[80px]">
+                <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider text-right pr-6 w-[80px]">
                   Acciones
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-subtle font-body-sm text-[13px]">
+            <tbody className="divide-y divide-border-subtle font-body-sm text-[14px]">
               {sortedTasks.map((task) => {
                 const taskOverdue = isOverdue(task);
                 const isTaskOwner = task.assigned_to === currentUser.id;
@@ -321,11 +321,11 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                   >
                     {/* Title & Description */}
                     <td className="px-6 py-4 pl-6 max-w-xs md:max-w-sm">
-                      <div className="font-medium text-text-primary font-body-md leading-snug">
+                      <div className="font-semibold text-text-primary text-[15px] leading-snug">
                         {task.title}
                       </div>
                       {task.description && (
-                        <p className="text-[11px] text-text-secondary mt-0.5 line-clamp-2">
+                        <p className="text-[13px] text-text-secondary mt-1 line-clamp-2">
                           {task.description}
                         </p>
                       )}
@@ -335,11 +335,11 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       {canManage ? (
                         <div className="flex items-center gap-1.5 relative">
-                          <div className={`w-2 h-2 rounded-full absolute left-2.5 ${getStatusDotClass(task.status)} pointer-events-none`}></div>
+                          <div className={`w-2.5 h-2.5 rounded-full absolute left-2.5 ${getStatusDotClass(task.status)} pointer-events-none`}></div>
                           <select
                             value={task.status}
                             onChange={(e) => handleStatusChange(task.id, task.assigned_to, e.target.value as TaskStatus)}
-                            className="bg-bg-input text-text-primary border border-border-default rounded-lg pl-6 pr-8 py-1 font-body-sm text-[12px] focus:outline-none focus:border-primary cursor-pointer w-full appearance-none select-none bg-[image:var(--select-arrow)]"
+                            className="bg-bg-input text-text-primary border border-border-default rounded-lg pl-7 pr-8 py-1.5 font-body-sm text-[13px] font-medium focus:outline-none focus:border-primary cursor-pointer w-full appearance-none select-none bg-[image:var(--select-arrow)]"
                             style={{
                               backgroundImage: `url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%239CA3AF'%3E%3Cpath d='M7 10l5 5 5-5H7z'/%3E%3C/svg%3E")`,
                               backgroundPosition: 'right 8px center',
@@ -359,8 +359,8 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                           task.status === "pendiente" ? "bg-warning/10 text-warning border-warning/20" :
                           "bg-success/10 text-success border-success/20"
                         }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${getStatusDotClass(task.status)}`}></div>
-                          <span>{STATUS_OPTIONS.find(o => o.id === task.status)?.label || task.status}</span>
+                          <div className={`w-2 h-2 rounded-full ${getStatusDotClass(task.status)}`}></div>
+                          <span className="text-[12px]">{STATUS_OPTIONS.find(o => o.id === task.status)?.label || task.status}</span>
                         </Badge>
                       )}
                     </td>
@@ -371,9 +371,9 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                         <Link
                           href={`/leads/${task.lead.id}`}
                           onClick={(e) => e.stopPropagation()}
-                          className="font-medium text-primary hover:underline hover:text-opacity-80 transition-colors inline-flex items-center gap-1"
+                          className="font-semibold text-primary hover:underline hover:text-opacity-80 transition-colors inline-flex items-center gap-1.5 text-[14px]"
                         >
-                          <span className="material-symbols-outlined text-[14px]">person</span>
+                          <span className="material-symbols-outlined text-[16px]">person</span>
                           {task.lead.full_name}
                         </Link>
                       ) : (
@@ -385,7 +385,7 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                     <td className="px-6 py-4">
                       <div className="flex flex-col space-y-0.5">
                         <div
-                          className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${
+                          className={`inline-flex items-center gap-1.5 text-[13px] font-semibold ${
                             task.status === "completada"
                               ? "text-success"
                               : taskOverdue
@@ -393,13 +393,13 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                                 : "text-warning"
                           }`}
                         >
-                          <span className="material-symbols-outlined text-[14px]">schedule</span>
+                          <span className="material-symbols-outlined text-[16px]">schedule</span>
                           <span>{getDueDateLabel(task)}</span>
                         </div>
                         {getRemainingTime(task) && (
                           <div
-                            className={`text-[10px] font-medium pl-5 leading-tight ${
-                              taskOverdue ? "text-danger/80 animate-pulse" : "text-warning/80"
+                            className={`text-[12px] font-medium pl-5.5 leading-tight ${
+                              taskOverdue ? "text-danger/90 animate-pulse" : "text-warning/90"
                             }`}
                           >
                             {getRemainingTime(task)}
@@ -412,10 +412,10 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                     <td className="px-6 py-4">
                       {task.assignee ? (
                         <div className="flex items-center gap-2" title={task.assignee.full_name}>
-                          <div className="w-5 h-5 rounded-full bg-border-strong flex items-center justify-center text-[10px] font-bold text-text-primary select-none">
+                          <div className="w-6 h-6 rounded-full bg-border-strong flex items-center justify-center text-[11px] font-bold text-text-primary select-none">
                             {task.assignee.full_name.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-text-primary truncate max-w-[120px]">
+                          <span className="text-text-primary font-medium text-[14px] truncate max-w-[130px]">
                             {task.assignee.full_name}
                           </span>
                         </div>
@@ -425,7 +425,7 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                     </td>
 
                     {/* Created At */}
-                    <td className="px-6 py-4 text-text-secondary text-[12px]">
+                    <td className="px-6 py-4 text-text-secondary text-[13px] font-data-mono">
                       {formatDateTime(task.created_at)}
                     </td>
 
@@ -437,10 +437,10 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                           className="text-text-secondary hover:text-danger rounded p-1 hover:bg-surface-container-high transition-all flex items-center justify-center cursor-pointer ml-auto"
                           title="Eliminar tarea"
                         >
-                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                          <span className="material-symbols-outlined text-[20px]">delete</span>
                         </button>
                       ) : (
-                        <span className="text-text-disabled text-[12px]">—</span>
+                        <span className="text-text-disabled text-[13px]">—</span>
                       )}
                     </td>
                   </tr>

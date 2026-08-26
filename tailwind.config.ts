@@ -28,7 +28,7 @@ const config: Config = {
         "lead-waiting-bg": "#1E1128",
         "on-error-container": "#ffdad6",
         "on-tertiary-fixed": "#301400",
-        "text-primary": "#F0F2FF",
+        "text-primary": "#ECECEC",
         "on-background": "#e4e1ee",
         "on-secondary-container": "#005669",
         "lead-no-reply-bg": "#2D1D00",

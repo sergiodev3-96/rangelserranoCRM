@@ -123,30 +123,30 @@ export default function OrdersListClient({
         <table className="w-full border-collapse text-left min-w-[900px]">
           <thead>
             <tr className="border-b border-border-default bg-surface-container-low select-none">
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Nombre Cliente
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Vehículo
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Precio
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Banco
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Cuota Mensual
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
                 Estado Pedido
               </th>
-              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right">
+              <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider text-right">
                 Fecha Registro/Cierre
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-border-subtle font-body-sm text-[13px]">
+          <tbody className="divide-y divide-border-subtle font-body-sm text-[14px]">
             {filteredOrders.map((order) => {
               const config = ORDER_STATUS_CONFIG[order.status];
               
@@ -163,13 +163,13 @@ export default function OrdersListClient({
                   {/* Client Initials & Name */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[12px] font-bold select-none shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-surface-container-highest flex items-center justify-center text-text-secondary text-[13px] font-bold select-none shrink-0">
                         {getInitials(order.client_name)}
                       </div>
                       <Link
                         href={order.lead_id ? `/leads/${order.lead_id}` : "#"}
                         onClick={(e) => e.stopPropagation()}
-                        className="font-semibold text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
+                        className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
                       >
                         {order.client_name}
                       </Link>
@@ -177,23 +177,31 @@ export default function OrdersListClient({
                   </td>
 
                   {/* Vehicle */}
-                  <td className="px-6 py-4 text-text-secondary">
-                    {order.vehicle || <span className="text-text-disabled italic">No especificado</span>}
+                  <td className="px-6 py-4 text-text-primary font-semibold text-[15px]">
+                    {order.vehicle ? (
+                      <span className="text-primary font-bold">{order.vehicle}</span>
+                    ) : (
+                      <span className="text-text-disabled italic font-normal">No especificado</span>
+                    )}
                   </td>
 
                   {/* Price */}
-                  <td className="px-6 py-4 text-text-primary font-data-mono font-medium">
-                    {order.price ? `${order.price.toLocaleString()} €` : <span className="text-text-disabled">—</span>}
+                  <td className="px-6 py-4 text-text-primary font-data-mono font-bold text-[15px]">
+                    {order.price ? `${order.price.toLocaleString()} €` : <span className="text-text-disabled font-normal">—</span>}
                   </td>
 
                   {/* Bank Entity */}
-                  <td className="px-6 py-4 text-text-primary font-medium">
+                  <td className="px-6 py-4 text-text-primary font-medium text-[14px]">
                     {order.bank_entity || <span className="text-text-disabled">—</span>}
                   </td>
 
                   {/* Monthly Payment */}
-                  <td className="px-6 py-4 text-text-secondary font-data-mono font-medium">
-                    {order.monthly_payment ? `${order.monthly_payment.toLocaleString()} €/mes` : <span className="text-text-disabled">—</span>}
+                  <td className="px-6 py-4 text-text-primary font-data-mono font-bold text-[15px]">
+                    {order.monthly_payment ? (
+                      <span className="text-primary">{order.monthly_payment.toLocaleString()} €/mes</span>
+                    ) : (
+                      <span className="text-text-disabled font-normal">—</span>
+                    )}
                   </td>
 
                   {/* Status Dropdown/Badge */}
@@ -203,7 +211,7 @@ export default function OrdersListClient({
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value as OrderStatus)}
                         disabled={isPending}
-                        className={`inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary ${config.bgClass} ${config.textClass} ${config.borderClass}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-lg text-[12px] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary ${config.bgClass} ${config.textClass} ${config.borderClass}`}
                       >
                         <option value="en_revision">En revisión</option>
                         <option value="aprobado">Aprobado</option>
@@ -211,7 +219,7 @@ export default function OrdersListClient({
                       </select>
                     ) : (
                       <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border select-none ${config.bgClass} ${config.textClass} ${config.borderClass}`}
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-[12px] font-bold border select-none ${config.bgClass} ${config.textClass} ${config.borderClass}`}
                       >
                         {config.label}
                       </span>
@@ -219,7 +227,7 @@ export default function OrdersListClient({
                   </td>
 
                   {/* Date */}
-                  <td className="px-6 py-4 text-right text-text-secondary font-data-mono">
+                  <td className="px-6 py-4 text-right text-text-secondary font-data-mono text-[13px]">
                     {order.closed_at
                       ? new Date(order.closed_at).toLocaleDateString("es-ES")
                       : new Date(order.created_at).toLocaleDateString("es-ES")}

@@ -48,33 +48,33 @@ export default function LeadTable({ leads }: LeadTableProps) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-border-default bg-surface-container-low select-none">
-            <th className="px-4 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider pl-6 w-[80px]">
+            <th className="px-4 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider pl-6 w-[90px]">
               Nº
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Nombre Cliente
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Estado Solicitud
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Teléfono
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Interés Vehículo
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Origen (Canal)
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Asignado A
             </th>
-            <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Fecha Registro
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-border-subtle font-body-sm text-[13px]">
+        <tbody className="divide-y divide-border-subtle font-body-sm text-[14px]">
           {leads.map((lead) => (
             <tr
               key={lead.id}
@@ -82,7 +82,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
               className="hover:bg-surface-container-high/40 transition-colors cursor-pointer"
             >
               {/* Lead Number */}
-              <td className="px-4 py-4 font-data-mono text-text-secondary font-medium pl-6 text-[12px]">
+              <td className="px-4 py-4 font-data-mono text-text-secondary font-bold pl-6 text-[13px]">
                 #{lead.lead_number || "—"}
               </td>
 
@@ -90,12 +90,12 @@ export default function LeadTable({ leads }: LeadTableProps) {
               <td className="px-6 py-4">
                 <Link
                   href={`/leads/${lead.id}`}
-                  className="font-medium text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
+                  className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
                 >
                   {lead.full_name}
                 </Link>
                 {lead.email && (
-                  <span className="text-[11px] text-text-secondary block">
+                  <span className="text-[12px] text-text-secondary block mt-0.5">
                     {lead.email}
                   </span>
                 )}
@@ -107,48 +107,52 @@ export default function LeadTable({ leads }: LeadTableProps) {
               </td>
 
               {/* Phone */}
-              <td className="px-6 py-4 text-text-primary">
-                {lead.phone || <span className="text-text-disabled">—</span>}
+              <td className="px-6 py-4 text-text-primary font-bold text-[15px] tracking-wide font-data-mono">
+                {lead.phone || <span className="text-text-disabled font-normal">—</span>}
               </td>
 
               {/* Vehicle */}
-              <td className="px-6 py-4 text-text-primary font-medium">
-                {lead.vehicle_interest || (
+              <td className="px-6 py-4 text-text-primary font-semibold text-[15px]">
+                {lead.vehicle_interest ? (
+                  <span className="text-primary font-bold">
+                    {lead.vehicle_interest}
+                  </span>
+                ) : (
                   <span className="text-text-disabled font-normal">—</span>
                 )}
               </td>
 
               {/* Source */}
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 text-[14px]">
                 <span className="text-text-secondary">
                   {formatSource(lead.source)}
                 </span>
                 {lead.campaign_name && (
-                  <span className="text-[10px] text-primary block">
+                  <span className="text-[12px] text-primary font-medium block mt-0.5">
                     {lead.campaign_name}
                   </span>
                 )}
               </td>
 
               {/* Assigned To */}
-              <td className="px-6 py-4 text-text-primary">
+              <td className="px-6 py-4 text-text-primary text-[14px]">
                 {lead.assignee ? (
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-border-strong flex items-center justify-center text-[10px] font-bold select-none">
+                    <div className="w-6 h-6 rounded-full bg-border-strong flex items-center justify-center text-[11px] font-bold select-none">
                       {lead.assignee.full_name.charAt(0).toUpperCase()}
                     </div>
-                    <span>{lead.assignee.full_name}</span>
+                    <span className="font-medium">{lead.assignee.full_name}</span>
                   </div>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-warning bg-warning/5 border border-warning/10 px-2 py-0.5 rounded">
-                    <span className="w-1 h-1 rounded-full bg-warning animate-pulse" />
+                  <span className="inline-flex items-center gap-1 text-[12px] text-warning bg-warning/5 border border-warning/10 px-2.5 py-0.5 rounded">
+                    <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
                     Sin asignar
                   </span>
                 )}
               </td>
 
               {/* Date */}
-              <td className="px-6 py-4 text-text-secondary">
+              <td className="px-6 py-4 text-text-secondary text-[13px] font-data-mono">
                 {formatDate(lead.created_at)}
               </td>
             </tr>

@@ -25,7 +25,8 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
     const d = new Date(dateStr);
     return d.toLocaleString("es-ES", {
       day: "2-digit",
-      month: "short",
+      month: "2-digit",
+      year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -72,10 +73,10 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
         const metadata = event.metadata as EventMetadata | null;
 
         return (
-          <div key={event.id} className="relative flex flex-col gap-1 text-left">
+          <div key={event.id} className="relative flex flex-col gap-1.5 text-left">
             {/* Event dot / icon */}
             <span
-              className={`absolute -left-[27px] top-0 w-6.5 h-6.5 rounded-full flex items-center justify-center border text-[14px] select-none ${getEventIconColor(
+              className={`absolute -left-[27px] top-0.5 w-6.5 h-6.5 rounded-full flex items-center justify-center border text-[14px] select-none ${getEventIconColor(
                 event.event_type
               )}`}
             >
@@ -85,17 +86,20 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
             </span>
 
             {/* Event header */}
-            <div className="flex items-center justify-between">
-              <span className="font-body-sm text-[13px] font-semibold text-text-primary">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <span className="font-body-md text-[14px] font-semibold text-text-primary">
                 {event.author.full_name}
               </span>
-              <span className="font-label-xs text-[11px] text-text-disabled">
+              <span className="inline-flex items-center gap-1.5 text-[13px] text-text-primary bg-surface-container-high px-2.5 py-0.5 rounded-md border border-border-default font-medium">
+                <span className="material-symbols-outlined text-[15px] text-text-secondary">
+                  schedule
+                </span>
                 {formatTime(event.created_at)}
               </span>
             </div>
 
             {/* Event content */}
-            <div className="font-body-sm text-[13px] text-text-secondary pl-0.5 mt-0.5">
+            <div className="font-body-sm text-[14px] text-text-secondary pl-0.5 mt-0.5">
               {isStatusChange &&
               metadata?.from_status &&
               metadata?.to_status ? (

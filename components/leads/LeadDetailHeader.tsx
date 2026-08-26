@@ -76,24 +76,24 @@ export default function LeadDetailHeader({
       <div className="space-y-1 text-left">
         <Link
           href="/leads"
-          className="inline-flex items-center gap-1 text-text-secondary hover:text-text-primary font-body-sm text-[13px] transition-colors mb-1"
+          className="inline-flex items-center gap-1 text-text-secondary hover:text-text-primary font-body-sm text-[14px] transition-colors mb-1.5"
         >
-          <span className="material-symbols-outlined text-[16px]">
+          <span className="material-symbols-outlined text-[18px]">
             arrow_back
           </span>
           Volver a Leads
         </Link>
-        <h1 className="font-headline-lg text-[24px] text-text-primary tracking-tight leading-none flex items-center gap-2">
+        <h1 className="font-headline-lg text-[26px] text-text-primary tracking-tight leading-tight flex items-center gap-2.5">
           {lead.full_name}
           {lead.lead_number && (
-            <span className="text-[13px] bg-surface-container-highest text-text-secondary border border-border-default px-2 py-0.5 rounded font-data-mono font-medium select-none">
+            <span className="text-[14px] bg-surface-container-highest text-text-secondary border border-border-default px-2.5 py-0.5 rounded font-data-mono font-semibold select-none">
               #{lead.lead_number}
             </span>
           )}
         </h1>
-        <p className="font-body-sm text-[13px] text-text-secondary">
-          Interés:{" "}
-          <span className="text-primary font-medium font-body-md">
+        <p className="font-body-md text-[15px] text-text-secondary flex items-center gap-2 pt-0.5">
+          <span>Vehículo de Interés:</span>
+          <span className="text-primary font-bold text-[16px] bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-md">
             {lead.vehicle_interest || "No especificado"}
           </span>
         </p>

@@ -9,7 +9,6 @@ import type { LeadEventWithAuthor } from "@/types/lead-events";
 import type { TaskWithDetails } from "@/types/tasks";
 import type { Simulation } from "@/types/simulations";
 import LeadDetailHeader from "./LeadDetailHeader";
-import LeadNoteInput from "./LeadNoteInput";
 import LeadTimeline from "./LeadTimeline";
 import TaskCreateModal from "../tasks/TaskCreateModal";
 import WhatsAppTemplatesModal from "./WhatsAppTemplatesModal";
@@ -59,6 +58,7 @@ export default function LeadDetailClient({
   const [vehicleModel, setVehicleModel] = useState(lead.vehicle_model || "");
   const [vehicleYear, setVehicleYear] = useState(lead.vehicle_year?.toString() || "");
   const [vehiclePlate, setVehiclePlate] = useState(lead.vehicle_plate || "");
+  const [vehicleVin, setVehicleVin] = useState(lead.vehicle_vin || "");
   const [vehiclePrice, setVehiclePrice] = useState(lead.vehicle_price?.toString() || "");
   const [downPayment, setDownPayment] = useState(lead.down_payment?.toString() || "");
   const [isSavingOps, setIsSavingOps] = useState(false);
@@ -85,6 +85,7 @@ export default function LeadDetailClient({
     setVehicleModel(lead.vehicle_model || "");
     setVehicleYear(lead.vehicle_year?.toString() || "");
     setVehiclePlate(lead.vehicle_plate || "");
+    setVehicleVin(lead.vehicle_vin || "");
     setVehiclePrice(lead.vehicle_price?.toString() || "");
     setDownPayment(lead.down_payment?.toString() || "");
   }, [lead]);
@@ -238,6 +239,7 @@ export default function LeadDetailClient({
         vehicle_model: vehicleModel || null,
         vehicle_year: parsedYear,
         vehicle_plate: vehiclePlate || null,
+        vehicle_vin: vehicleVin || null,
         vehicle_price: parsedPrice,
         down_payment: parsedDownPayment,
       });
@@ -363,34 +365,34 @@ export default function LeadDetailClient({
               <div className="lg:col-span-1 space-y-6">
                 {/* Card: Información de Contacto */}
                 <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
-                  <h2 className="font-section-subtitle text-[17px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
-                    <span className="material-symbols-outlined text-primary text-[20px]">
+                  <h2 className="font-section-subtitle text-[18px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
+                    <span className="material-symbols-outlined text-primary text-[22px]">
                       contact_phone
                     </span>
                     Información de Contacto
                   </h2>
 
-                  <div className="space-y-3.5">
+                  <div className="space-y-4">
                     {/* Teléfono */}
                     <div className="space-y-1">
-                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                      <label className="font-field-label text-[12px] font-semibold text-text-secondary uppercase tracking-wider block">
                         Teléfono
                       </label>
                       {lead.phone ? (
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="flex items-center justify-between gap-3 mt-1">
                           <a
                             href={`tel:${lead.phone}`}
-                            className="font-body-md text-[14px] text-text-primary hover:text-primary transition-colors hover:underline font-semibold"
+                            className="font-body-md text-[18px] text-text-primary hover:text-primary transition-colors hover:underline font-bold tracking-wide"
                           >
                             {lead.phone}
                           </a>
-                          <div className="flex gap-2 shrink-0">
+                          <div className="flex gap-2.5 shrink-0">
                             <a
                               href={`tel:${lead.phone}`}
-                              className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center border border-border-default hover:border-primary/20"
+                              className="w-10 h-10 rounded-xl bg-surface-container-high hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center border border-border-default hover:border-primary/20"
                               title="Llamar"
                             >
-                              <span className="material-symbols-outlined text-[16px]">
+                              <span className="material-symbols-outlined text-[20px]">
                                 call
                               </span>
                             </a>
@@ -398,13 +400,13 @@ export default function LeadDetailClient({
                               type="button"
                               onClick={() => setIsWhatsAppModalOpen(true)}
                               disabled={!canEdit}
-                              className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-success/20 hover:text-success transition-all flex items-center justify-center border border-border-default hover:border-success/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-10 h-10 rounded-xl bg-surface-container-high hover:bg-success/20 hover:text-success transition-all flex items-center justify-center border border-border-default hover:border-success/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Enviar WhatsApp"
                             >
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 448 512"
-                                className="w-[18px] h-[18px] fill-[#25D366]"
+                                className="w-[22px] h-[22px] fill-[#25D366]"
                               >
                                 <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7 .9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
                               </svg>
@@ -412,7 +414,7 @@ export default function LeadDetailClient({
                           </div>
                         </div>
                       ) : (
-                        <span className="text-[13px] text-text-disabled italic">
+                        <span className="text-[14px] text-text-disabled italic">
                           No registrado
                         </span>
                       )}
@@ -420,29 +422,29 @@ export default function LeadDetailClient({
 
                     {/* Email */}
                     <div className="space-y-1">
-                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                      <label className="font-field-label text-[12px] font-semibold text-text-secondary uppercase tracking-wider block">
                         Correo Electrónico
                       </label>
                       {lead.email ? (
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <div className="flex items-center justify-between gap-3 mt-1">
                           <a
                             href={`mailto:${lead.email}`}
-                            className="font-body-md text-[14px] text-text-primary hover:text-primary transition-colors hover:underline truncate"
+                            className="font-body-md text-[15px] text-text-primary hover:text-primary transition-colors hover:underline truncate"
                           >
                             {lead.email}
                           </a>
                           <a
                             href={`mailto:${lead.email}`}
-                            className="w-8 h-8 rounded-lg bg-surface-container-high hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center border border-border-default hover:border-primary/20 shrink-0"
+                            className="w-10 h-10 rounded-xl bg-surface-container-high hover:bg-primary/20 hover:text-primary transition-all flex items-center justify-center border border-border-default hover:border-primary/20 shrink-0"
                             title="Enviar Correo"
                           >
-                            <span className="material-symbols-outlined text-[16px]">
+                            <span className="material-symbols-outlined text-[20px]">
                               mail
                             </span>
                           </a>
                         </div>
                       ) : (
-                        <span className="text-[13px] text-text-disabled italic">
+                        <span className="text-[14px] text-text-disabled italic">
                           No registrado
                         </span>
                       )}
@@ -452,20 +454,20 @@ export default function LeadDetailClient({
 
                 {/* Card: Detalles del Lead */}
                 <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
-                  <h2 className="font-section-subtitle text-[17px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
-                    <span className="material-symbols-outlined text-primary text-[20px]">
+                  <h2 className="font-section-subtitle text-[18px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
+                    <span className="material-symbols-outlined text-primary text-[22px]">
                       info
                     </span>
                     Detalles del Lead
                   </h2>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3.5">
                     {/* Origen */}
                     <div>
-                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                      <label className="font-field-label text-[12px] font-semibold text-text-secondary uppercase tracking-wider block">
                         Origen (Canal)
                       </label>
-                      <span className="font-body-md text-[13px] text-text-primary font-medium mt-0.5 block">
+                      <span className="font-body-md text-[14px] text-text-primary font-medium mt-0.5 block">
                         {formattedSource}
                       </span>
                     </div>
@@ -473,10 +475,10 @@ export default function LeadDetailClient({
                     {/* Campaña */}
                     {lead.campaign_name && (
                       <div>
-                        <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                        <label className="font-field-label text-[12px] font-semibold text-text-secondary uppercase tracking-wider block">
                           Campaña
                         </label>
-                        <span className="font-body-md text-[13px] text-primary font-medium mt-0.5 block">
+                        <span className="font-body-md text-[14px] text-primary font-medium mt-0.5 block">
                           {lead.campaign_name}
                         </span>
                       </div>
@@ -484,25 +486,29 @@ export default function LeadDetailClient({
 
                     {/* Interés Vehículo */}
                     <div>
-                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                      <label className="font-field-label text-[12px] font-semibold text-text-secondary uppercase tracking-wider block">
                         Vehículo de Interés
                       </label>
-                      <span className="font-body-md text-[13px] text-text-primary font-medium mt-0.5 block">
-                        {lead.vehicle_interest || (
-                          <span className="text-text-disabled font-normal">No especificado</span>
-                        )}
-                      </span>
+                      {lead.vehicle_interest ? (
+                        <span className="font-body-md text-[16px] text-primary font-bold bg-primary/10 border border-primary/20 px-3 py-1 rounded-md inline-block mt-1">
+                          {lead.vehicle_interest}
+                        </span>
+                      ) : (
+                        <span className="text-[14px] text-text-disabled font-normal mt-0.5 block">
+                          No especificado
+                        </span>
+                      )}
                     </div>
 
                     {/* Fechas */}
                     <div className="pt-2 border-t border-border-default/40 space-y-2 select-none">
-                      <div className="flex justify-between text-[11px]">
+                      <div className="flex justify-between text-[12px]">
                         <span className="text-text-secondary">Creado el</span>
                         <span className="text-text-primary font-medium">
                           {formatDate(lead.created_at)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[11px]">
+                      <div className="flex justify-between text-[12px]">
                         <span className="text-text-secondary">Actualizado el</span>
                         <span className="text-text-primary font-medium">
                           {formatDate(lead.updated_at)}
@@ -514,8 +520,8 @@ export default function LeadDetailClient({
 
                 {/* Card: Estado del Lead */}
                 <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
-                  <h2 className="font-section-subtitle text-[17px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
-                    <span className="material-symbols-outlined text-primary text-[20px]">
+                  <h2 className="font-section-subtitle text-[18px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
+                    <span className="material-symbols-outlined text-primary text-[22px]">
                       settings_accessibility
                     </span>
                     Estado del Lead
@@ -531,27 +537,14 @@ export default function LeadDetailClient({
                 </div>
               </div>
 
-              {/* Right Column: Notes, Tasks, Simulations, Timeline */}
+              {/* Right Column: Tasks, Simulations, Timeline */}
               <div className="lg:col-span-2 space-y-6">
                 
-                {/* Note Input Panel */}
-                {canEdit && (
-                  <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
-                    <h2 className="font-section-subtitle text-[17px] text-text-primary flex items-center gap-2 select-none">
-                      <span className="material-symbols-outlined text-primary text-[20px]">
-                        edit_note
-                      </span>
-                      Registrar Seguimiento
-                    </h2>
-                    <LeadNoteInput leadId={lead.id} onSuccess={handleRefresh} />
-                  </div>
-                )}
-
                 {/* Tasks Panel */}
-                <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
+                <div className="glass-card-lead rounded-xl p-6 border border-border-default space-y-4">
                   <div className="flex justify-between items-center border-b border-border-default pb-3 select-none">
-                    <h2 className="font-section-subtitle text-[17px] text-text-primary flex items-center gap-2">
-                      <span className="material-symbols-outlined text-primary text-[20px]">
+                    <h2 className="font-section-subtitle text-[20px] text-text-primary flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary text-[24px]">
                         check_box
                       </span>
                       Tareas de Seguimiento
@@ -559,16 +552,16 @@ export default function LeadDetailClient({
                     {canEdit && (
                       <button
                         onClick={() => setIsTaskModalOpen(true)}
-                        className="text-primary hover:text-text-primary text-[12px] font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                        className="text-primary hover:text-text-primary text-[14px] font-bold flex items-center gap-1 hover:underline cursor-pointer"
                       >
-                        <span className="material-symbols-outlined text-[16px]">add</span>
+                        <span className="material-symbols-outlined text-[18px]">add</span>
                         Añadir Tarea
                       </button>
                     )}
                   </div>
 
                   {/* Tasks List */}
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {tasks.map((task) => {
                       const overdue = isOverdue(task);
                       const isCompleted = task.status === "completada";
@@ -576,16 +569,16 @@ export default function LeadDetailClient({
                       return (
                         <div
                           key={task.id}
-                          className={`flex items-start justify-between p-3 rounded-lg bg-surface border hover:bg-surface-container-high/30 transition-colors ${
-                            overdue ? "border-danger/20" : "border-border-default"
+                          className={`flex items-start justify-between p-3.5 rounded-xl bg-surface border hover:bg-surface-container-high/30 transition-colors ${
+                            overdue ? "border-danger/30" : "border-border-default"
                           }`}
                         >
-                          <div className="flex items-start gap-3 flex-1 min-w-0">
+                          <div className="flex items-start gap-3.5 flex-1 min-w-0">
                             {/* Status Checkbox */}
                             <button
                               onClick={() => handleToggleTaskStatus(task.id, task.status)}
                               disabled={!canEdit || isPending}
-                              className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
+                              className={`mt-0.5 w-6 h-6 rounded-md border flex items-center justify-center transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shrink-0 ${
                                 isCompleted
                                   ? "bg-success border-success text-inverse-on-surface"
                                   : overdue
@@ -594,7 +587,7 @@ export default function LeadDetailClient({
                               }`}
                             >
                               {isCompleted && (
-                                <span className="material-symbols-outlined text-[14px] font-bold">
+                                <span className="material-symbols-outlined text-[16px] font-bold">
                                   check
                                 </span>
                               )}
@@ -602,21 +595,21 @@ export default function LeadDetailClient({
 
                             <div className="min-w-0 flex-1">
                               <h4
-                                className={`text-[13px] font-medium text-text-primary leading-tight truncate ${
+                                className={`text-[15px] font-bold text-text-primary leading-tight truncate ${
                                   isCompleted ? "line-through text-text-disabled" : ""
                                 }`}
                               >
                                 {task.title}
                               </h4>
                               {task.description && (
-                                <p className="text-[11px] text-text-secondary mt-0.5 truncate">
+                                <p className="text-[13px] text-text-secondary mt-1">
                                   {task.description}
                                 </p>
                               )}
-                              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                              <div className="flex items-center gap-2.5 mt-2 flex-wrap">
                                 {/* Priority Badge */}
                                 <span
-                                  className={`text-[9px] font-semibold uppercase px-1.5 py-0.25 rounded border select-none ${
+                                  className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded-md border select-none ${
                                     task.priority === "alta"
                                       ? "bg-error-container/20 text-danger border-danger/25"
                                       : task.priority === "media"
@@ -630,11 +623,11 @@ export default function LeadDetailClient({
                                 {/* Due date */}
                                 {task.due_date && (
                                   <span
-                                    className={`text-[10px] font-medium inline-flex items-center gap-1 select-none ${
-                                      overdue ? "text-danger" : "text-text-secondary"
+                                    className={`text-[13px] font-medium inline-flex items-center gap-1 select-none font-data-mono ${
+                                      overdue ? "text-danger font-semibold" : "text-text-secondary"
                                     }`}
                                   >
-                                    <span className="material-symbols-outlined text-[12px]">schedule</span>
+                                    <span className="material-symbols-outlined text-[15px]">schedule</span>
                                     {overdue ? "Vencida (" : ""}
                                     {new Date(task.due_date).toLocaleDateString("es-ES", {
                                       day: "2-digit",
@@ -651,10 +644,10 @@ export default function LeadDetailClient({
                           {canEdit && (
                             <button
                               onClick={() => handleDeleteTask(task.id)}
-                              className="text-text-secondary hover:text-danger p-1 rounded hover:bg-surface-container-high transition-colors shrink-0 cursor-pointer"
+                              className="text-text-secondary hover:text-danger p-1.5 rounded-lg hover:bg-surface-container-high transition-colors shrink-0 cursor-pointer ml-2"
                               title="Eliminar tarea"
                             >
-                              <span className="material-symbols-outlined text-[15px]">delete</span>
+                              <span className="material-symbols-outlined text-[18px]">delete</span>
                             </button>
                           )}
                         </div>
@@ -662,11 +655,11 @@ export default function LeadDetailClient({
                     })}
 
                     {tasks.length === 0 && (
-                      <div className="text-center py-6 text-text-disabled/40 select-none">
-                        <span className="material-symbols-outlined text-2xl mb-1">
+                      <div className="text-center py-8 text-text-disabled/40 select-none">
+                        <span className="material-symbols-outlined text-3xl mb-1">
                           assignment_turned_in
                         </span>
-                        <p className="text-[12px]">No hay tareas creadas para este lead.</p>
+                        <p className="text-[14px]">No hay tareas creadas para este lead.</p>
                       </div>
                     )}
                   </div>
@@ -910,6 +903,19 @@ export default function LeadDetailClient({
                           onChange={(e) => setVehiclePlate(e.target.value)}
                           disabled={!canEdit || isSavingOps}
                           className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                          Número de Bastidor (VIN)
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. WBA1234567890..."
+                          value={vehicleVin}
+                          onChange={(e) => setVehicleVin(e.target.value)}
+                          disabled={!canEdit || isSavingOps}
+                          className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60 uppercase"
                         />
                       </div>
                       <div className="space-y-1">

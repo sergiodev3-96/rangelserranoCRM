@@ -451,6 +451,7 @@ export async function updateLeadOperationDetails(
     vehicle_model?: string | null;
     vehicle_year?: number | null;
     vehicle_plate?: string | null;
+    vehicle_vin?: string | null;
     vehicle_price?: number | null;
     down_payment?: number | null;
   }
