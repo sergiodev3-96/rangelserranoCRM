@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
+import ThemeToggle from "./ThemeToggle";
 import type { Profile } from "@/types/profiles";
 
 type HeaderProps = {
@@ -50,7 +51,12 @@ export default function Header({ profile, onToggleSidebar }: HeaderProps) {
       </div>
 
       {/* User Actions */}
-      <div className="flex items-center gap-4 ml-auto">
+      <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+        {/* Theme Switcher */}
+        <ThemeToggle />
+
+        <div className="h-5 w-[1px] bg-border-default hidden sm:block mx-0.5" />
+
         <div className="flex items-center gap-3">
           {/* User Info */}
           <div className="text-right">

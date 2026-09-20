@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import ThemeToggle from "./ThemeToggle";
 
 type SidebarProps = {
   isAdmin: boolean;
@@ -121,6 +122,9 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
           <span className="material-symbols-outlined text-[20px]">help</span>
           <span className="font-body-sm text-[13px]">Ayuda</span>
         </Link>
+        <div className="pt-1 border-t border-border-default/60">
+          <ThemeToggle showLabel className="w-full justify-start px-3 py-2" />
+        </div>
       </div>
     </aside>
   );

@@ -3,6 +3,7 @@
 import { useState, useTransition, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login } from "@/lib/actions/auth";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 
 function LoginForm() {
   const router = useRouter();
@@ -148,6 +149,11 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <main className="flex-1 flex flex-col justify-center items-center min-h-screen bg-bg-base text-text-primary relative p-6">
+      {/* Top right theme toggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle showLabel className="bg-surface border border-border-default shadow-sm px-3 py-1.5" />
+      </div>
+
       {/* Atmospheric glow */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
