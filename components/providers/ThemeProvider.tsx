@@ -17,7 +17,6 @@ const STORAGE_KEY = "rs_crm_theme";
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Initialize with light mode by default
   const [theme, setThemeState] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     // Check initial DOM state or localStorage
@@ -38,7 +37,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       console.error("Failed to access localStorage for theme preference", e);
     }
-    setMounted(true);
   }, []);
 
   const setTheme = (newTheme: Theme) => {

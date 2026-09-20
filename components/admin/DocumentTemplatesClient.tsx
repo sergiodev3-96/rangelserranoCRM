@@ -27,7 +27,7 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
 
   const activeTemplate = templates.find((t) => t.id === selectedId) || templates[0];
 
-  const updateActiveContent = (newContent: any) => {
+  const updateActiveContent = (newContent: ReservaContent | GarantiaContent | ContratoContent) => {
     setTemplates((prev) =>
       prev.map((t) => (t.id === selectedId ? { ...t, content: newContent } : t))
     );
@@ -203,7 +203,7 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
                   </label>
                   <input
                     type="text"
-                    value={(activeTemplate.content as any).title || ""}
+                    value={activeTemplate.content.title || ""}
                     onChange={(e) =>
                       updateActiveContent({ ...activeTemplate.content, title: e.target.value })
                     }
@@ -218,7 +218,7 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
                     </label>
                     <input
                       type="text"
-                      value={(activeTemplate.content as any).city || ""}
+                      value={(activeTemplate.content as GarantiaContent | ContratoContent).city || ""}
                       onChange={(e) =>
                         updateActiveContent({ ...activeTemplate.content, city: e.target.value })
                       }
@@ -494,7 +494,7 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
                   <button
                     type="button"
                     onClick={() => {
-                      const ex = (activeTemplate.content as any).exclusions || [];
+                      const ex = (activeTemplate.content as GarantiaContent | ContratoContent).exclusions || [];
                       updateActiveContent({
                         ...activeTemplate.content,
                         exclusions: [...ex, "Nueva exclusión..."],
@@ -508,13 +508,13 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
                 </div>
 
                 <div className="space-y-2">
-                  {((activeTemplate.content as any).exclusions || []).map((exc: string, idx: number) => (
+                  {((activeTemplate.content as GarantiaContent | ContratoContent).exclusions || []).map((exc: string, idx: number) => (
                     <div key={idx} className="flex items-start gap-2">
                       <input
                         type="text"
                         value={exc}
                         onChange={(e) => {
-                          const ex = [...(activeTemplate.content as any).exclusions];
+                          const ex = [...(activeTemplate.content as GarantiaContent | ContratoContent).exclusions];
                           ex[idx] = e.target.value;
                           updateActiveContent({ ...activeTemplate.content, exclusions: ex });
                         }}
@@ -523,8 +523,8 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
                       <button
                         type="button"
                         onClick={() => {
-                          const ex = (activeTemplate.content as any).exclusions.filter(
-                            (_: any, i: number) => i !== idx
+                          const ex = (activeTemplate.content as GarantiaContent | ContratoContent).exclusions.filter(
+                            (_: string, i: number) => i !== idx
                           );
                           updateActiveContent({ ...activeTemplate.content, exclusions: ex });
                         }}

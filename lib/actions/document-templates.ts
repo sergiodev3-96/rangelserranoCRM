@@ -122,9 +122,12 @@ export async function updateDocumentTemplate(
     revalidatePath("/leads");
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error updating document template:", err);
-    return { success: false, error: err.message || "Error al actualizar la plantilla" };
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Error al actualizar la plantilla",
+    };
   }
 }
 
@@ -138,8 +141,11 @@ export async function resetDocumentTemplate(
     }
 
     return await updateDocumentTemplate(id, defaultTemplate.content);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Error resetting template:", err);
-    return { success: false, error: err.message || "Error al reiniciar la plantilla" };
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Error al reiniciar la plantilla",
+    };
   }
 }

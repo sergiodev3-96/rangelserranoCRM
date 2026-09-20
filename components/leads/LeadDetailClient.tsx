@@ -1219,6 +1219,7 @@ export default function LeadDetailClient({
                   title="PDF Preview"
                 />
               ) : /\.(jpg|jpeg|png|webp)$/i.test(previewFile.name) ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={previewFile.url}
                   alt={previewFile.name}

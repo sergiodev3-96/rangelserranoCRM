@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import Image from "next/image";
 import type { LeadWithAssignee } from "@/types/leads";
 import {
   DocumentTemplate,
@@ -400,7 +399,19 @@ export default function LeadDocumentsTab({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div>
+                  <label className="block font-semibold text-text-secondary uppercase tracking-wider mb-1">
+                    Año
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="2023"
+                    value={year}
+                    onChange={(e) => setYear(e.target.value)}
+                    className="w-full bg-bg-input border border-border-default rounded-lg px-2.5 py-2 text-text-primary text-[13px] focus:outline-none focus:border-primary"
+                  />
+                </div>
                 <div>
                   <label className="block font-semibold text-text-secondary uppercase tracking-wider mb-1">
                     Kilometraje
@@ -679,7 +690,7 @@ export default function LeadDocumentsTab({
                             {(activeTemplate.content as ContratoContent).title}
                           </h1>
                           <p className="text-[10.5px] font-medium text-slate-500">
-                            En {signingCity || (activeTemplate.content as any).city}, a {docDate}
+                            En {signingCity || (activeTemplate.content as ContratoContent).city}, a {docDate}
                           </p>
                         </div>
                       </div>
@@ -785,7 +796,7 @@ export default function LeadDocumentsTab({
                             {(activeTemplate.content as GarantiaContent).title}
                           </h1>
                           <p className="text-[10.5px] font-medium text-slate-500">
-                            En {signingCity || (activeTemplate.content as any).city}, a {docDate}
+                            En {signingCity || (activeTemplate.content as GarantiaContent).city}, a {docDate}
                           </p>
                         </div>
                       </div>
