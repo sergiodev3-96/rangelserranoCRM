@@ -44,6 +44,16 @@ export type Lead = {
   vehicle_vin?: string | null;
   vehicle_price?: number | null;
   down_payment?: number | null;
+  client_address?: string | null;
+  client_postal_code?: string | null;
+  client_city?: string | null;
+  client_province?: string | null;
+  vehicle_kms?: number | null;
+  vehicle_color?: string | null;
+  vehicle_fuel?: string | null;
+  vehicle_reg_date?: string | null;
+  vehicle_itv_date?: string | null;
+  reservation_amount?: number | null;
   created_at: string;
   updated_at: string;
 };

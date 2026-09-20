@@ -17,32 +17,36 @@ export default function DashboardShell({ profile, children }: DashboardShellProp
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="flex w-screen h-dvh overflow-hidden bg-bg-base text-text-primary">
+    <div className="flex w-screen h-dvh overflow-hidden bg-bg-base text-text-primary print:h-auto print:w-full print:overflow-visible print:bg-white">
       {/* Sidebar Navigation */}
-      <Sidebar 
-        isAdmin={profile.role === "admin"} 
-        isOpen={isSidebarOpen} 
-        onClose={closeSidebar} 
-      />
+      <div className="no-print">
+        <Sidebar 
+          isAdmin={profile.role === "admin"} 
+          isOpen={isSidebarOpen} 
+          onClose={closeSidebar} 
+        />
+      </div>
 
       {/* Backdrop for mobile */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+          className="no-print fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={closeSidebar}
         />
       )}
 
       {/* Main Panel */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative print:h-auto print:overflow-visible print:static">
         {/* Atmospheric glow */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="no-print absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
         {/* Global Dashboard Header */}
-        <Header profile={profile} onToggleSidebar={toggleSidebar} />
+        <div className="no-print">
+          <Header profile={profile} onToggleSidebar={toggleSidebar} />
+        </div>
 
         {/* Content Area */}
-        <main className="flex-1 overflow-y-auto md:overflow-hidden relative z-10 flex flex-col">
+        <main className="flex-1 overflow-y-auto md:overflow-hidden relative z-10 flex flex-col print:h-auto print:overflow-visible print:static print:p-0 print:m-0">
           {children}
         </main>
       </div>

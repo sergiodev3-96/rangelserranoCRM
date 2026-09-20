@@ -31,6 +31,11 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
       label: "Plantillas WA",
       icon: "chat",
     });
+    navItems.push({
+      href: "/admin/plantillas-documentos",
+      label: "Plantillas Documentos",
+      icon: "article",
+    });
   }
 
   return (

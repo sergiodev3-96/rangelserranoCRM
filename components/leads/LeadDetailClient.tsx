@@ -22,6 +22,7 @@ import {
   deleteLeadDocument,
   listLeadDocuments,
 } from "@/lib/actions/leads";
+import LeadDocumentsTab from "./LeadDocumentsTab";
 
 type LeadDetailClientProps = {
   lead: LeadWithAssignee;
@@ -45,7 +46,7 @@ export default function LeadDetailClient({
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<"cliente" | "pedido">("cliente");
+  const [activeTab, setActiveTab] = useState<"cliente" | "pedido" | "presupuesto">("cliente");
 
   // Fields for operation details
   const [fullName, setFullName] = useState(lead.full_name || "");
@@ -322,20 +323,22 @@ export default function LeadDetailClient({
   };
 
   return (
-    <div className="flex-1 flex flex-col md:h-full md:overflow-hidden bg-bg-base text-left">
+    <div className="flex-1 flex flex-col md:h-full md:overflow-hidden bg-bg-base text-left print:h-auto print:overflow-visible print:bg-white">
       {/* Detail Header */}
-      <LeadDetailHeader
-        lead={lead}
-        currentUser={currentUser}
-        comerciales={comerciales}
-        onRefresh={handleRefresh}
-      />
+      <div className="no-print">
+        <LeadDetailHeader
+          lead={lead}
+          currentUser={currentUser}
+          comerciales={comerciales}
+          onRefresh={handleRefresh}
+        />
+      </div>
 
       {/* Tab Selector */}
-      <div className="flex border-b border-border-default px-6 bg-surface select-none shrink-0 gap-6">
+      <div className="no-print flex border-b border-border-default px-6 bg-surface select-none shrink-0 gap-6 overflow-x-auto">
         <button
           onClick={() => setActiveTab("cliente")}
-          className={`py-3.5 px-2 font-body-md text-[13px] uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+          className={`py-3.5 px-2 font-body-md text-[13px] uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "cliente"
               ? "border-primary text-primary"
               : "border-transparent text-text-secondary hover:text-text-primary"
@@ -345,7 +348,7 @@ export default function LeadDetailClient({
         </button>
         <button
           onClick={() => setActiveTab("pedido")}
-          className={`py-3.5 px-2 font-body-md text-[13px] uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer ${
+          className={`py-3.5 px-2 font-body-md text-[13px] uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === "pedido"
               ? "border-primary text-primary"
               : "border-transparent text-text-secondary hover:text-text-primary"
@@ -353,11 +356,21 @@ export default function LeadDetailClient({
         >
           Información del pedido
         </button>
+        <button
+          onClick={() => setActiveTab("presupuesto")}
+          className={`py-3.5 px-2 font-body-md text-[13px] uppercase tracking-wider font-bold border-b-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === "presupuesto"
+              ? "border-primary text-primary"
+              : "border-transparent text-text-secondary hover:text-text-primary"
+          }`}
+        >
+          Presupuesto, contrato y garantia
+        </button>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-[1400px] mx-auto">
+      <div className="flex-1 overflow-y-auto p-6 print:p-0 print:overflow-visible print:h-auto">
+        <div className="max-w-[1400px] mx-auto print:max-w-none print:w-full print:p-0 print:m-0">
           {activeTab === "cliente" ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
@@ -756,7 +769,7 @@ export default function LeadDetailClient({
 
               </div>
             </div>
-          ) : (
+          ) : activeTab === "pedido" ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
               
               {/* Seccion 2.1: Datos Operacion */}
@@ -1140,6 +1153,12 @@ export default function LeadDetailClient({
                 </div>
               </div>
             </div>
+          ) : (
+            <LeadDocumentsTab
+              lead={lead}
+              canEdit={canEdit}
+              onRefresh={handleRefresh}
+            />
           )}
         </div>
       </div>

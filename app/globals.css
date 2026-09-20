@@ -400,3 +400,137 @@ input::placeholder,
 textarea::placeholder {
   color: var(--text-tertiary);
 }
+
+/* ==========================================================================
+   Print Styles for A4 Documents (Presupuesto, Contrato, Garantía)
+   ========================================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 15mm;
+  }
+
+  /* Reset root styles */
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Completely hide all CRM interface chrome, headers, sidebars, forms, and anything marked no-print */
+  aside,
+  header,
+  nav,
+  button,
+  input,
+  textarea,
+  select,
+  .no-print,
+  .no-print * {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+  }
+
+  /* Reset layout constraints so pages flow naturally without being clipped or limited to viewport height */
+  body,
+  main,
+  section,
+  article,
+  div {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    position: static !important;
+    float: none !important;
+  }
+
+  /* Unset flex and grid constraints that prevent table paging and full width */
+  .grid,
+  .flex {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Isolate and expand the document container to full page width */
+  .print-document-container {
+    display: block !important;
+    visibility: visible !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  /* Table layout for document to repeat header on all pages */
+  table.print-table {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  /* Repeating header on every printed page */
+  table.print-table thead {
+    display: table-header-group !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  table.print-table tbody {
+    display: table-row-group !important;
+  }
+
+  table.print-table tr {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  table.print-table td,
+  table.print-table th {
+    display: table-cell !important;
+  }
+
+  /* Prevent sections from splitting across pages */
+  .print-section {
+    display: block !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+    break-after: auto !important;
+    margin-bottom: 14px !important;
+  }
+
+  .print-section p,
+  .print-section div,
+  .print-section li {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Force exact print colors for badges, borders, backgrounds and images */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+

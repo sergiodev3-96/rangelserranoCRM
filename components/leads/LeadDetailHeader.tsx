@@ -71,7 +71,7 @@ export default function LeadDetailHeader({
   };
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border-default bg-surface p-6 shrink-0">
+    <div className="no-print flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b border-border-default bg-surface p-6 shrink-0">
       {/* Title block */}
       <div className="space-y-1 text-left">
         <Link

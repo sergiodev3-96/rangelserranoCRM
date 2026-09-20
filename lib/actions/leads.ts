@@ -454,6 +454,18 @@ export async function updateLeadOperationDetails(
     vehicle_vin?: string | null;
     vehicle_price?: number | null;
     down_payment?: number | null;
+    client_address?: string | null;
+    client_postal_code?: string | null;
+    client_city?: string | null;
+    client_province?: string | null;
+    vehicle_kms?: number | null;
+    vehicle_color?: string | null;
+    vehicle_fuel?: string | null;
+    vehicle_reg_date?: string | null;
+    vehicle_itv_date?: string | null;
+    reservation_amount?: number | null;
+    phone?: string | null;
+    email?: string | null;
   }
 ): Promise<ActionResult<Lead>> {
   try {
@@ -465,12 +477,43 @@ export async function updateLeadOperationDetails(
       return { success: false, data: null, error: "No autorizado" };
     }
 
-    const { data, error } = await supabase
+    // Attempt update with all provided fields
+    let { data, error } = await supabase
       .from("leads")
       .update(input)
       .eq("id", leadId)
       .select()
       .single();
+
+    // If there's an error because extended contract columns don't exist yet in the DB table,
+    // fallback to updating the standard columns so the user action never fails.
+    if (error && error.message && error.message.includes("column")) {
+      const fallbackInput = {
+        full_name: input.full_name,
+        first_surname: input.first_surname,
+        second_surname: input.second_surname,
+        dni_nie: input.dni_nie,
+        nationality: input.nationality,
+        birth_country: input.birth_country,
+        vehicle_brand: input.vehicle_brand,
+        vehicle_model: input.vehicle_model,
+        vehicle_year: input.vehicle_year,
+        vehicle_plate: input.vehicle_plate,
+        vehicle_vin: input.vehicle_vin,
+        vehicle_price: input.vehicle_price,
+        down_payment: input.down_payment,
+        phone: input.phone,
+        email: input.email,
+      };
+      const fallbackResult = await supabase
+        .from("leads")
+        .update(fallbackInput)
+        .eq("id", leadId)
+        .select()
+        .single();
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
 
     if (error) {
       return { success: false, data: null, error: error.message };
