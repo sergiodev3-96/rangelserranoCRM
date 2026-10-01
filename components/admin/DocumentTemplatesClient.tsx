@@ -16,14 +16,20 @@ import {
 
 type Props = {
   initialTemplates: DocumentTemplate[];
+  isDbReady?: boolean;
 };
 
-export default function DocumentTemplatesClient({ initialTemplates }: Props) {
+export default function DocumentTemplatesClient({ initialTemplates, isDbReady = true }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedId, setSelectedId] = useState<TemplateId>("reserva_venta");
   const [templates, setTemplates] = useState<DocumentTemplate[]>(initialTemplates);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" | "warning" } | null>(null);
+
+  // Synchronize internal state whenever initialTemplates changes (e.g. on server revalidation or reset)
+  React.useEffect(() => {
+    setTemplates(initialTemplates);
+  }, [initialTemplates]);
 
   const activeTemplate = templates.find((t) => t.id === selectedId) || templates[0];
 
@@ -38,7 +44,11 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
     startTransition(async () => {
       const res = await updateDocumentTemplate(activeTemplate.id, activeTemplate.content);
       if (res.success) {
-        setStatusMessage({ text: "Plantilla guardada correctamente", type: "success" });
+        if (res.warning) {
+          setStatusMessage({ text: res.warning, type: "warning" });
+        } else {
+          setStatusMessage({ text: "Plantilla guardada correctamente", type: "success" });
+        }
         router.refresh();
       } else {
         setStatusMessage({ text: res.error || "Error al guardar la plantilla", type: "error" });
@@ -54,7 +64,11 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
     startTransition(async () => {
       const res = await resetDocumentTemplate(activeTemplate.id);
       if (res.success) {
-        setStatusMessage({ text: "Plantilla restaurada a los valores originales", type: "success" });
+        if (res.warning) {
+          setStatusMessage({ text: res.warning, type: "warning" });
+        } else {
+          setStatusMessage({ text: "Plantilla restaurada a los valores originales", type: "success" });
+        }
         router.refresh();
       } else {
         setStatusMessage({ text: res.error || "Error al restaurar plantilla", type: "error" });
@@ -132,18 +146,47 @@ export default function DocumentTemplatesClient({ initialTemplates }: Props) {
         </div>
       </div>
 
+      {/* Database readiness warning banner */}
+      {!isDbReady && (
+        <div className="mx-6 my-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 flex items-start gap-3 shrink-0">
+          <span className="material-symbols-outlined text-amber-400 text-[22px] shrink-0 mt-0.5">
+            database
+          </span>
+          <div className="text-xs space-y-1.5 flex-1">
+            <p className="font-bold text-amber-100 text-[13px]">
+              La tabla de base de datos aún no ha sido creada en Supabase
+            </p>
+            <p className="text-amber-200/90 leading-relaxed">
+              Las modificaciones se guardarán en un archivo local temporal, pero para que persistan de forma definitiva en producción (Vercel) y en todos los dispositivos, es necesario ejecutar la migración SQL en tu proyecto de Supabase.
+            </p>
+            <div className="pt-0.5 flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-amber-300/80">Archivo a ejecutar en el SQL Editor de Supabase:</span>
+              <code className="bg-amber-950/60 border border-amber-500/30 px-2 py-0.5 rounded font-mono text-[11px] text-amber-200 select-all">
+                supabase/migrations/0014_document_templates_and_lead_contract_fields.sql
+              </code>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status banner */}
       {statusMessage && (
         <div
           className={`px-6 py-2.5 text-xs font-semibold flex items-center justify-between transition-all ${
             statusMessage.type === "success"
               ? "bg-success/15 text-success border-b border-success/20"
+              : statusMessage.type === "warning"
+              ? "bg-amber-500/15 text-amber-400 border-b border-amber-500/20"
               : "bg-danger/15 text-danger border-b border-danger/20"
           }`}
         >
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px]">
-              {statusMessage.type === "success" ? "check_circle" : "error"}
+              {statusMessage.type === "success"
+                ? "check_circle"
+                : statusMessage.type === "warning"
+                ? "warning"
+                : "error"}
             </span>
             <span>{statusMessage.text}</span>
           </div>

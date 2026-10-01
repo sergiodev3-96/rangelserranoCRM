@@ -5,8 +5,12 @@ import { getOrders } from "@/lib/actions/orders";
 import OrdersListClient from "@/components/orders/OrdersListClient";
 
 export default async function PedidosPage() {
-  // 1. Obtener perfil del usuario actual y validar sesión
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil del usuario y pedidos en paralelo
+  const [profileResult, ordersResult] = await Promise.all([
+    getCurrentProfile(),
+    getOrders(),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -15,8 +19,6 @@ export default async function PedidosPage() {
     role: profileResult.data.role as "admin" | "comercial",
   };
 
-  // 2. Obtener lista de pedidos
-  const ordersResult = await getOrders();
   const orders = ordersResult.success && ordersResult.data ? ordersResult.data : [];
 
   return (

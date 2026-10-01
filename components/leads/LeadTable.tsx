@@ -111,6 +111,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
               <td className="px-6 py-4">
                 <Link
                   href={`/leads/${lead.id}`}
+                  prefetch={false}
                   className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
                 >
                   {lead.full_name}

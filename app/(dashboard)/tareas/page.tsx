@@ -6,8 +6,13 @@ import { getActiveComerciales } from "@/lib/actions/users";
 import TaskList from "@/components/tasks/TaskList";
 
 export default async function TareasPage() {
-  // 1. Obtener perfil del usuario actual y validar sesión
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil, tareas y comerciales en paralelo
+  const [profileResult, tasksResult, comercialesResult] = await Promise.all([
+    getCurrentProfile(),
+    getTasks(),
+    getActiveComerciales(),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -16,12 +21,7 @@ export default async function TareasPage() {
     role: profileResult.data.role as "admin" | "comercial",
   };
 
-  // 2. Obtener todas las tareas
-  const tasksResult = await getTasks();
   const tasks = tasksResult.success && tasksResult.data ? tasksResult.data : [];
-
-  // 3. Obtener comerciales activos para el filtro
-  const comercialesResult = await getActiveComerciales();
   const comerciales = comercialesResult.success && comercialesResult.data ? comercialesResult.data : [];
 
   return (

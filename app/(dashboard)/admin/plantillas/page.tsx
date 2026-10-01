@@ -5,8 +5,12 @@ import { getWhatsAppTemplates } from "@/lib/actions/whatsapp-templates";
 import WhatsAppTemplatesListClient from "@/components/admin/WhatsAppTemplatesListClient";
 
 export default async function PlantillasAdminPage() {
-  // 1. Obtener perfil de la sesión actual y validar rol admin
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil y plantillas en paralelo
+  const [profileResult, templatesResult] = await Promise.all([
+    getCurrentProfile(),
+    getWhatsAppTemplates(),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -16,8 +20,6 @@ export default async function PlantillasAdminPage() {
     redirect("/leads");
   }
 
-  // 2. Obtener lista de plantillas de la base de datos
-  const templatesResult = await getWhatsAppTemplates();
   const templates = templatesResult.success && templatesResult.data ? templatesResult.data : [];
 
   return (

@@ -1,7 +1,7 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/actions/auth";
-import { getLeads } from "@/lib/actions/leads";
+import { getLeadsForSelector } from "@/lib/actions/leads";
 import { getSimulationById } from "@/lib/actions/simulations";
 import SimulationClient from "@/components/simulations/SimulationClient";
 
@@ -18,29 +18,19 @@ export default async function SimulacionesPage({
   const simulationId =
     typeof resolvedSearchParams.id === "string" ? resolvedSearchParams.id : null;
 
-  // 1. Obtener perfil del usuario actual y validar sesión
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil, lista ligera de leads y datos de simulación en paralelo
+  const [profileResult, leadsResult, simResult] = await Promise.all([
+    getCurrentProfile(),
+    getLeadsForSelector(),
+    simulationId ? getSimulationById(simulationId) : Promise.resolve(null),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
-  // 2. Obtener lista de leads para el selector
-  const leadsResult = await getLeads({ pageSize: 150 });
-  const leads = leadsResult.success && leadsResult.data ? leadsResult.data.leads : [];
 
-  // Mapear leads a la estructura esperada por el selector
-  const mappedLeads = leads.map((l) => ({
-    id: l.id,
-    full_name: l.full_name,
-  }));
-
-  // 3. Si se pasa id de simulación, obtener sus datos
-  let initialSimulation = null;
-  if (simulationId) {
-    const simResult = await getSimulationById(simulationId);
-    if (simResult.success && simResult.data) {
-      initialSimulation = simResult.data;
-    }
-  }
+  const mappedLeads = leadsResult.success && leadsResult.data ? leadsResult.data : [];
+  const initialSimulation = simResult && simResult.success && simResult.data ? simResult.data : null;
 
   return (
     <SimulationClient

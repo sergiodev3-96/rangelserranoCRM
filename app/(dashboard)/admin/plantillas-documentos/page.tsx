@@ -1,11 +1,16 @@
 import React from "react";
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/actions/auth";
-import { getDocumentTemplates } from "@/lib/actions/document-templates";
+import { getDocumentTemplates, checkDocumentTemplatesTable } from "@/lib/actions/document-templates";
 import DocumentTemplatesClient from "@/components/admin/DocumentTemplatesClient";
 
 export default async function PlantillasDocumentosAdminPage() {
-  const profileResult = await getCurrentProfile();
+  const [profileResult, templates, dbStatus] = await Promise.all([
+    getCurrentProfile(),
+    getDocumentTemplates(),
+    checkDocumentTemplatesTable(),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -15,7 +20,10 @@ export default async function PlantillasDocumentosAdminPage() {
     redirect("/leads");
   }
 
-  const templates = await getDocumentTemplates();
-
-  return <DocumentTemplatesClient initialTemplates={templates} />;
+  return (
+    <DocumentTemplatesClient
+      initialTemplates={templates}
+      isDbReady={dbStatus.exists}
+    />
+  );
 }

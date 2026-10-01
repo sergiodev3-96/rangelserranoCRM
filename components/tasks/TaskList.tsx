@@ -370,6 +370,7 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                       {task.lead ? (
                         <Link
                           href={`/leads/${task.lead.id}`}
+                          prefetch={false}
                           onClick={(e) => e.stopPropagation()}
                           className="font-semibold text-primary hover:underline hover:text-opacity-80 transition-colors inline-flex items-center gap-1.5 text-[14px]"
                         >

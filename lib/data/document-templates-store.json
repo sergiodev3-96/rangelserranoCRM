@@ -5,17 +5,17 @@
     "description": "Documento oficial de formalización de reserva y señal económica para compraventa.",
     "content": {
       "title": "RESERVA DE COMPRA DE VEHÍCULO",
-      "seller_name": "RANGEL & SERRANO, S.L.",
-      "seller_cif": "B90210014",
-      "seller_address": "C/ Juan Díaz de Solís, 24A. (41010-Sevilla)",
-      "seller_iban": "ES42 0182 6647 2801 0150 7654",
-      "default_amount": 500,
-      "validity_hours": 48,
       "conditions": [
         "EL COMPRADOR conoce y acepta el estado actual del vehículo en cuanto a su estado, kilometraje, tiempo de matriculación y garantía.",
         "EL VENDEDOR se compromete a no ofrecer ni vender el vehículo reservado a terceros durante el plazo de 48 horas a contar a partir de la fecha de reserva indicada. Si durante dicho plazo no se formalizase la compra del vehículo por desistimiento por parte de EL COMPRADOR, éste perderá la cantidad entregada."
-      ]
-    }
+      ],
+      "seller_cif": "B90210014",
+      "seller_iban": "ES42 0182 6647 2801 0150 7654",
+      "seller_name": "RANGEL & SERRANO, S.L.",
+      "default_amount": 500,
+      "seller_address": "C/ Juan Díaz de Solís, 24A. (41010-Sevilla)"
+    },
+    "updated_at": "2026-10-01T17:53:41.252Z"
   },
   "garantia_delegada": {
     "id": "garantia_delegada",

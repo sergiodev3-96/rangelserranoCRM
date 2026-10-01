@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.document_templates (
 );
 
 -- Trigger: updated_at
+DROP TRIGGER IF EXISTS document_templates_set_updated_at ON public.document_templates;
 CREATE TRIGGER document_templates_set_updated_at
   BEFORE UPDATE ON public.document_templates
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -31,11 +32,13 @@ CREATE TRIGGER document_templates_set_updated_at
 -- RLS
 ALTER TABLE public.document_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "document_templates_select_authenticated" ON public.document_templates;
 CREATE POLICY "document_templates_select_authenticated"
   ON public.document_templates FOR SELECT
   TO authenticated
   USING (true);
 
+DROP POLICY IF EXISTS "document_templates_write_admin" ON public.document_templates;
 CREATE POLICY "document_templates_write_admin"
   ON public.document_templates FOR ALL
   TO authenticated

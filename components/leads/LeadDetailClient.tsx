@@ -23,6 +23,7 @@ import {
   listLeadDocuments,
 } from "@/lib/actions/leads";
 import LeadDocumentsTab from "./LeadDocumentsTab";
+import type { DocumentTemplate } from "@/types/document-templates";
 
 type LeadDetailClientProps = {
   lead: LeadWithAssignee;
@@ -31,6 +32,7 @@ type LeadDetailClientProps = {
   events: LeadEventWithAuthor[];
   tasks: TaskWithDetails[];
   simulations: Simulation[];
+  templates?: DocumentTemplate[];
 };
 
 export default function LeadDetailClient({
@@ -40,6 +42,7 @@ export default function LeadDetailClient({
   events,
   tasks,
   simulations,
+  templates,
 }: LeadDetailClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -1156,6 +1159,7 @@ export default function LeadDetailClient({
           ) : (
             <LeadDocumentsTab
               lead={lead}
+              templates={templates}
               canEdit={canEdit}
               onRefresh={handleRefresh}
             />

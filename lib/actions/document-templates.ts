@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { revalidatePath } from "next/cache";
 import { createServiceClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/actions/auth";
 import {
   DocumentTemplate,
   TemplateId,
@@ -20,7 +21,11 @@ function ensureStoreFile(): Record<TemplateId, DocumentTemplate> {
       fs.mkdirSync(dir, { recursive: true });
     }
     if (!fs.existsSync(STORE_PATH)) {
-      fs.writeFileSync(STORE_PATH, JSON.stringify(DEFAULT_TEMPLATES, null, 2), "utf-8");
+      try {
+        fs.writeFileSync(STORE_PATH, JSON.stringify(DEFAULT_TEMPLATES, null, 2), "utf-8");
+      } catch {
+        // Ignored on read-only environments
+      }
       return { ...DEFAULT_TEMPLATES };
     }
     const data = fs.readFileSync(STORE_PATH, "utf-8");
@@ -31,15 +36,37 @@ function ensureStoreFile(): Record<TemplateId, DocumentTemplate> {
   }
 }
 
-function saveStoreFile(data: Record<TemplateId, DocumentTemplate>) {
+function saveStoreFile(data: Record<TemplateId, DocumentTemplate>): boolean {
   try {
     const dir = path.dirname(STORE_PATH);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
     fs.writeFileSync(STORE_PATH, JSON.stringify(data, null, 2), "utf-8");
+    return true;
   } catch (err) {
     console.error("Error saving document templates store file:", err);
+    return false;
+  }
+}
+
+export async function checkDocumentTemplatesTable(): Promise<{ exists: boolean; error?: string }> {
+  try {
+    const supabase = createServiceClient();
+    const { error } = await supabase.from("document_templates").select("id").limit(1);
+    if (error) {
+      if (
+        error.code === "PGRST205" ||
+        error.message?.includes("does not exist") ||
+        error.message?.includes("schema cache")
+      ) {
+        return { exists: false, error: "La tabla 'document_templates' no existe en Supabase." };
+      }
+      return { exists: false, error: error.message };
+    }
+    return { exists: true };
+  } catch (err) {
+    return { exists: false, error: err instanceof Error ? err.message : "Error al conectar con Supabase" };
   }
 }
 
@@ -86,8 +113,19 @@ export async function getDocumentTemplate(id: TemplateId): Promise<DocumentTempl
 export async function updateDocumentTemplate(
   id: TemplateId,
   content: TemplateContent
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; warning?: string }> {
   try {
+    const profileRes = await getCurrentProfile();
+    if (!profileRes.success || !profileRes.data) {
+      return { success: false, error: "Usuario no autenticado." };
+    }
+    if (profileRes.data.role !== "admin") {
+      return { success: false, error: "No autorizado. Se requieren permisos de administrador." };
+    }
+
+    let supabaseSaved = false;
+    let supabaseError: string | null = null;
+
     // 1. Try to update in Supabase
     try {
       const supabase = createServiceClient();
@@ -95,16 +133,22 @@ export async function updateDocumentTemplate(
         .from("document_templates")
         .upsert({
           id,
-          name: DEFAULT_TEMPLATES[id].name,
-          description: DEFAULT_TEMPLATES[id].description,
+          name: DEFAULT_TEMPLATES[id]?.name || id,
+          description: DEFAULT_TEMPLATES[id]?.description || "",
           content,
           updated_at: new Date().toISOString(),
         });
 
-      if (error && error.code !== "PGRST205") {
-        console.warn("Supabase upsert warning:", error);
+      if (error) {
+        supabaseError = error.message;
+        if (error.code !== "PGRST205") {
+          console.warn("Supabase upsert warning:", error);
+        }
+      } else {
+        supabaseSaved = true;
       }
     } catch (dbErr) {
+      supabaseError = dbErr instanceof Error ? dbErr.message : "Error al conectar con Supabase";
       console.warn("Supabase update error (non-fatal, local fallback active):", dbErr);
     }
 
@@ -116,10 +160,24 @@ export async function updateDocumentTemplate(
       content,
       updated_at: new Date().toISOString(),
     };
-    saveStoreFile(store);
+    const fileSaved = saveStoreFile(store);
 
     revalidatePath("/admin/plantillas-documentos");
     revalidatePath("/leads");
+
+    if (!supabaseSaved && !fileSaved) {
+      return {
+        success: false,
+        error: `No se pudo guardar la plantilla: La tabla 'document_templates' no existe en Supabase y el almacenamiento local no es accesible en este entorno. Por favor, ejecuta la migración '0014_document_templates_and_lead_contract_fields.sql' en el SQL Editor de tu panel de Supabase.${supabaseError ? ` (${supabaseError})` : ""}`,
+      };
+    }
+
+    if (!supabaseSaved) {
+      return {
+        success: true,
+        warning: "Guardado temporalmente en almacenamiento local. La tabla 'document_templates' aún no existe en Supabase; debes ejecutar la migración 0014 en Supabase para que los cambios se mantengan en producción.",
+      };
+    }
 
     return { success: true };
   } catch (err: unknown) {
@@ -133,8 +191,16 @@ export async function updateDocumentTemplate(
 
 export async function resetDocumentTemplate(
   id: TemplateId
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; warning?: string }> {
   try {
+    const profileRes = await getCurrentProfile();
+    if (!profileRes.success || !profileRes.data) {
+      return { success: false, error: "Usuario no autenticado." };
+    }
+    if (profileRes.data.role !== "admin") {
+      return { success: false, error: "No autorizado. Se requieren permisos de administrador." };
+    }
+
     const defaultTemplate = DEFAULT_TEMPLATES[id];
     if (!defaultTemplate) {
       return { success: false, error: "Plantilla no encontrada" };

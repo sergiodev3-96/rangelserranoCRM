@@ -168,6 +168,7 @@ export default function OrdersListClient({
                       </div>
                       <Link
                         href={order.lead_id ? `/leads/${order.lead_id}` : "#"}
+                        prefetch={false}
                         onClick={(e) => e.stopPropagation()}
                         className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
                       >

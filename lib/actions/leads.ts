@@ -68,6 +68,37 @@ export async function getLeads(params: {
   }
 }
 
+// Obtener lista ligera de leads (solo id y nombre) para selectores rápidos
+export async function getLeadsForSelector(): Promise<
+  ActionResult<{ id: string; full_name: string }[]>
+> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("leads")
+      .select("id, full_name")
+      .eq("archived", false)
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    return {
+      success: true,
+      data: (data || []) as { id: string; full_name: string }[],
+      error: null,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al obtener lista de leads",
+    };
+  }
+}
+
 // Obtener un lead por ID con datos enriquecidos
 export async function getLeadById(
   leadId: string

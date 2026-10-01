@@ -6,6 +6,7 @@ import { getCurrentProfile } from "@/lib/actions/auth";
 import { getActiveComerciales } from "@/lib/actions/users";
 import { getTasksByLeadId } from "@/lib/actions/tasks";
 import { getSimulationsByLeadId } from "@/lib/actions/simulations";
+import { getDocumentTemplates } from "@/lib/actions/document-templates";
 import LeadDetailClient from "@/components/leads/LeadDetailClient";
 import Link from "next/link";
 
@@ -19,8 +20,12 @@ export default async function LeadDetailPage({
   const resolvedParams = await params;
   const leadId = resolvedParams.id;
 
-  // 1. Obtener perfil actual y validar sesión
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil y datos del lead en paralelo
+  const [profileResult, leadResult] = await Promise.all([
+    getCurrentProfile(),
+    getLeadById(leadId),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -29,8 +34,6 @@ export default async function LeadDetailPage({
     role: profileResult.data.role as "admin" | "comercial",
   };
 
-  // 2. Obtener datos del lead
-  const leadResult = await getLeadById(leadId);
   if (!leadResult.success || !leadResult.data) {
     return (
       <div className="flex-1 flex flex-col justify-center items-center py-12 text-center bg-bg-base text-text-primary h-full">
@@ -53,17 +56,19 @@ export default async function LeadDetailPage({
     );
   }
 
-  // 3. Obtener eventos, tareas, simulaciones y comerciales activos
-  const eventsResult = await getLeadEvents(leadId);
+  // 2. Obtener eventos, tareas, simulaciones, comerciales y plantillas todos en paralelo
+  const [eventsResult, tasksResult, simulationsResult, comercialesResult, templates] =
+    await Promise.all([
+      getLeadEvents(leadId),
+      getTasksByLeadId(leadId),
+      getSimulationsByLeadId(leadId),
+      getActiveComerciales(),
+      getDocumentTemplates(),
+    ]);
+
   const events = eventsResult.success && eventsResult.data ? eventsResult.data : [];
-
-  const tasksResult = await getTasksByLeadId(leadId);
   const tasks = tasksResult.success && tasksResult.data ? tasksResult.data : [];
-
-  const simulationsResult = await getSimulationsByLeadId(leadId);
   const simulations = simulationsResult.success && simulationsResult.data ? simulationsResult.data : [];
-
-  const comercialesResult = await getActiveComerciales();
   const comerciales = comercialesResult.success && comercialesResult.data ? comercialesResult.data : [];
 
   return (
@@ -74,6 +79,7 @@ export default async function LeadDetailPage({
       events={events}
       tasks={tasks}
       simulations={simulations}
+      templates={templates}
     />
   );
 }

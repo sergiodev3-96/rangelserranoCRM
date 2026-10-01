@@ -34,35 +34,35 @@ export default async function LeadsPage({
 
   const pageSize = 20;
 
-  // 1. Obtener lista de leads paginados con filtros
-  const result = await getLeads({
-    page,
-    pageSize,
-    status,
-    unassignedOnly: unassigned,
-    search,
-  });
+  // 1. Obtener lista de leads y perfil del usuario en paralelo
+  const [result, profileResult] = await Promise.all([
+    getLeads({
+      page,
+      pageSize,
+      status,
+      unassignedOnly: unassigned,
+      search,
+    }),
+    getCurrentProfile(),
+  ]);
 
   const leads = result.success && result.data ? result.data.leads : [];
   const total = result.success && result.data ? result.data.total : 0;
   const error = !result.success ? result.error : null;
 
-  // 2. Obtener datos de asignación si el usuario es Admin
-  const profileResult = await getCurrentProfile();
   const isAdmin = profileResult.success && profileResult.data?.role === "admin";
 
   let unassignedLeads: LeadWithAssignee[] = [];
   let comerciales: ProfileSummary[] = [];
 
   if (isAdmin) {
-    // Obtener leads sin asignar
-    const unassignedRes = await getLeads({ unassignedOnly: true, pageSize: 20 });
+    const [unassignedRes, comercialesRes] = await Promise.all([
+      getLeads({ unassignedOnly: true, pageSize: 20 }),
+      getActiveComerciales(),
+    ]);
     if (unassignedRes.success && unassignedRes.data) {
       unassignedLeads = unassignedRes.data.leads;
     }
-
-    // Obtener comerciales activos
-    const comercialesRes = await getActiveComerciales();
     if (comercialesRes.success && comercialesRes.data) {
       comerciales = comercialesRes.data;
     }

@@ -5,8 +5,12 @@ import { getAllProfiles } from "@/lib/actions/users";
 import UsersListClient from "@/components/admin/UsersListClient";
 
 export default async function UsuariosPage() {
-  // 1. Obtener perfil de la sesión actual y validar rol admin
-  const profileResult = await getCurrentProfile();
+  // 1. Obtener perfil y lista de usuarios en paralelo
+  const [profileResult, profilesResult] = await Promise.all([
+    getCurrentProfile(),
+    getAllProfiles(),
+  ]);
+
   if (!profileResult.success || !profileResult.data) {
     redirect("/login");
   }
@@ -16,8 +20,6 @@ export default async function UsuariosPage() {
     redirect("/leads");
   }
 
-  // 2. Obtener lista de perfiles
-  const profilesResult = await getAllProfiles();
   const profiles = profilesResult.success && profilesResult.data ? profilesResult.data : [];
 
   return (
