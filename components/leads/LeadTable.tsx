@@ -75,7 +75,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Estado Solicitud
             </th>
-            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider whitespace-nowrap min-w-[180px]">
               Teléfono
             </th>
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
@@ -129,7 +129,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
               </td>
 
               {/* Phone */}
-              <td className="px-6 py-4 text-text-primary font-bold text-[15px] tracking-wide font-data-mono">
+              <td className="px-6 py-4 text-text-primary font-bold text-[15px] tracking-wide font-data-mono whitespace-nowrap min-w-[180px]">
                 {lead.phone || <span className="text-text-disabled font-normal">—</span>}
               </td>
 

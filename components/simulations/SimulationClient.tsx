@@ -6,6 +6,7 @@ import { calculateAmortization } from "@/lib/finance/calculator";
 import { createSimulation } from "@/lib/actions/simulations";
 import type { CreateSimulationInput } from "@/lib/validations/simulations";
 import type { Simulation } from "@/types/simulations";
+import type { FinancialEntity } from "@/types/financial-entities";
 
 type LeadSummary = {
   id: string;
@@ -16,26 +17,36 @@ type SimulationClientProps = {
   leads: LeadSummary[];
   initialLeadId?: string | null;
   initialSimulation?: Simulation | null;
+  initialEntities?: FinancialEntity[];
 };
 
-const ENTITIES_CONFIG = [
+const DEFAULT_ENTITIES_FALLBACK = [
   { name: "Santander Consumer", tin: 6.49 },
   { name: "BBVA", tin: 5.99 },
   { name: "Cetelem Auto", tin: 7.15 },
-  { name: "Personalizado", tin: 0 },
 ];
 
 export default function SimulationClient({
   leads,
   initialLeadId,
   initialSimulation,
+  initialEntities = [],
 }: SimulationClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
+  const entitiesList = React.useMemo(() => {
+    const baseList =
+      initialEntities && initialEntities.length > 0
+        ? initialEntities.map((e) => ({ name: e.name, tin: Number(e.tin) }))
+        : DEFAULT_ENTITIES_FALLBACK;
+
+    return [...baseList, { name: "Personalizado", tin: 0 }];
+  }, [initialEntities]);
+
   // Find entity index from initialSimulation
   const initialEntityIdx = initialSimulation
-    ? ENTITIES_CONFIG.findIndex((e) => e.name === initialSimulation.entity_name)
+    ? entitiesList.findIndex((e) => e.name === initialSimulation.entity_name)
     : 0;
 
   // Compute initial insurance monthly if we have an initial simulation
@@ -62,7 +73,7 @@ export default function SimulationClient({
     initialSimulation ? Number(initialSimulation.down_payment) : 6500
   );
   const [entityIndex, setEntityIndex] = useState<number>(
-    initialEntityIdx === -1 ? ENTITIES_CONFIG.length - 1 : initialEntityIdx
+    initialEntityIdx === -1 ? entitiesList.length - 1 : initialEntityIdx
   );
   const [customTin, setCustomTin] = useState<number>(
     initialSimulation ? Number(initialSimulation.tin_rate) : 6.5
@@ -88,7 +99,7 @@ export default function SimulationClient({
   }, [initialLeadId]);
 
   // Derived values
-  const currentEntity = ENTITIES_CONFIG[entityIndex];
+  const currentEntity = entitiesList[entityIndex] || entitiesList[0];
   const tinRate = currentEntity.name === "Personalizado" ? customTin : currentEntity.tin;
 
   const { financedCapital, taeRate, options } = calculateAmortization(
@@ -257,8 +268,8 @@ export default function SimulationClient({
                     onChange={(e) => setEntityIndex(parseInt(e.target.value))}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
                   >
-                    {ENTITIES_CONFIG.map((ent, idx) => (
-                      <option key={ent.name} value={idx}>
+                    {entitiesList.map((ent, idx) => (
+                      <option key={`${ent.name}-${idx}`} value={idx}>
                         {ent.name} {ent.tin > 0 ? `(TIN ${ent.tin}%)` : ""}
                       </option>
                     ))}

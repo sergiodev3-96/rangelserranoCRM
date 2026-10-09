@@ -47,9 +47,32 @@ export default function WhatsAppTemplatesModal({
       getWhatsAppTemplates().then((res) => {
         setIsLoadingTemplates(false);
         if (res.success && res.data) {
-          setTemplates(res.data);
-          if (res.data.length > 0) {
-            setSelectedTemplate(res.data[0]);
+          // Ordenar plantillas por numeración (sort_order) y fallback a prioridad
+          const getTemplatePriority = (tmpl: WhatsAppTemplate): number => {
+            const lbl = tmpl.label.toLowerCase();
+            if (lbl.includes("saludo")) return 1;
+            if (lbl.includes("contacto") || lbl.includes("bienvenida") || lbl.includes("inicial")) return 2;
+            if (tmpl.category === "success") return 3;
+            if (tmpl.category === "primary") return 4;
+            if (tmpl.category === "warning" || lbl.includes("seguimiento")) return 5;
+            if (tmpl.category === "error" || lbl.includes("rechazad")) return 10;
+            return 6;
+          };
+
+          const sorted = [...res.data].sort((a, b) => {
+            const orderA = Number(a.sort_order ?? 0);
+            const orderB = Number(b.sort_order ?? 0);
+            if (orderA !== orderB && orderA > 0 && orderB > 0) {
+              return orderA - orderB;
+            }
+            if (orderA > 0 && orderB === 0) return -1;
+            if (orderA === 0 && orderB > 0) return 1;
+            return getTemplatePriority(a) - getTemplatePriority(b);
+          });
+
+          setTemplates(sorted);
+          if (sorted.length > 0) {
+            setSelectedTemplate(sorted[0]);
           } else {
             setSelectedTemplate(null);
             setCustomBody("");

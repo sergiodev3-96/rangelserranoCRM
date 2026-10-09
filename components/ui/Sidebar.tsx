@@ -36,6 +36,11 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
       label: "Plantillas Documentos",
       icon: "article",
     });
+    navItems.push({
+      href: "/admin/entidades-financieras",
+      label: "Entidades Financieras",
+      icon: "account_balance",
+    });
   }
 
   return (

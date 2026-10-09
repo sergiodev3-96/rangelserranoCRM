@@ -25,13 +25,19 @@ export async function getWhatsAppTemplates(): Promise<ActionResult<WhatsAppTempl
     const { data, error } = await supabase
       .from("whatsapp_templates")
       .select("*")
+      .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
 
     if (error) {
       return { success: false, data: null, error: error.message };
     }
 
-    return { success: true, data: (data || []) as WhatsAppTemplate[], error: null };
+    const mapped = (data || []).map((tmpl) => ({
+      ...tmpl,
+      sort_order: Number(tmpl.sort_order ?? 0),
+    })) as WhatsAppTemplate[];
+
+    return { success: true, data: mapped, error: null };
   } catch (err) {
     return {
       success: false,
@@ -46,6 +52,7 @@ export async function createWhatsAppTemplate(params: {
   label: string;
   body: string;
   category: WhatsAppTemplateCategory;
+  sort_order?: number;
 }): Promise<ActionResult<WhatsAppTemplate>> {
   try {
     const adminCheck = await checkAdminAuth();
@@ -60,6 +67,7 @@ export async function createWhatsAppTemplate(params: {
         label: params.label,
         body: params.body,
         category: params.category,
+        sort_order: params.sort_order ?? 0,
       })
       .select()
       .single();
@@ -70,7 +78,14 @@ export async function createWhatsAppTemplate(params: {
 
     revalidatePath("/admin/plantillas");
     revalidatePath("/leads");
-    return { success: true, data: data as WhatsAppTemplate, error: null };
+    return {
+      success: true,
+      data: {
+        ...data,
+        sort_order: Number(data.sort_order ?? 0),
+      } as WhatsAppTemplate,
+      error: null,
+    };
   } catch (err) {
     return {
       success: false,
@@ -86,6 +101,7 @@ export async function updateWhatsAppTemplate(params: {
   label: string;
   body: string;
   category: WhatsAppTemplateCategory;
+  sort_order?: number;
 }): Promise<ActionResult<WhatsAppTemplate>> {
   try {
     const adminCheck = await checkAdminAuth();
@@ -100,6 +116,7 @@ export async function updateWhatsAppTemplate(params: {
         label: params.label,
         body: params.body,
         category: params.category,
+        ...(typeof params.sort_order === "number" ? { sort_order: params.sort_order } : {}),
         updated_at: new Date().toISOString(),
       })
       .eq("id", params.id)
@@ -112,7 +129,14 @@ export async function updateWhatsAppTemplate(params: {
 
     revalidatePath("/admin/plantillas");
     revalidatePath("/leads");
-    return { success: true, data: data as WhatsAppTemplate, error: null };
+    return {
+      success: true,
+      data: {
+        ...data,
+        sort_order: Number(data.sort_order ?? 0),
+      } as WhatsAppTemplate,
+      error: null,
+    };
   } catch (err) {
     return {
       success: false,
