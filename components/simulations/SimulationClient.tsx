@@ -2,8 +2,9 @@
 
 import React, { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { calculateAmortization } from "@/lib/finance/calculator";
-import { createSimulation } from "@/lib/actions/simulations";
+import { createSimulation, updateSimulation } from "@/lib/actions/simulations";
 import type { CreateSimulationInput } from "@/lib/validations/simulations";
 import type { Simulation } from "@/types/simulations";
 import type { FinancialEntity } from "@/types/financial-entities";
@@ -34,6 +35,10 @@ export default function SimulationClient({
 }: SimulationClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  const [currentSimulationId, setCurrentSimulationId] = useState<string | null>(
+    initialSimulation?.id || null
+  );
 
   const entitiesList = React.useMemo(() => {
     const baseList =
@@ -66,16 +71,16 @@ export default function SimulationClient({
   };
 
   // Input states
-  const [vehiclePrice, setVehiclePrice] = useState<number>(
+  const [vehiclePrice, setVehiclePrice] = useState<number | "">(
     initialSimulation ? Number(initialSimulation.vehicle_price) : 32500
   );
-  const [downPayment, setDownPayment] = useState<number>(
+  const [downPayment, setDownPayment] = useState<number | "">(
     initialSimulation ? Number(initialSimulation.down_payment) : 6500
   );
   const [entityIndex, setEntityIndex] = useState<number>(
     initialEntityIdx === -1 ? entitiesList.length - 1 : initialEntityIdx
   );
-  const [customTin, setCustomTin] = useState<number>(
+  const [customTin, setCustomTin] = useState<number | "">(
     initialSimulation ? Number(initialSimulation.tin_rate) : 6.5
   );
   const [selectedLeadId, setSelectedLeadId] = useState<string>(
@@ -89,35 +94,67 @@ export default function SimulationClient({
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [optionsViewMode, setOptionsViewMode] = useState<"cards" | "list">("cards");
-  const [insuranceMonthly, setInsuranceMonthly] = useState<number>(getInitialInsurance());
+  const [insuranceMonthly, setInsuranceMonthly] = useState<number | "">(getInitialInsurance());
 
-  // Sync selectedLeadId if initialLeadId changes
+  // Limpiar mensajes tras cualquier modificación para permitir guardar de nuevo
+  const clearAlerts = () => {
+    if (successMsg) setSuccessMsg(null);
+    if (errorMsg) setErrorMsg(null);
+  };
+
+  // Sync if initialSimulation or initialLeadId changes
   useEffect(() => {
-    if (initialLeadId) {
+    if (initialSimulation) {
+      setCurrentSimulationId(initialSimulation.id);
+      setVehiclePrice(Number(initialSimulation.vehicle_price));
+      setDownPayment(Number(initialSimulation.down_payment));
+      const entIdx = entitiesList.findIndex((e) => e.name === initialSimulation.entity_name);
+      setEntityIndex(entIdx === -1 ? entitiesList.length - 1 : entIdx);
+      setCustomTin(Number(initialSimulation.tin_rate));
+      setSelectedLeadId(initialSimulation.lead_id || initialLeadId || "");
+      setSelectedTerm(Number(initialSimulation.term_months));
+    } else if (initialLeadId) {
       setSelectedLeadId(initialLeadId);
     }
-  }, [initialLeadId]);
+  }, [initialSimulation, initialLeadId, entitiesList]);
+
+  // Lead seleccionado actual
+  const selectedLead = leads.find((l) => l.id === selectedLeadId);
 
   // Derived values
+  const numericVehiclePrice = typeof vehiclePrice === "number" ? vehiclePrice : 0;
+  const numericDownPayment = typeof downPayment === "number" ? downPayment : 0;
+  const numericCustomTin = typeof customTin === "number" ? customTin : 0;
+  const numericInsurance = typeof insuranceMonthly === "number" ? insuranceMonthly : 0;
+
   const currentEntity = entitiesList[entityIndex] || entitiesList[0];
-  const tinRate = currentEntity.name === "Personalizado" ? customTin : currentEntity.tin;
+  const tinRate = currentEntity.name === "Personalizado" ? numericCustomTin : currentEntity.tin;
 
   const { financedCapital, taeRate, options } = calculateAmortization(
-    vehiclePrice,
-    downPayment,
+    numericVehiclePrice,
+    numericDownPayment,
     tinRate
   );
 
-  // Validate initial deposit (min 10%)
-  const minDeposit = vehiclePrice * 0.1;
-  const isDepositValid = downPayment >= minDeposit;
+  // Depósito: porcentaje y recomendación (sin bloquear guardado si es menor al 10%)
+  const minDeposit = numericVehiclePrice * 0.1;
+  const isDepositRecommended = numericDownPayment >= minDeposit;
+  const isValidToSave = numericVehiclePrice > 0 && numericDownPayment >= 0 && financedCapital > 0;
 
   // Selected option details
   const selectedOption = options.find((o) => o.termMonths === selectedTerm) || options[2]; // Fallback to 84m
 
   const handleSave = () => {
-    if (!isDepositValid) {
-      setErrorMsg("El depósito inicial debe ser de al menos el 10% del valor del vehículo.");
+    if (numericVehiclePrice <= 0) {
+      setErrorMsg("El precio del vehículo debe ser mayor a 0.");
+      return;
+    }
+    if (numericDownPayment < 0) {
+      setErrorMsg("La entrada no puede ser negativa.");
+      return;
+    }
+    if (numericDownPayment >= numericVehiclePrice) {
+      setErrorMsg("La entrada no puede ser igual o superior al precio total del vehículo.");
       return;
     }
     if (financedCapital <= 0) {
@@ -131,20 +168,35 @@ export default function SimulationClient({
     startTransition(async () => {
       const input: CreateSimulationInput = {
         lead_id: selectedLeadId || null,
-        vehicle_price: vehiclePrice,
-        down_payment: downPayment,
+        vehicle_price: numericVehiclePrice,
+        down_payment: numericDownPayment,
         financed_capital: financedCapital,
         entity_name: currentEntity.name === "Personalizado" ? "Personalizado" : currentEntity.name,
         tin_rate: tinRate,
         tae_rate: taeRate,
         term_months: selectedTerm,
-        monthly_payment: selectedOption.monthlyPayment + insuranceMonthly,
+        monthly_payment: selectedOption.monthlyPayment + numericInsurance,
         total_interest: selectedOption.totalInterest,
-        total_payable: selectedOption.totalPayable + (insuranceMonthly * selectedTerm),
+        total_payable: selectedOption.totalPayable + (numericInsurance * selectedTerm),
         is_draft: !selectedLeadId, // If lead selected, not draft. Otherwise, draft.
       };
 
-      const result = await createSimulation(input);
+      let result;
+      if (currentSimulationId) {
+        result = await updateSimulation(currentSimulationId, input);
+      } else {
+        result = await createSimulation(input);
+        if (result.success && result.data) {
+          setCurrentSimulationId(result.data.id);
+          // Actualizar URL sin recargar para que las siguientes modificaciones actualicen esta misma simulación
+          const url = new URL(window.location.href);
+          url.searchParams.set("id", result.data.id);
+          if (selectedLeadId) {
+            url.searchParams.set("leadId", selectedLeadId);
+          }
+          window.history.replaceState({}, "", url.toString());
+        }
+      }
 
       if (result.success) {
         setSuccessMsg(
@@ -152,29 +204,45 @@ export default function SimulationClient({
             ? "Simulación guardada y vinculada al lead con éxito."
             : "Simulación libre guardada con éxito."
         );
-        // If linked to lead, go back to lead details after 1.5 seconds
-        if (selectedLeadId) {
-          setTimeout(() => {
-            router.push(`/leads/${selectedLeadId}`);
-            router.refresh();
-          }, 1500);
-        }
       } else {
         setErrorMsg(result.error || "No se pudo guardar la simulación.");
       }
     });
   };
 
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left bg-bg-base text-text-primary md:h-full">
       {/* Title */}
-      <div>
-        <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
-          Simulador Financiero
-        </h1>
-        <p className="font-body-sm text-[13px] text-text-secondary">
-          Configura los parámetros para cotizar opciones de financiación y guardarlas en el CRM.
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
+              Simulador Financiero
+            </h1>
+            {currentSimulationId && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+                Editando simulación
+              </span>
+            )}
+          </div>
+          <p className="font-body-sm text-[13px] text-text-secondary">
+            Configura los parámetros para cotizar opciones de financiación y guardarlas en el CRM.
+          </p>
+        </div>
+
+        {selectedLead && (
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/leads/${selectedLead.id}`}
+              className="px-3 py-1.5 rounded-lg border border-border-default hover:border-primary/50 text-[12px] font-medium text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5"
+            >
+              <span className="material-symbols-outlined text-[16px] text-primary">person</span>
+              Lead: <strong className="text-text-primary">{selectedLead.full_name}</strong>
+              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Grid */}
@@ -202,7 +270,10 @@ export default function SimulationClient({
                   </span>
                   <select
                     value={selectedLeadId}
-                    onChange={(e) => setSelectedLeadId(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedLeadId(e.target.value);
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
                   >
                     <option value="">Simulación Libre (Borrador)</option>
@@ -229,8 +300,14 @@ export default function SimulationClient({
                   </span>
                   <input
                     type="number"
-                    value={vehiclePrice || ""}
-                    onChange={(e) => setVehiclePrice(Math.max(0, parseFloat(e.target.value) || 0))}
+                    min="0"
+                    step="any"
+                    value={vehiclePrice}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setVehiclePrice(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
                   />
                 </div>
@@ -247,10 +324,22 @@ export default function SimulationClient({
                   </span>
                   <input
                     type="number"
-                    value={downPayment || ""}
-                    onChange={(e) => setDownPayment(Math.max(0, parseFloat(e.target.value) || 0))}
+                    min="0"
+                    step="any"
+                    value={downPayment}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDownPayment(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
                   />
+                </div>
+                <div className="mt-1 flex justify-between items-center text-xs text-text-tertiary">
+                  <span>Min. 10% recomendado</span>
+                  <span className={isDepositRecommended ? "text-success font-medium" : "text-warning font-medium"}>
+                    {numericVehiclePrice > 0 ? `${((numericDownPayment / numericVehiclePrice) * 100).toFixed(1)}% de entrada` : "0.0%"}
+                  </span>
                 </div>
               </div>
 
@@ -265,7 +354,10 @@ export default function SimulationClient({
                   </span>
                   <select
                     value={entityIndex}
-                    onChange={(e) => setEntityIndex(parseInt(e.target.value))}
+                    onChange={(e) => {
+                      setEntityIndex(parseInt(e.target.value));
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
                   >
                     {entitiesList.map((ent, idx) => (
@@ -289,8 +381,13 @@ export default function SimulationClient({
                   <input
                     type="number"
                     step="0.01"
-                    value={customTin || ""}
-                    onChange={(e) => setCustomTin(Math.max(0, parseFloat(e.target.value) || 0))}
+                    min="0"
+                    value={customTin}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setCustomTin(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 px-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
                   />
                 </div>
@@ -307,8 +404,14 @@ export default function SimulationClient({
                   </span>
                   <input
                     type="number"
-                    value={insuranceMonthly || ""}
-                    onChange={(e) => setInsuranceMonthly(Math.max(0, parseFloat(e.target.value) || 0))}
+                    min="0"
+                    step="any"
+                    value={insuranceMonthly}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setInsuranceMonthly(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                      clearAlerts();
+                    }}
                     className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
                   />
                 </div>
@@ -410,12 +513,15 @@ export default function SimulationClient({
               {options.map((opt) => {
                 const isSelected = selectedTerm === opt.termMonths;
                 const { isRecommended } = opt;
-                const totalMonthly = opt.monthlyPayment + insuranceMonthly;
+                const totalMonthly = opt.monthlyPayment + numericInsurance;
 
                 return (
                   <div
                     key={opt.termMonths}
-                    onClick={() => setSelectedTerm(opt.termMonths)}
+                    onClick={() => {
+                      setSelectedTerm(opt.termMonths);
+                      clearAlerts();
+                    }}
                     className={`relative overflow-hidden rounded-xl p-5 cursor-pointer transition-all duration-300 border flex flex-col justify-between h-full ${
                       isSelected
                         ? "border-primary bg-surface-container-high ring-1 ring-primary shadow-[0_0_20px_rgba(108,99,255,0.2)]"
@@ -457,7 +563,7 @@ export default function SimulationClient({
                       <div className="flex justify-between text-xs">
                         <span className="text-text-secondary">Seguro de vida</span>
                         <span className="font-data-mono text-text-primary">
-                          {insuranceMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                         </span>
                       </div>
                       <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
@@ -487,12 +593,15 @@ export default function SimulationClient({
                 <tbody>
                   {options.map((opt) => {
                     const isSelected = selectedTerm === opt.termMonths;
-                    const totalPaymentWithInsurance = opt.monthlyPayment + insuranceMonthly;
+                    const totalPaymentWithInsurance = opt.monthlyPayment + numericInsurance;
 
                     return (
                       <tr
                         key={opt.termMonths}
-                        onClick={() => setSelectedTerm(opt.termMonths)}
+                        onClick={() => {
+                          setSelectedTerm(opt.termMonths);
+                          clearAlerts();
+                        }}
                         className={`border-b border-border-default/30 transition-all cursor-pointer ${
                           isSelected
                             ? "bg-primary/10 hover:bg-primary/15 font-semibold text-primary"
@@ -514,7 +623,7 @@ export default function SimulationClient({
                           <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
                         </td>
                         <td className="py-3 px-2 font-data-mono text-text-secondary">
-                          {insuranceMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}/mes
+                          {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}/mes
                         </td>
                         <td className="py-3 px-2">
                           <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
@@ -540,29 +649,48 @@ export default function SimulationClient({
 
           {/* Action Alert Message */}
           {errorMsg && (
-            <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-4 font-body-sm text-[13px] mt-4">
-              {errorMsg}
+            <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">error</span>
+              <span>{errorMsg}</span>
             </div>
           )}
           {successMsg && (
-            <div className="bg-success/10 border border-success/20 text-success rounded-lg p-4 font-body-sm text-[13px] mt-4">
-              {successMsg}
+            <div className="bg-success/10 border border-success/30 text-success rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                <span>{successMsg}</span>
+              </div>
+              {selectedLeadId && (
+                <Link
+                  href={`/leads/${selectedLeadId}`}
+                  className="px-3.5 py-1.5 bg-success text-white hover:bg-success/90 font-medium rounded-lg text-[12px] transition-colors shrink-0 flex items-center gap-1.5 shadow-sm"
+                >
+                  <span className="material-symbols-outlined text-[16px]">person</span>
+                  Volver al Lead
+                </Link>
+              )}
             </div>
           )}
 
           {/* Submit Action */}
           <div className="flex justify-end gap-3 mt-6">
             <button
+              type="button"
               onClick={() => {
-                router.back();
+                if (selectedLeadId) {
+                  router.push(`/leads/${selectedLeadId}`);
+                } else {
+                  router.back();
+                }
               }}
               className="px-5 py-2.5 border border-border-default text-text-secondary hover:text-text-primary rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
             >
-              Cancelar
+              {selectedLeadId ? "Volver al Lead" : "Cancelar"}
             </button>
             <button
+              type="button"
               onClick={handleSave}
-              disabled={isPending || !isDepositValid}
+              disabled={isPending || !isValidToSave}
               className="bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] disabled:opacity-50 disabled:hover:shadow-none transition-all duration-300 rounded-lg py-2.5 px-6 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer"
             >
               {isPending ? (
@@ -584,3 +712,4 @@ export default function SimulationClient({
     </div>
   );
 }
+

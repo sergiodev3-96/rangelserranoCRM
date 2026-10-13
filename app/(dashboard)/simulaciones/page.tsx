@@ -20,20 +20,34 @@ export default async function SimulacionesPage({
     typeof resolvedSearchParams.id === "string" ? resolvedSearchParams.id : null;
 
   // 1. Obtener perfil, leads, datos de simulación y entidades financieras en paralelo
-  const [profileResult, leadsResult, simResult, entitiesResult] = await Promise.all([
-    getCurrentProfile(),
-    getLeadsForSelector(),
-    simulationId ? getSimulationById(simulationId) : Promise.resolve(null),
-    getFinancialEntities(true),
-  ]);
+  let profileResult;
+  let leadsResult;
+  let simResult = null;
+  let entitiesResult;
 
-  if (!profileResult.success || !profileResult.data) {
+  try {
+    const results = await Promise.all([
+      getCurrentProfile(),
+      getLeadsForSelector(),
+      simulationId ? getSimulationById(simulationId) : Promise.resolve(null),
+      getFinancialEntities(true),
+    ]);
+    profileResult = results[0];
+    leadsResult = results[1];
+    simResult = results[2];
+    entitiesResult = results[3];
+  } catch (error) {
+    console.error("Error loading simulation page data:", error);
     redirect("/login");
   }
 
-  const mappedLeads = leadsResult.success && leadsResult.data ? leadsResult.data : [];
+  if (!profileResult?.success || !profileResult?.data) {
+    redirect("/login");
+  }
+
+  const mappedLeads = leadsResult?.success && leadsResult?.data ? leadsResult.data : [];
   const initialSimulation = simResult && simResult.success && simResult.data ? simResult.data : null;
-  const initialEntities = entitiesResult.success && entitiesResult.data ? entitiesResult.data : [];
+  const initialEntities = entitiesResult?.success && entitiesResult?.data ? entitiesResult.data : [];
 
   return (
     <SimulationClient
@@ -44,3 +58,4 @@ export default async function SimulacionesPage({
     />
   );
 }
+

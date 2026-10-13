@@ -16,3 +16,7 @@ export const createSimulationSchema = z.object({
 });
 
 export type CreateSimulationInput = z.infer<typeof createSimulationSchema>;
+
+export const updateSimulationSchema = createSimulationSchema.partial();
+
+export type UpdateSimulationInput = z.infer<typeof updateSimulationSchema>;

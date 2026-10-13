@@ -727,6 +727,7 @@ export default function LeadDetailClient({
 
                           <div className="flex items-center gap-4 text-[11px] text-text-secondary flex-wrap">
                             <span>Vehículo: <strong className="text-text-primary">{sim.vehicle_price.toLocaleString()} €</strong></span>
+                            <span>Entrada: <strong className="text-text-primary">{(sim.down_payment ?? 0).toLocaleString()} €</strong></span>
                             <span>Financiado: <strong className="text-text-primary">{sim.financed_capital.toLocaleString()} €</strong></span>
                             <span>Banco: <strong className="text-text-primary">{sim.entity_name}</strong></span>
                             <span>TIN: <strong className="text-text-primary">{sim.tin_rate}%</strong></span>
