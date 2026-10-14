@@ -61,11 +61,12 @@ export async function getTasksByLeadId(
 // Crear una tarea
 export async function createTask(input: CreateTaskInput): Promise<ActionResult<Task>> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     const taskData = {
       title: input.title,
@@ -116,11 +117,12 @@ export async function updateTaskStatus(
   input: UpdateTaskStatusInput
 ): Promise<ActionResult<Task>> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     // 1. Obtener la tarea para verificar quién es el asignado
     const { data: currentTask } = await supabase
@@ -130,8 +132,7 @@ export async function updateTaskStatus(
       .single();
 
     // 2. Verificar permisos: es Admin o es el Comercial asignado
-    const profileResult = await getCurrentProfile();
-    const isAdmin = profileResult.success && profileResult.data.role === "admin";
+    const isAdmin = user.role === "admin";
     const isAssigned = currentTask && currentTask.assigned_to === user.id;
 
     if (!isAdmin && !isAssigned) {
@@ -183,11 +184,12 @@ export async function updateTaskStatus(
 // Eliminar una tarea
 export async function deleteTask(taskId: string): Promise<ActionResult<void>> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     // Verificar permisos
     const { data: currentTask } = await supabase
@@ -196,8 +198,7 @@ export async function deleteTask(taskId: string): Promise<ActionResult<void>> {
       .eq("id", taskId)
       .single();
 
-    const profileResult = await getCurrentProfile();
-    const isAdmin = profileResult.success && profileResult.data.role === "admin";
+    const isAdmin = user.role === "admin";
     const isAssigned = currentTask && currentTask.assigned_to === user.id;
 
     if (!isAdmin && !isAssigned) {
@@ -238,11 +239,12 @@ export async function deleteTask(taskId: string): Promise<ActionResult<void>> {
 // Actualizar detalles completos de una tarea
 export async function updateTask(input: UpdateTaskInput): Promise<ActionResult<Task>> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     // 1. Obtener la tarea para verificar quién es el asignado originalmente
     const { data: currentTask } = await supabase
@@ -252,8 +254,7 @@ export async function updateTask(input: UpdateTaskInput): Promise<ActionResult<T
       .single();
 
     // 2. Verificar permisos: es Admin o es el Comercial asignado originalmente
-    const profileResult = await getCurrentProfile();
-    const isAdmin = profileResult.success && profileResult.data.role === "admin";
+    const isAdmin = user.role === "admin";
     const isAssigned = currentTask && currentTask.assigned_to === user.id;
 
     if (!isAdmin && !isAssigned) {
@@ -308,4 +309,75 @@ export async function updateTask(input: UpdateTaskInput): Promise<ActionResult<T
     };
   }
 }
+
+// Archivar o desarchivar una tarea
+export async function toggleArchiveTask(
+  taskId: string,
+  archived: boolean
+): Promise<ActionResult<void>> {
+  try {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+    const user = profileResult.data;
+    const supabase = await createClient();
+
+    // 1. Obtener la tarea para verificar quién es el asignado
+    const { data: currentTask } = await supabase
+      .from("tasks")
+      .select("assigned_to, lead_id, title")
+      .eq("id", taskId)
+      .single();
+
+    // 2. Verificar permisos: es Admin o es el Comercial asignado
+    const isAdmin = user.role === "admin";
+    const isAssigned = currentTask && currentTask.assigned_to === user.id;
+
+    if (!isAdmin && !isAssigned) {
+      return {
+        success: false,
+        data: null,
+        error: "No tienes permiso para modificar esta tarea.",
+      };
+    }
+
+    const { error } = await supabase
+      .from("tasks")
+      .update({ archived })
+      .eq("id", taskId);
+
+    if (error) {
+      if (error.message?.includes("'archived' column") || error.message?.includes("schema cache")) {
+        return {
+          success: false,
+          data: null,
+          error: "Para usar el archivado de tareas, ejecuta la migración 0017 en Supabase SQL Editor.",
+        };
+      }
+      return { success: false, data: null, error: error.message };
+    }
+
+    // Si la tarea está vinculada a un lead, registrar evento
+    if (currentTask && currentTask.lead_id) {
+      await supabase.from("lead_events").insert({
+        lead_id: currentTask.lead_id,
+        author_id: user.id,
+        event_type: "note",
+        content: `Tarea "${currentTask.title}" ${archived ? "archivada" : "desarchivada"}.`,
+      });
+      revalidatePath(`/leads/${currentTask.lead_id}`);
+    }
+
+    revalidatePath("/tareas");
+    return { success: true, data: undefined, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al cambiar estado de archivo de la tarea",
+    };
+  }
+}
+
 

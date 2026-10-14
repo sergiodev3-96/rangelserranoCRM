@@ -10,12 +10,12 @@ import { getCurrentProfile } from "./auth";
 // Obtener todas las simulaciones a las que el usuario tiene acceso
 export async function getSimulations(): Promise<ActionResult<Simulation[]>> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
+    const supabase = await createClient();
     const { data, error } = await supabase
       .from("simulations")
       .select("*")

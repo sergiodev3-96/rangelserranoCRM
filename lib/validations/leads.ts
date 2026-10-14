@@ -31,6 +31,8 @@ export const updateLeadStatusSchema = z.object({
     "cuarentena",
     "asnef",
     "rechazado",
+    "seguir_insistiendo",
+    "ocupado",
   ]),
 });
 

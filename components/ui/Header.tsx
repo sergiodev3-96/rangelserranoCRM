@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { logout } from "@/lib/actions/auth";
 import ThemeToggle from "./ThemeToggle";
 import type { Profile } from "@/types/profiles";
@@ -11,9 +11,67 @@ type HeaderProps = {
   onToggleSidebar?: () => void;
 };
 
+function getPageHeaderInfo(pathname: string): { title: string; subtitle: string } {
+  if (pathname.startsWith("/leads/") && pathname !== "/leads") {
+    return {
+      title: "Ficha del Lead",
+      subtitle: "Detalle y seguimiento integral del cliente",
+    };
+  }
+  if (pathname.startsWith("/leads")) {
+    return {
+      title: "Pipeline de Leads",
+      subtitle: "Gestiona y asigna las solicitudes entrantes y realiza simulaciones de financiación",
+    };
+  }
+  if (pathname.startsWith("/tareas")) {
+    return {
+      title: "Listado de Tareas",
+      subtitle: "Tareas comerciales ordenadas por fecha de vencimiento",
+    };
+  }
+  if (pathname.startsWith("/simulaciones")) {
+    return {
+      title: "Simulador de Financiación",
+      subtitle: "Calcula y personaliza las cuotas mensuales de los clientes",
+    };
+  }
+  if (pathname.startsWith("/pedidos")) {
+    return {
+      title: "Gestión de Pedidos",
+      subtitle: "Seguimiento de operaciones y pedidos formalizados",
+    };
+  }
+  if (pathname.startsWith("/admin/usuarios")) {
+    return {
+      title: "Gestión de Usuarios",
+      subtitle: "Administración de accesos y roles del equipo comercial",
+    };
+  }
+  if (pathname.startsWith("/admin/plantillas-whatsapp")) {
+    return {
+      title: "Plantillas de WhatsApp",
+      subtitle: "Mensajes rápidos preconfigurados para comunicación comercial",
+    };
+  }
+  if (pathname.startsWith("/admin/entidades-financieras")) {
+    return {
+      title: "Entidades Financieras",
+      subtitle: "Configuración de bancos y tipos de interés",
+    };
+  }
+  return {
+    title: "Panel de Control",
+    subtitle: "Rangel Serrano CRM",
+  };
+}
+
 export default function Header({ profile, onToggleSidebar }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
+
+  const { title, subtitle } = getPageHeaderInfo(pathname);
 
   const handleLogout = () => {
     startTransition(async () => {
@@ -26,27 +84,25 @@ export default function Header({ profile, onToggleSidebar }: HeaderProps) {
   };
 
   return (
-    <header className="h-[56px] border-b border-border-default bg-surface flex items-center justify-between px-6 z-30 shrink-0">
-      {/* Search Input */}
-      <div className="flex items-center gap-3">
+    <header className="h-[60px] border-b border-border-default bg-surface flex items-center justify-between px-6 z-30 shrink-0">
+      {/* Page Title & Subtitle (replaces search input) */}
+      <div className="flex items-center gap-3 min-w-0 mr-4">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="md:hidden text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
+            className="md:hidden text-text-secondary hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-container transition-colors cursor-pointer shrink-0"
             aria-label="Abrir menú"
           >
             <span className="material-symbols-outlined text-[24px]">menu</span>
           </button>
         )}
-        <div className="w-[320px] relative hidden sm:block">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">
-            search
-          </span>
-          <input
-            type="text"
-            placeholder="Buscar leads por nombre..."
-            className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg pl-10 pr-4 py-1.5 font-body-sm text-[13px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200"
-          />
+        <div className="min-w-0">
+          <h1 className="font-headline-lg text-[18px] sm:text-[20px] font-bold text-primary tracking-tight leading-tight truncate">
+            {title}
+          </h1>
+          <p className="font-body-sm text-[12px] text-text-secondary truncate hidden sm:block">
+            {subtitle}
+          </p>
         </div>
       </div>
 

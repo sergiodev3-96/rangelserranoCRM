@@ -9,7 +9,7 @@ import type {
 } from "@/lib/validations/leads";
 import { createClient, createServiceClient } from "../supabase/server";
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "./auth";
+import { getCurrentProfile, getCurrentUserId } from "./auth";
 
 // Obtener leads paginados con filtros
 export async function getLeads(params: {
@@ -40,7 +40,19 @@ export async function getLeads(params: {
     }
 
     if (params.search) {
-      query = query.ilike("full_name", `%${params.search}%`);
+      const sanitized = params.search.replace(/[,()]/g, "").trim();
+      if (sanitized) {
+        const digits = sanitized.replace(/\s+/g, "");
+        if (digits !== sanitized && digits.length >= 3) {
+          query = query.or(
+            `full_name.ilike.%${sanitized}%,phone.ilike.%${sanitized}%,phone.ilike.%${digits}%`
+          );
+        } else {
+          query = query.or(
+            `full_name.ilike.%${sanitized}%,phone.ilike.%${sanitized}%`
+          );
+        }
+      }
     }
 
     query = query.order("created_at", { ascending: false }).range(from, to);
@@ -131,13 +143,11 @@ export async function createLead(
   input: CreateLeadInput
 ): Promise<ActionResult<Lead>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const supabase = await createClient();
 
     const leadData = {
       full_name: input.full_name,
@@ -164,7 +174,7 @@ export async function createLead(
     // Registrar evento de creación
     await supabase.from("lead_events").insert({
       lead_id: data.id,
-      author_id: user.id,
+      author_id: userId,
       event_type: "note",
       content: "Lead creado manualmente en el sistema.",
     });
@@ -185,13 +195,11 @@ export async function updateLeadStatus(
   input: UpdateLeadStatusInput
 ): Promise<ActionResult<Lead>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const supabase = await createClient();
 
     // Obtener estado anterior para registrar en metadatos
     const { data: oldLead, error: fetchError } = await supabase
@@ -216,13 +224,20 @@ export async function updateLeadStatus(
       .single();
 
     if (error) {
+      if (error.message?.includes("leads_status_check")) {
+        return {
+          success: false,
+          data: null,
+          error: "Para usar los nuevos estados, ejecuta la migración 0017 en Supabase SQL Editor.",
+        };
+      }
       return { success: false, data: null, error: error.message };
     }
 
     // Registrar evento de cambio de estado
     await supabase.from("lead_events").insert({
       lead_id: input.lead_id,
-      author_id: user.id,
+      author_id: userId,
       event_type: "status_change",
       content: `Estado actualizado de "${oldLead.status}" a "${input.status}".`,
       metadata: {
@@ -251,23 +266,17 @@ export async function assignLead(
   input: AssignLeadInput
 ): Promise<ActionResult<Lead>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, data: null, error: "No autorizado" };
-    }
-
     // Verificar que el usuario que asigna es admin
     const profileResult = await getCurrentProfile();
-    if (!profileResult.success || profileResult.data.role !== "admin") {
+    if (!profileResult.success || !profileResult.data || profileResult.data.role !== "admin") {
       return {
         success: false,
         data: null,
         error: "Solo los administradores pueden asignar leads.",
       };
     }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     // Obtener nombre del comercial asignado para la nota de evento
     const { data: assigneeProfile } = await supabase
@@ -312,17 +321,9 @@ export async function archiveLead(
   leadId: string
 ): Promise<ActionResult<void>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, data: null, error: "No autorizado" };
-    }
-
     // Verificar que el usuario es admin
     const profileResult = await getCurrentProfile();
-    if (!profileResult.success || profileResult.data.role !== "admin") {
+    if (!profileResult.success || !profileResult.data || profileResult.data.role !== "admin") {
       return {
         success: false,
         data: null,
@@ -330,6 +331,8 @@ export async function archiveLead(
       };
     }
 
+    const user = profileResult.data;
+    const supabase = await createClient();
     const { error } = await supabase
       .from("leads")
       .update({ archived: true })
@@ -500,13 +503,11 @@ export async function updateLeadOperationDetails(
   }
 ): Promise<ActionResult<Lead>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
+    const supabase = await createClient();
 
     // Attempt update with all provided fields
     let { data, error } = await supabase
@@ -553,7 +554,7 @@ export async function updateLeadOperationDetails(
     // Registrar evento de actualización
     await supabase.from("lead_events").insert({
       lead_id: leadId,
-      author_id: user.id,
+      author_id: userId,
       event_type: "note",
       content: "Datos de operación actualizados en la ficha del lead.",
     });
@@ -709,24 +710,18 @@ export async function listLeadDocuments(
 // Eliminar un lead permanentemente
 export async function deleteLead(leadId: string): Promise<ActionResult<void>> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const profileResult = await getCurrentProfile();
+    if (!profileResult.success || !profileResult.data) {
       return { success: false, data: null, error: "No autorizado" };
     }
-
-    const profileResult = await getCurrentProfile();
-    if (!profileResult.success) {
-      return { success: false, data: null, error: "No se pudo verificar el perfil del usuario" };
-    }
+    const user = profileResult.data;
+    const supabase = await createClient();
 
     // Usamos el cliente con privilegios de servicio para eliminar el lead y sus relaciones
     const serviceClient = createServiceClient();
 
     // Si no es admin, verificar que el lead esté asignado al usuario
-    if (profileResult.data.role !== "admin") {
+    if (user.role !== "admin") {
       const { data: lead } = await supabase
         .from("leads")
         .select("id, assigned_to")

@@ -15,6 +15,7 @@ export type Task = {
   due_date: string | null;
   due_time: string | null;
   completed_at: string | null;
+  archived?: boolean;
   created_at: string;
   updated_at: string;
 };

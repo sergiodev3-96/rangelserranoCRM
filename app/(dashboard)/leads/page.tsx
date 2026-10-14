@@ -1,4 +1,6 @@
 import React, { Suspense } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { getLeads } from "@/lib/actions/leads";
 import { getCurrentProfile } from "@/lib/actions/auth";
 import { getActiveComerciales } from "@/lib/actions/users";
@@ -6,6 +8,7 @@ import LeadTable from "@/components/leads/LeadTable";
 import LeadFilters from "@/components/leads/LeadFilters";
 import LeadPagination from "@/components/leads/LeadPagination";
 import UnassignedLeadsPanel from "@/components/leads/UnassignedLeadsPanel";
+import { LEADS_STATE_COOKIE, LeadFilterState } from "@/lib/utils/lead-state";
 
 import type { LeadWithAssignee } from "@/types/leads";
 import type { ProfileSummary } from "@/types/profiles";
@@ -18,19 +21,47 @@ export default async function LeadsPage({
   searchParams: SearchParams;
 }) {
   const resolvedSearchParams = await searchParams;
-  const page =
-    typeof resolvedSearchParams.page === "string"
-      ? parseInt(resolvedSearchParams.page)
-      : 1;
-  const status =
-    typeof resolvedSearchParams.status === "string"
-      ? resolvedSearchParams.status
-      : null;
-  const unassigned = resolvedSearchParams.unassigned === "true";
-  const search =
-    typeof resolvedSearchParams.search === "string"
-      ? resolvedSearchParams.search
-      : "";
+
+  const cookieStore = await cookies();
+  const savedCookie = cookieStore.get(LEADS_STATE_COOKIE)?.value;
+  let saved: LeadFilterState | null = null;
+  if (savedCookie) {
+    try {
+      const decoded = savedCookie.includes("%") ? decodeURIComponent(savedCookie) : savedCookie;
+      saved = JSON.parse(decoded);
+    } catch {
+      try {
+        saved = JSON.parse(savedCookie);
+      } catch {}
+    }
+  }
+
+  const hasPage = typeof resolvedSearchParams.page === "string";
+  const hasStatus = typeof resolvedSearchParams.status === "string";
+  const hasSearch = typeof resolvedSearchParams.search === "string";
+  const hasUnassigned = typeof resolvedSearchParams.unassigned === "string";
+
+  // Si se accede a /leads limpiamente sin ningún query param (menú lateral, volver de lead, etc.):
+  const isDirectAccessWithoutParams = !hasPage && !hasStatus && !hasSearch && !hasUnassigned;
+
+  if (isDirectAccessWithoutParams && saved) {
+    const redirectParams = new URLSearchParams();
+    if (saved.status) redirectParams.set("status", saved.status);
+    if (saved.page && saved.page > 1) redirectParams.set("page", saved.page.toString());
+    if (saved.search) redirectParams.set("search", saved.search);
+    if (saved.unassigned) redirectParams.set("unassigned", "true");
+
+    const q = redirectParams.toString();
+    if (q) {
+      redirect(`/leads?${q}`);
+    }
+  }
+
+  // Determinar los valores activos: si vienen en URL se usan; si falta el status pero viene página, se usa el guardado
+  const page = hasPage ? parseInt(resolvedSearchParams.page as string, 10) : 1;
+  const status = hasStatus ? (resolvedSearchParams.status as string) : (saved?.status || null);
+  const unassigned = hasUnassigned ? resolvedSearchParams.unassigned === "true" : (saved?.unassigned || false);
+  const search = hasSearch ? (resolvedSearchParams.search as string) : (saved?.search || "");
 
   const pageSize = 20;
 
@@ -70,16 +101,6 @@ export default async function LeadsPage({
 
   return (
     <div className="flex-1 flex flex-col md:h-full md:overflow-hidden p-6 space-y-6">
-      {/* Page Title */}
-      <div className="shrink-0">
-        <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
-          Pipeline de Leads
-        </h1>
-        <p className="font-body-sm text-[13px] text-text-secondary">
-          Gestiona y asigna las solicitudes entrantes y realiza simulaciones de financiación
-        </p>
-      </div>
-
       {/* Unassigned Leads Quick Assignment Panel (Only for Admin) */}
       {isAdmin && unassignedLeads.length > 0 && (
         <UnassignedLeadsPanel
@@ -95,7 +116,11 @@ export default async function LeadsPage({
             <div className="h-16 bg-surface border border-border-default rounded-xl animate-pulse" />
           }
         >
-          <LeadFilters />
+          <LeadFilters
+            activeStatus={status || ""}
+            activeSearch={search}
+            activeUnassigned={unassigned}
+          />
         </Suspense>
       </div>
 
@@ -118,7 +143,14 @@ export default async function LeadsPage({
             <div className="h-12 bg-surface border-t border-border-default animate-pulse" />
           }
         >
-          <LeadPagination totalItems={total} pageSize={pageSize} />
+          <LeadPagination
+            totalItems={total}
+            pageSize={pageSize}
+            activePage={page}
+            activeStatus={status || ""}
+            activeSearch={search}
+            activeUnassigned={unassigned}
+          />
         </Suspense>
       </div>
     </div>

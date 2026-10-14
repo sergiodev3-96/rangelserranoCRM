@@ -48,7 +48,7 @@ export default function LeadNoteInput({
           rows={3}
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Escriba una nota interna sobre el seguimiento de este cliente..."
+          placeholder="Escriba una nota u observación sobre este cliente..."
           className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg px-4 py-3 font-body-sm text-[13px] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all duration-200 resize-none"
           disabled={isPending}
         />
@@ -64,9 +64,9 @@ export default function LeadNoteInput({
               isPending ? "animate-spin" : ""
             }`}
           >
-            {isPending ? "sync" : "send"}
+            {isPending ? "sync" : "add_comment"}
           </span>
-          <span>{isPending ? "Añadiendo..." : "Añadir Nota"}</span>
+          <span>{isPending ? "Guardando..." : "Añadir Observación"}</span>
         </button>
       </div>
     </form>

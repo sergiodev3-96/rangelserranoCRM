@@ -76,6 +76,7 @@ export default function LeadDetailHeader({
       <div className="space-y-1 text-left">
         <Link
           href="/leads"
+          prefetch={false}
           className="inline-flex items-center gap-1 text-text-secondary hover:text-text-primary font-body-sm text-[14px] transition-colors mb-1.5"
         >
           <span className="material-symbols-outlined text-[18px]">

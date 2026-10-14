@@ -66,28 +66,28 @@ export default function LeadTable({ leads }: LeadTableProps) {
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b border-border-default bg-surface-container-low select-none">
-            <th className="px-4 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider pl-6 w-[90px]">
+            <th className="px-4 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider pl-6 w-[80px]">
               Nº
             </th>
-            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider w-[21%]">
               Nombre Cliente
             </th>
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Estado Solicitud
             </th>
-            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider whitespace-nowrap min-w-[180px]">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider whitespace-nowrap min-w-[170px]">
               Teléfono
             </th>
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Interés Vehículo
             </th>
-            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider w-[17%]">
               Origen (Canal)
             </th>
             <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
               Asignado A
             </th>
-            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
+            <th className="px-6 py-3.5 font-field-label text-[13px] font-semibold text-text-secondary uppercase tracking-wider whitespace-nowrap">
               Fecha Registro
             </th>
             <th className="py-3.5 pr-4 pl-1 text-right w-[44px]">
@@ -108,16 +108,17 @@ export default function LeadTable({ leads }: LeadTableProps) {
               </td>
 
               {/* Name */}
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 max-w-[260px]">
                 <Link
                   href={`/leads/${lead.id}`}
                   prefetch={false}
-                  className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md"
+                  title={lead.full_name}
+                  className="font-bold text-[15px] text-text-primary hover:text-primary transition-colors hover:underline block font-body-md truncate"
                 >
                   {lead.full_name}
                 </Link>
                 {lead.email && (
-                  <span className="text-[12px] text-text-secondary block mt-0.5">
+                  <span className="text-[12px] text-text-secondary block mt-0.5 truncate" title={lead.email}>
                     {lead.email}
                   </span>
                 )}

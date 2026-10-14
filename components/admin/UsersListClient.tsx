@@ -3,7 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Profile, UserRole } from "@/types/profiles";
-import { updateProfileRole, toggleProfileActive, inviteNewUser } from "@/lib/actions/users";
+import { updateProfileRole, toggleProfileActive, inviteNewUser, deleteUserProfile } from "@/lib/actions/users";
 import Modal from "../ui/Modal";
 
 type UsersListClientProps = {
@@ -22,6 +22,29 @@ export default function UsersListClient({
   const [inviteEmail, setInviteEmail] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Estados para modal de confirmación de eliminación
+  const [userToDelete, setUserToDelete] = useState<Profile | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteUser = () => {
+    if (!userToDelete) return;
+    if (userToDelete.id === currentUserId) {
+      alert("No puedes eliminar tu propia cuenta.");
+      return;
+    }
+
+    setDeleteError(null);
+    startTransition(async () => {
+      const result = await deleteUserProfile(userToDelete.id);
+      if (result.success) {
+        setUserToDelete(null);
+        router.refresh();
+      } else {
+        setDeleteError(result.error || "No se pudo eliminar el usuario.");
+      }
+    });
+  };
 
   const handleRoleChange = (userId: string, nextRole: UserRole) => {
     if (userId === currentUserId) {
@@ -141,6 +164,9 @@ export default function UsersListClient({
               <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right">
                 Fecha Registro
               </th>
+              <th className="px-6 py-3 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right">
+                Acciones
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-subtle font-body-sm text-[13px]">
@@ -220,13 +246,39 @@ export default function UsersListClient({
                   <td className="px-6 py-4 text-right text-text-secondary font-data-mono">
                     {new Date(user.created_at).toLocaleDateString("es-ES")}
                   </td>
+
+                  {/* Actions (Delete) */}
+                  <td className="px-6 py-4 text-right">
+                    {isSelf ? (
+                      <span
+                        className="text-text-disabled/40 text-[12px] select-none inline-block px-2"
+                        title="No puedes eliminarte a ti mismo"
+                      >
+                        —
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserToDelete(user);
+                          setDeleteError(null);
+                        }}
+                        disabled={isPending}
+                        title={`Eliminar usuario ${user.full_name}`}
+                        aria-label={`Eliminar usuario ${user.full_name}`}
+                        className="p-1.5 text-text-secondary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    )}
+                  </td>
                 </tr>
               );
             })}
 
             {initialUsers.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-text-disabled/40 select-none">
+                <td colSpan={6} className="px-6 py-12 text-center text-text-disabled/40 select-none">
                   <span className="material-symbols-outlined text-4xl mb-2">group</span>
                   <p className="font-body-sm text-[13px]">No se encontraron usuarios.</p>
                 </td>
@@ -322,6 +374,96 @@ export default function UsersListClient({
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete User Confirmation Modal */}
+      <Modal
+        isOpen={userToDelete !== null}
+        onClose={() => {
+          if (!isPending) {
+            setUserToDelete(null);
+            setDeleteError(null);
+          }
+        }}
+        title="Eliminar Usuario"
+      >
+        {userToDelete && (
+          <div className="space-y-4 text-left">
+            {deleteError && (
+              <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-3 font-body-sm text-[13px]">
+                {deleteError}
+              </div>
+            )}
+
+            {/* User details card */}
+            <div className="flex items-center gap-3 p-3 bg-surface-container-high/40 rounded-xl border border-border-default">
+              <div className="w-10 h-10 rounded-full bg-danger/10 text-danger flex items-center justify-center text-[13px] font-bold select-none shrink-0">
+                {getInitials(userToDelete.full_name)}
+              </div>
+              <div className="min-w-0">
+                <span className="font-semibold text-text-primary text-[14px] block truncate">
+                  {userToDelete.full_name}
+                </span>
+                <span className="text-[12px] text-text-secondary block truncate">
+                  {userToDelete.email}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[13px] text-text-secondary leading-relaxed">
+              ¿Estás seguro de que deseas eliminar permanentemente a este usuario? Esta acción dará de baja su cuenta y revocarán sus accesos.
+            </p>
+
+            {/* Lead assignment clarification */}
+            <div className="bg-surface-container-high/60 border border-border-default rounded-xl p-3 text-[12px] text-text-secondary flex items-start gap-2.5">
+              <span className="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">
+                assignment_return
+              </span>
+              <div className="space-y-1">
+                <strong className="text-text-primary block font-medium">
+                  ¿Qué ocurre con sus leads?
+                </strong>
+                <p className="text-text-secondary leading-normal">
+                  Todos los leads que estaban asignados a este comercial pasarán automáticamente al estado{" "}
+                  <span className="font-semibold text-text-primary">&quot;Sin asignar&quot;</span>.
+                  Ningún dato o lead se borrará, y podrás reasignarlos fácilmente a otro comercial desde el listado de Leads.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-border-default mt-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setUserToDelete(null);
+                  setDeleteError(null);
+                }}
+                className="px-4 py-2 border border-border-default text-text-secondary hover:text-text-primary rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
+                disabled={isPending}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={isPending}
+                className="px-4 py-2 bg-danger hover:bg-danger/90 text-white rounded-lg text-[13px] font-medium transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isPending ? (
+                  <>
+                    <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                    Eliminando...
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                    Eliminar definitivamente
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

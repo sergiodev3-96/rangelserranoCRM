@@ -9,7 +9,9 @@ export type LeadStatus =
   | "no_responde"
   | "cuarentena"
   | "asnef"
-  | "rechazado";
+  | "rechazado"
+  | "seguir_insistiendo"
+  | "ocupado";
 
 export type LeadSource =
   | "tiktok_lead_ads"
@@ -136,5 +138,19 @@ export const LEAD_STATUS_CONFIG: Record<
     textClass: "text-lead-rejected-text",
     borderClass: "border-lead-rejected-text/20",
     dotClass: "bg-lead-rejected-text",
+  },
+  seguir_insistiendo: {
+    label: "Seguir insistiendo",
+    bgClass: "bg-amber-500/10",
+    textClass: "text-amber-500",
+    borderClass: "border-amber-500/20",
+    dotClass: "bg-amber-500",
+  },
+  ocupado: {
+    label: "Ocupado",
+    bgClass: "bg-purple-500/10",
+    textClass: "text-purple-400",
+    borderClass: "border-purple-500/20",
+    dotClass: "bg-purple-400",
   },
 } as const;

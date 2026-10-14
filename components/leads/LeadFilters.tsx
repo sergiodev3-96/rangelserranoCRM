@@ -1,31 +1,99 @@
 "use client";
 
-import React, { useState, useEffect, useTransition } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, useTransition, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import LeadCreateModal from "./LeadCreateModal";
 import TikTokConfigModal from "./TikTokConfigModal";
 import type { LeadStatus } from "@/types/leads";
 import { LEAD_STATUS_CONFIG } from "@/types/leads";
+import { saveLeadState } from "@/lib/utils/lead-state";
 
-export default function LeadFilters() {
+type LeadFiltersProps = {
+  activeStatus?: string;
+  activeSearch?: string;
+  activeUnassigned?: boolean;
+};
+
+export default function LeadFilters({
+  activeStatus = "",
+  activeSearch = "",
+  activeUnassigned = false,
+}: LeadFiltersProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // URL searchParams states
-  const currentSearch = searchParams.get("search") || "";
-  const currentStatus = searchParams.get("status") || "";
-  const currentUnassigned = searchParams.get("unassigned") === "true";
+  // Local state synced with active server props
+  const [selectedStatus, setSelectedStatus] = useState(activeStatus);
+  const [searchInput, setSearchInput] = useState(activeSearch);
+  const [isUnassigned, setIsUnassigned] = useState(activeUnassigned);
 
-  // Local input state for search input to prevent lag
-  const [searchInput, setSearchInput] = useState(currentSearch);
+  const isFocusedRef = useRef(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTikTokModalOpen, setIsTikTokModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  // Sync input value with URL when url changes
+  // Sincronizar estado cuando los props del servidor cambien (ej. al paginar o navegar)
   useEffect(() => {
-    setSearchInput(currentSearch);
-  }, [currentSearch]);
+    setSelectedStatus(activeStatus);
+  }, [activeStatus]);
+
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setSearchInput(activeSearch);
+    }
+  }, [activeSearch]);
+
+  useEffect(() => {
+    setIsUnassigned(activeUnassigned);
+  }, [activeUnassigned]);
+
+  const updateFilters = useCallback(
+    (updates: {
+      search?: string;
+      status?: string;
+      unassigned?: boolean;
+    }) => {
+      const nextStatus = updates.status !== undefined ? updates.status : selectedStatus;
+      const nextSearch = updates.search !== undefined ? updates.search : searchInput;
+      const nextUnassigned = updates.unassigned !== undefined ? updates.unassigned : isUnassigned;
+
+      const params = new URLSearchParams();
+
+      if (nextStatus) {
+        params.set("status", nextStatus);
+      }
+      if (nextSearch.trim()) {
+        params.set("search", nextSearch.trim());
+      }
+      if (nextUnassigned) {
+        params.set("unassigned", "true");
+      }
+
+      // Guardar en cookie y localStorage para persistencia
+      saveLeadState({
+        status: nextStatus || null,
+        page: 1,
+        search: nextSearch.trim() || "",
+        unassigned: nextUnassigned,
+      });
+
+      startTransition(() => {
+        const q = params.toString();
+        router.replace(q ? `/leads?${q}` : "/leads", { scroll: false });
+      });
+    },
+    [router, selectedStatus, searchInput, isUnassigned]
+  );
+
+  // Filtrado reactivo conforme el usuario escribe (debounce 350ms)
+  useEffect(() => {
+    if (searchInput === activeSearch) return;
+
+    const timer = setTimeout(() => {
+      updateFilters({ search: searchInput });
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [searchInput, activeSearch, updateFilters]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
@@ -43,54 +111,26 @@ export default function LeadFilters() {
     });
   };
 
-  const updateFilters = (updates: {
-    search?: string;
-    status?: string;
-    unassigned?: boolean;
-  }) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    // Reset page when filters change
-    params.delete("page");
-
-    if (updates.search !== undefined) {
-      if (updates.search) {
-        params.set("search", updates.search);
-      } else {
-        params.delete("search");
-      }
-    }
-
-    if (updates.status !== undefined) {
-      if (updates.status) {
-        params.set("status", updates.status);
-      } else {
-        params.delete("status");
-      }
-    }
-
-    if (updates.unassigned !== undefined) {
-      if (updates.unassigned) {
-        params.set("unassigned", "true");
-      } else {
-        params.delete("unassigned");
-      }
-    }
-
-    router.push(`/leads?${params.toString()}`);
-  };
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateFilters({ search: searchInput });
   };
 
+  const handleClearSearch = () => {
+    setSearchInput("");
+    updateFilters({ search: "" });
+  };
+
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    updateFilters({ status: e.target.value });
+    const val = e.target.value;
+    setSelectedStatus(val);
+    updateFilters({ status: val });
   };
 
   const handleUnassignedToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateFilters({ unassigned: e.target.checked });
+    const checked = e.target.checked;
+    setIsUnassigned(checked);
+    updateFilters({ unassigned: checked });
   };
 
   return (
@@ -99,22 +139,42 @@ export default function LeadFilters() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center flex-1">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="relative w-full sm:max-w-xs">
-          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">
-            search
+          <span
+            className={`material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] transition-colors ${
+              isPending ? "text-primary animate-spin" : "text-text-secondary"
+            }`}
+          >
+            {isPending ? "sync" : "search"}
           </span>
           <input
             type="text"
-            placeholder="Buscar por nombre..."
+            placeholder="Buscar por nombre o teléfono..."
             value={searchInput}
+            onFocus={() => {
+              isFocusedRef.current = true;
+            }}
+            onBlur={() => {
+              isFocusedRef.current = false;
+            }}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg pl-10 pr-4 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary"
+            className="w-full bg-bg-input text-text-primary placeholder:text-text-disabled border border-border-default rounded-lg pl-10 pr-9 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary transition-colors"
           />
+          {searchInput && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text-primary p-1 rounded-md transition-colors cursor-pointer"
+              title="Limpiar búsqueda"
+            >
+              <span className="material-symbols-outlined text-[16px] block">close</span>
+            </button>
+          )}
         </form>
 
         {/* Status Select */}
         <div className="w-full sm:max-w-[200px]">
           <select
-            value={currentStatus}
+            value={selectedStatus}
             onChange={handleStatusChange}
             className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary cursor-pointer"
           >
@@ -131,7 +191,7 @@ export default function LeadFilters() {
         <label className="flex items-center gap-2 px-1 cursor-pointer select-none">
           <input
             type="checkbox"
-            checked={currentUnassigned}
+            checked={isUnassigned}
             onChange={handleUnassignedToggle}
             className="w-4 h-4 rounded bg-bg-input border-border-default text-primary focus:ring-primary focus:ring-offset-bg-base cursor-pointer"
           />

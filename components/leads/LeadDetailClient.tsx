@@ -24,6 +24,8 @@ import {
 } from "@/lib/actions/leads";
 import LeadDocumentsTab from "./LeadDocumentsTab";
 import type { DocumentTemplate } from "@/types/document-templates";
+import type { LeadNote } from "@/types/lead-notes";
+import LeadNoteCard from "./LeadNoteCard";
 
 type LeadDetailClientProps = {
   lead: LeadWithAssignee;
@@ -33,6 +35,7 @@ type LeadDetailClientProps = {
   tasks: TaskWithDetails[];
   simulations: Simulation[];
   templates?: DocumentTemplate[];
+  leadNote?: LeadNote | null;
 };
 
 export default function LeadDetailClient({
@@ -43,11 +46,14 @@ export default function LeadDetailClient({
   tasks,
   simulations,
   templates,
+  leadNote,
 }: LeadDetailClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [selectedTaskToEdit, setSelectedTaskToEdit] = useState<TaskWithDetails | null>(null);
   const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [isEventsOpen, setIsEventsOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"cliente" | "pedido" | "presupuesto">("cliente");
 
@@ -313,6 +319,17 @@ export default function LeadDetailClient({
     });
   };
 
+  const handleEditTask = (task: TaskWithDetails) => {
+    setSelectedTaskToEdit(task);
+    setIsTaskModalOpen(true);
+  };
+
+  const openCreateTaskModal = () => {
+    setSelectedTaskToEdit(null);
+    setIsTaskModalOpen(true);
+  };
+
+
   const handleDeleteSimulation = (simId: string) => {
     if (!confirm("¿Estás seguro de que deseas eliminar esta simulación?")) return;
     startTransition(async () => {
@@ -373,12 +390,12 @@ export default function LeadDetailClient({
 
       {/* Main Content Area */}
       <div className="flex-1 overflow-y-auto p-6 print:p-0 print:overflow-visible print:h-auto">
-        <div className="max-w-[1400px] mx-auto print:max-w-none print:w-full print:p-0 print:m-0">
+        <div className="max-w-[1680px] mx-auto print:max-w-none print:w-full print:p-0 print:m-0">
           {activeTab === "cliente" ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1.5fr_1fr] gap-6 items-start">
               
-              {/* Left Column: Contact and Lead Info */}
-              <div className="lg:col-span-1 space-y-6">
+              {/* Columna 1 (37% del ancho): Información de contacto, Detalles del lead, Estado del lead */}
+              <div className="space-y-6">
                 {/* Card: Información de Contacto */}
                 <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
                   <h2 className="font-section-subtitle text-[18px] text-text-primary border-b border-border-default pb-3 flex items-center gap-2 select-none">
@@ -553,8 +570,8 @@ export default function LeadDetailClient({
                 </div>
               </div>
 
-              {/* Right Column: Tasks, Simulations, Timeline */}
-              <div className="lg:col-span-2 space-y-6">
+              {/* Columna 2 (37% del ancho): Tareas de seguimiento, Historial de simulaciones, Historial de eventos */}
+              <div className="space-y-6">
                 
                 {/* Tasks Panel */}
                 <div className="glass-card-lead rounded-xl p-6 border border-border-default space-y-4">
@@ -567,7 +584,7 @@ export default function LeadDetailClient({
                     </h2>
                     {canEdit && (
                       <button
-                        onClick={() => setIsTaskModalOpen(true)}
+                        onClick={openCreateTaskModal}
                         className="text-primary hover:text-text-primary text-[14px] font-bold flex items-center gap-1 hover:underline cursor-pointer"
                       >
                         <span className="material-symbols-outlined text-[18px]">add</span>
@@ -656,15 +673,24 @@ export default function LeadDetailClient({
                             </div>
                           </div>
 
-                          {/* Delete button */}
+                          {/* Action buttons: Edit & Delete */}
                           {canEdit && (
-                            <button
-                              onClick={() => handleDeleteTask(task.id)}
-                              className="text-text-secondary hover:text-danger p-1.5 rounded-lg hover:bg-surface-container-high transition-colors shrink-0 cursor-pointer ml-2"
-                              title="Eliminar tarea"
-                            >
-                              <span className="material-symbols-outlined text-[18px]">delete</span>
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0 ml-2">
+                              <button
+                                onClick={() => handleEditTask(task)}
+                                className="text-text-secondary hover:text-primary p-1.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer"
+                                title="Editar tarea"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">edit</span>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="text-text-secondary hover:text-danger p-1.5 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer"
+                                title="Eliminar tarea"
+                              >
+                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                              </button>
+                            </div>
                           )}
                         </div>
                       );
@@ -759,19 +785,63 @@ export default function LeadDetailClient({
                 </div>
 
                 {/* Timeline Panel */}
-                <div className="glass-card-lead rounded-xl p-5 border border-border-default space-y-4">
-                  <h2 className="font-section-subtitle text-[17px] text-text-primary flex items-center gap-2 border-b border-border-default pb-3 select-none">
-                    <span className="material-symbols-outlined text-primary text-[20px]">
-                      history
-                    </span>
-                    Historial de Eventos
-                  </h2>
-                  <div className="max-h-[600px] overflow-y-auto pr-2">
-                    <LeadTimeline events={events} />
+                <div className="glass-card-lead rounded-xl p-4 sm:p-5 border border-border-default transition-all">
+                  <div
+                    onClick={() => setIsEventsOpen((prev) => !prev)}
+                    className={`flex justify-between items-center select-none cursor-pointer group ${
+                      isEventsOpen ? "border-b border-border-default pb-3 mb-4" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <h2 className="font-section-subtitle text-[17px] text-text-primary flex items-center gap-2 group-hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined text-primary text-[20px]">
+                          history
+                        </span>
+                        Historial de Eventos
+                      </h2>
+                      <span className="text-[11px] font-semibold text-text-secondary px-2 py-0.5 bg-surface-container-high rounded-full">
+                        {events.length} {events.length === 1 ? "evento" : "eventos"}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsEventsOpen((prev) => !prev);
+                      }}
+                      className="text-primary hover:text-text-primary px-2.5 py-1 rounded-lg bg-surface-container-high/60 hover:bg-surface-container-high transition-all flex items-center gap-1.5 text-[12px] font-semibold cursor-pointer"
+                      aria-expanded={isEventsOpen}
+                    >
+                      <span>{isEventsOpen ? "Ocultar" : "Desplegar"}</span>
+                      <span
+                        className={`material-symbols-outlined text-[18px] transition-transform duration-200 ${
+                          isEventsOpen ? "rotate-180" : ""
+                        }`}
+                      >
+                        expand_more
+                      </span>
+                    </button>
                   </div>
+
+                  {isEventsOpen && (
+                    <div className="max-h-[600px] overflow-y-auto pr-2">
+                      <LeadTimeline events={events} />
+                    </div>
+                  )}
                 </div>
 
               </div>
+
+              {/* Columna 3 (25% del ancho): Notas */}
+              <div className="space-y-6">
+                <LeadNoteCard
+                  leadId={lead.id}
+                  initialNote={leadNote ?? null}
+                  canEdit={canEdit}
+                />
+              </div>
+
             </div>
           ) : activeTab === "pedido" ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -1172,10 +1242,14 @@ export default function LeadDetailClient({
       {canEdit && (
         <TaskCreateModal
           isOpen={isTaskModalOpen}
-          onClose={() => setIsTaskModalOpen(false)}
+          onClose={() => {
+            setIsTaskModalOpen(false);
+            setSelectedTaskToEdit(null);
+          }}
           onSuccess={handleRefresh}
           initialLeadId={lead.id}
           currentUserId={currentUser.id}
+          taskToEdit={selectedTaskToEdit}
         />
       )}
 

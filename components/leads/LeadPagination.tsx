@@ -1,34 +1,57 @@
 "use client";
 
-import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Pagination from "../ui/Pagination";
+import { saveLeadState } from "@/lib/utils/lead-state";
 
 type LeadPaginationProps = {
   totalItems: number;
   pageSize: number;
+  activePage?: number;
+  activeStatus?: string;
+  activeSearch?: string;
+  activeUnassigned?: boolean;
 };
 
 export default function LeadPagination({
   totalItems,
   pageSize,
+  activePage = 1,
+  activeStatus = "",
+  activeSearch = "",
+  activeUnassigned = false,
 }: LeadPaginationProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const currentPage =
-    typeof searchParams.get("page") === "string"
-      ? parseInt(searchParams.get("page")!)
-      : 1;
 
   const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
+
+    // Preservar siempre el status, search y unassigned activos
+    if (activeStatus) {
+      params.set("status", activeStatus);
+    }
+    if (activeSearch) {
+      params.set("search", activeSearch);
+    }
+    if (activeUnassigned) {
+      params.set("unassigned", "true");
+    }
+
     params.set("page", page.toString());
+
+    saveLeadState({
+      status: activeStatus || null,
+      page: page,
+      search: activeSearch || "",
+      unassigned: activeUnassigned,
+    });
+
     router.push(`/leads?${params.toString()}`);
   };
 
   return (
     <Pagination
-      currentPage={currentPage}
+      currentPage={activePage}
       totalItems={totalItems}
       pageSize={pageSize}
       onPageChange={handlePageChange}

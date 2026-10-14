@@ -7,6 +7,7 @@ import { getActiveComerciales } from "@/lib/actions/users";
 import { getTasksByLeadId } from "@/lib/actions/tasks";
 import { getSimulationsByLeadId } from "@/lib/actions/simulations";
 import { getDocumentTemplates } from "@/lib/actions/document-templates";
+import { getLeadNote } from "@/lib/actions/lead-notes";
 import LeadDetailClient from "@/components/leads/LeadDetailClient";
 import Link from "next/link";
 
@@ -56,20 +57,22 @@ export default async function LeadDetailPage({
     );
   }
 
-  // 2. Obtener eventos, tareas, simulaciones, comerciales y plantillas todos en paralelo
-  const [eventsResult, tasksResult, simulationsResult, comercialesResult, templates] =
+  // 2. Obtener eventos, tareas, simulaciones, comerciales, plantillas y notas todos en paralelo
+  const [eventsResult, tasksResult, simulationsResult, comercialesResult, templates, leadNoteResult] =
     await Promise.all([
       getLeadEvents(leadId),
       getTasksByLeadId(leadId),
       getSimulationsByLeadId(leadId),
       getActiveComerciales(),
       getDocumentTemplates(),
+      getLeadNote(leadId),
     ]);
 
   const events = eventsResult.success && eventsResult.data ? eventsResult.data : [];
   const tasks = tasksResult.success && tasksResult.data ? tasksResult.data : [];
   const simulations = simulationsResult.success && simulationsResult.data ? simulationsResult.data : [];
   const comerciales = comercialesResult.success && comercialesResult.data ? comercialesResult.data : [];
+  const leadNote = leadNoteResult.success && leadNoteResult.data ? leadNoteResult.data : null;
 
   return (
     <LeadDetailClient
@@ -80,6 +83,7 @@ export default async function LeadDetailPage({
       tasks={tasks}
       simulations={simulations}
       templates={templates}
+      leadNote={leadNote}
     />
   );
 }

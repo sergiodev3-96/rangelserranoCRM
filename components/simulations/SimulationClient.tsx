@@ -66,7 +66,7 @@ export default function SimulationClient({
     const { options: initialOpts } = calculateAmortization(price, down, tin);
     const baseOpt = initialOpts.find((o) => o.termMonths === term);
     if (!baseOpt) return 0;
-    
+
     return Math.max(0, Math.round((savedMonthly - baseOpt.monthlyPayment) * 100) / 100);
   };
 
@@ -247,12 +247,12 @@ export default function SimulationClient({
 
       {/* Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1400px] mx-auto items-start">
-        
+
         {/* Left Form: Inputs */}
         <div className="lg:col-span-4 space-y-6">
           <div className="glass-card-lead border border-border-default rounded-xl p-5 relative overflow-hidden group">
             <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500 pointer-events-none"></div>
-            
+
             <h3 className="text-[17px] font-medium text-text-primary mb-4 flex items-center gap-2 select-none">
               <span className="material-symbols-outlined text-primary text-xl">settings_applications</span>
               Parámetros de Entrada
@@ -478,28 +478,26 @@ export default function SimulationClient({
                 <span className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
                 <span className="text-[11px] text-text-secondary">Plazo Recomendado</span>
               </div>
-              
+
               {/* View Switcher Toggle */}
               <div className="flex bg-surface-container-high/85 p-1 rounded-lg border border-border-default select-none shrink-0 text-[13px] font-bold">
                 <button
                   type="button"
                   onClick={() => setOptionsViewMode("cards")}
-                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${
-                    optionsViewMode === "cards"
+                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "cards"
                       ? "bg-primary text-white shadow-sm"
                       : "text-text-secondary hover:text-text-primary"
-                  }`}
+                    }`}
                 >
                   Tarjetas
                 </button>
                 <button
                   type="button"
                   onClick={() => setOptionsViewMode("list")}
-                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${
-                    optionsViewMode === "list"
+                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "list"
                       ? "bg-primary text-white shadow-sm"
                       : "text-text-secondary hover:text-text-primary"
-                  }`}
+                    }`}
                 >
                   Listado
                 </button>
@@ -522,13 +520,12 @@ export default function SimulationClient({
                       setSelectedTerm(opt.termMonths);
                       clearAlerts();
                     }}
-                    className={`relative overflow-hidden rounded-xl p-5 cursor-pointer transition-all duration-300 border flex flex-col justify-between h-full ${
-                      isSelected
+                    className={`relative overflow-hidden rounded-xl p-5 cursor-pointer transition-all duration-300 border flex flex-col justify-between h-full ${isSelected
                         ? "border-primary bg-surface-container-high ring-1 ring-primary shadow-[0_0_20px_rgba(108,99,255,0.2)]"
                         : isRecommended
-                        ? "border-primary/40 bg-surface-container-low hover:border-primary"
-                        : "border-border-default bg-surface-container hover:border-strong"
-                    }`}
+                          ? "border-primary/40 bg-surface-container-low hover:border-primary"
+                          : "border-border-default bg-surface-container hover:border-strong"
+                      }`}
                   >
                     {isRecommended && (
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
@@ -602,11 +599,10 @@ export default function SimulationClient({
                           setSelectedTerm(opt.termMonths);
                           clearAlerts();
                         }}
-                        className={`border-b border-border-default/30 transition-all cursor-pointer ${
-                          isSelected
+                        className={`border-b border-border-default/30 transition-all cursor-pointer ${isSelected
                             ? "bg-primary/10 hover:bg-primary/15 font-semibold text-primary"
                             : "hover:bg-surface-container-high/40 text-text-secondary"
-                        }`}
+                          }`}
                       >
                         <td className="py-3 px-2 flex items-center gap-2">
                           <span className={isSelected ? "text-primary font-bold" : "text-text-primary"}>

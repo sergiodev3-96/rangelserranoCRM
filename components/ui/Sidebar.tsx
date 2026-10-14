@@ -98,6 +98,7 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
             <Link
               key={item.href}
               href={item.href}
+              prefetch={false}
               onClick={onClose}
               className={`nav-link flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer font-body-sm text-[13px] ${
                 isActive ? "active" : ""
