@@ -1,6 +1,5 @@
 import React, { Suspense } from "react";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { getLeads } from "@/lib/actions/leads";
 import { getCurrentProfile } from "@/lib/actions/auth";
 import { getActiveComerciales } from "@/lib/actions/users";
@@ -41,32 +40,20 @@ export default async function LeadsPage({
   const hasSearch = typeof resolvedSearchParams.search === "string";
   const hasUnassigned = typeof resolvedSearchParams.unassigned === "string";
 
-  // Si se accede a /leads limpiamente sin ningún query param (menú lateral, volver de lead, etc.):
-  const isDirectAccessWithoutParams = !hasPage && !hasStatus && !hasSearch && !hasUnassigned;
-
-  if (isDirectAccessWithoutParams && saved) {
-    const redirectParams = new URLSearchParams();
-    if (saved.status) redirectParams.set("status", saved.status);
-    if (saved.page && saved.page > 1) redirectParams.set("page", saved.page.toString());
-    if (saved.search) redirectParams.set("search", saved.search);
-    if (saved.unassigned) redirectParams.set("unassigned", "true");
-
-    const q = redirectParams.toString();
-    if (q) {
-      redirect(`/leads?${q}`);
-    }
-  }
-
-  // Determinar los valores activos: si vienen en URL se usan; si falta el status pero viene página, se usa el guardado
-  const page = hasPage ? parseInt(resolvedSearchParams.page as string, 10) : 1;
+  // Determinar los valores activos directamente sin necesidad de doble redirección HTTP
+  const page = hasPage ? parseInt(resolvedSearchParams.page as string, 10) : (saved?.page || 1);
   const status = hasStatus ? (resolvedSearchParams.status as string) : (saved?.status || null);
   const unassigned = hasUnassigned ? resolvedSearchParams.unassigned === "true" : (saved?.unassigned || false);
   const search = hasSearch ? (resolvedSearchParams.search as string) : (saved?.search || "");
 
   const pageSize = 20;
 
-  // 1. Obtener lista de leads y perfil del usuario en paralelo
-  const [result, profileResult] = await Promise.all([
+  // 1. Obtener perfil de usuario (resultado inmediato en memoria gracias a React cache)
+  const profileResult = await getCurrentProfile();
+  const isAdmin = profileResult.success && profileResult.data?.role === "admin";
+
+  // 2. Ejecutar todas las consultas de la página en paralelo (sin cascada secuencial)
+  const [result, unassignedRes, comercialesRes] = await Promise.all([
     getLeads({
       page,
       pageSize,
@@ -74,30 +61,18 @@ export default async function LeadsPage({
       unassignedOnly: unassigned,
       search,
     }),
-    getCurrentProfile(),
+    isAdmin ? getLeads({ unassignedOnly: true, pageSize: 20, skipCount: true }) : Promise.resolve(null),
+    isAdmin ? getActiveComerciales() : Promise.resolve(null),
   ]);
 
   const leads = result.success && result.data ? result.data.leads : [];
   const total = result.success && result.data ? result.data.total : 0;
   const error = !result.success ? result.error : null;
 
-  const isAdmin = profileResult.success && profileResult.data?.role === "admin";
-
-  let unassignedLeads: LeadWithAssignee[] = [];
-  let comerciales: ProfileSummary[] = [];
-
-  if (isAdmin) {
-    const [unassignedRes, comercialesRes] = await Promise.all([
-      getLeads({ unassignedOnly: true, pageSize: 20 }),
-      getActiveComerciales(),
-    ]);
-    if (unassignedRes.success && unassignedRes.data) {
-      unassignedLeads = unassignedRes.data.leads;
-    }
-    if (comercialesRes.success && comercialesRes.data) {
-      comerciales = comercialesRes.data;
-    }
-  }
+  const unassignedLeads: LeadWithAssignee[] =
+    unassignedRes && unassignedRes.success && unassignedRes.data ? unassignedRes.data.leads : [];
+  const comerciales: ProfileSummary[] =
+    comercialesRes && comercialesRes.success && comercialesRes.data ? comercialesRes.data : [];
 
   return (
     <div className="flex-1 flex flex-col md:h-full md:overflow-hidden p-6 space-y-6">

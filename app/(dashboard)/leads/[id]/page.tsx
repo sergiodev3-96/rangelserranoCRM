@@ -6,7 +6,6 @@ import { getCurrentProfile } from "@/lib/actions/auth";
 import { getActiveComerciales } from "@/lib/actions/users";
 import { getTasksByLeadId } from "@/lib/actions/tasks";
 import { getSimulationsByLeadId } from "@/lib/actions/simulations";
-import { getDocumentTemplates } from "@/lib/actions/document-templates";
 import { getLeadNote } from "@/lib/actions/lead-notes";
 import LeadDetailClient from "@/components/leads/LeadDetailClient";
 import Link from "next/link";
@@ -21,10 +20,24 @@ export default async function LeadDetailPage({
   const resolvedParams = await params;
   const leadId = resolvedParams.id;
 
-  // 1. Obtener perfil y datos del lead en paralelo
-  const [profileResult, leadResult] = await Promise.all([
+  // 1. Obtener perfil, datos del lead, eventos, tareas, simulaciones, comerciales y notas en paralelo
+  // (Las plantillas de documentos se cargan bajo demanda si el usuario entra a esa pestaña)
+  const [
+    profileResult,
+    leadResult,
+    eventsResult,
+    tasksResult,
+    simulationsResult,
+    comercialesResult,
+    leadNoteResult,
+  ] = await Promise.all([
     getCurrentProfile(),
     getLeadById(leadId),
+    getLeadEvents(leadId),
+    getTasksByLeadId(leadId),
+    getSimulationsByLeadId(leadId),
+    getActiveComerciales(),
+    getLeadNote(leadId),
   ]);
 
   if (!profileResult.success || !profileResult.data) {
@@ -57,17 +70,6 @@ export default async function LeadDetailPage({
     );
   }
 
-  // 2. Obtener eventos, tareas, simulaciones, comerciales, plantillas y notas todos en paralelo
-  const [eventsResult, tasksResult, simulationsResult, comercialesResult, templates, leadNoteResult] =
-    await Promise.all([
-      getLeadEvents(leadId),
-      getTasksByLeadId(leadId),
-      getSimulationsByLeadId(leadId),
-      getActiveComerciales(),
-      getDocumentTemplates(),
-      getLeadNote(leadId),
-    ]);
-
   const events = eventsResult.success && eventsResult.data ? eventsResult.data : [];
   const tasks = tasksResult.success && tasksResult.data ? tasksResult.data : [];
   const simulations = simulationsResult.success && simulationsResult.data ? simulationsResult.data : [];
@@ -82,7 +84,6 @@ export default async function LeadDetailPage({
       events={events}
       tasks={tasks}
       simulations={simulations}
-      templates={templates}
       leadNote={leadNote}
     />
   );

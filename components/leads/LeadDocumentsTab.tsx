@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import type { LeadWithAssignee } from "@/types/leads";
 import {
   DocumentTemplate,
@@ -12,6 +12,7 @@ import {
 } from "@/types/document-templates";
 import { updateLeadOperationDetails } from "@/lib/actions/leads";
 import { numberToSpanishWords } from "@/lib/utils/number-to-words";
+import { getDocumentTemplates } from "@/lib/actions/document-templates";
 
 type Props = {
   lead: LeadWithAssignee;
@@ -22,13 +23,25 @@ type Props = {
 
 export default function LeadDocumentsTab({
   lead,
-  templates,
+  templates: initialTemplates,
   canEdit,
   onRefresh,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const [selectedDoc, setSelectedDoc] = useState<TemplateId>("reserva_venta");
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [templates, setTemplates] = useState<DocumentTemplate[]>(initialTemplates || []);
+
+  // Carga perezosa (lazy) de plantillas solo cuando el usuario abre la pestaña de documentos
+  useEffect(() => {
+    if (!initialTemplates || initialTemplates.length === 0) {
+      getDocumentTemplates().then((data) => {
+        if (data && data.length > 0) {
+          setTemplates(data);
+        }
+      });
+    }
+  }, [initialTemplates]);
 
   // Fallback to DEFAULT_TEMPLATES if none provided
   const templatesMap: Record<TemplateId, DocumentTemplate> = React.useMemo(() => {

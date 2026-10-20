@@ -18,6 +18,7 @@ export async function getLeads(params: {
   status?: string | null;
   unassignedOnly?: boolean;
   search?: string;
+  skipCount?: boolean;
 }): Promise<ActionResult<{ leads: LeadWithAssignee[]; total: number }>> {
   try {
     const supabase = await createClient();
@@ -26,9 +27,12 @@ export async function getLeads(params: {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
+    const LEAD_LIST_COLUMNS =
+      "id, lead_number, full_name, phone, email, status, source, campaign_name, vehicle_interest, assigned_to, archived, created_at, updated_at, assignee:profiles(id, full_name)";
+
     let query = supabase
       .from("leads")
-      .select("*, assignee:profiles(id, full_name)", { count: "exact" })
+      .select(LEAD_LIST_COLUMNS, params.skipCount ? undefined : { count: "exact" })
       .eq("archived", false);
 
     if (params.status) {
@@ -63,10 +67,15 @@ export async function getLeads(params: {
       return { success: false, data: null, error: error.message };
     }
 
+    const normalizedLeads = (data || []).map((lead: any) => ({
+      ...lead,
+      assignee: Array.isArray(lead.assignee) ? (lead.assignee[0] || null) : (lead.assignee || null),
+    })) as LeadWithAssignee[];
+
     return {
       success: true,
       data: {
-        leads: (data || []) as LeadWithAssignee[],
+        leads: normalizedLeads,
         total: count || 0,
       },
       error: null,
@@ -369,10 +378,8 @@ export async function convertLeadToClient(
 > {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
@@ -416,7 +423,7 @@ export async function convertLeadToClient(
     // b. Crear lead_event
     await supabase.from("lead_events").insert({
       lead_id: leadId,
-      author_id: user.id,
+      author_id: userId,
       event_type: "status_change",
       content: `Cliente convertido. Estado cambiado de "${lead.status}" a "pedido".`,
       metadata: {

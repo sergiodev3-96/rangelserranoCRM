@@ -43,6 +43,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Europe/Madrid",
     });
   };
 
@@ -175,7 +176,7 @@ export default function LeadTable({ leads }: LeadTableProps) {
               </td>
 
               {/* Date */}
-              <td className="px-6 py-4 text-text-secondary text-[13px] font-data-mono">
+              <td className="px-6 py-4 text-text-secondary text-[13px] font-data-mono" suppressHydrationWarning>
                 {formatDate(lead.created_at)}
               </td>
 

@@ -141,6 +141,7 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Europe/Madrid",
     });
   };
 
@@ -643,11 +644,12 @@ export default function TaskList({ tasks, currentUser, comerciales }: TaskListPr
                             }`}
                           >
                             <span className="material-symbols-outlined text-[15px]">schedule</span>
-                            <span>{getDueDateLabel(task)}</span>
+                            <span suppressHydrationWarning>{getDueDateLabel(task)}</span>
                           </span>
                         </div>
                         {getRemainingTime(task) && (
                           <div
+                            suppressHydrationWarning
                             className={`text-[12px] font-medium leading-tight ${
                               isTaskVencida ? "text-red-400/90 font-semibold" : "text-emerald-400/80"
                             }`}

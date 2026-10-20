@@ -33,7 +33,7 @@ export type Lead = {
   assigned_to: string | null;
   archived: boolean;
   lead_number?: number;
-  raw_webhook_payload: Record<string, unknown> | null;
+  raw_webhook_payload?: Record<string, unknown> | null;
   first_surname?: string | null;
   second_surname?: string | null;
   dni_nie?: string | null;

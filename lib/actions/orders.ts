@@ -40,10 +40,6 @@ export async function updateOrderStatus(
 ): Promise<ActionResult<Order>> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return { success: false, data: null, error: "No autorizado" };
-    }
 
     // Obtener perfil actual del usuario
     const profileRes = await getCurrentProfile();
@@ -66,7 +62,7 @@ export async function updateOrderStatus(
     // Si se cierra (aprobado o denegado), registrar datos de cierre
     if (status === "aprobado" || status === "denegado") {
       updateData.closed_at = new Date().toISOString();
-      updateData.closed_by = user.id;
+      updateData.closed_by = profileRes.data.id;
     }
 
     const { data, error } = await supabase
@@ -83,7 +79,7 @@ export async function updateOrderStatus(
     // Registrar evento de cambio en el lead asociado
     await supabase.from("lead_events").insert({
       lead_id: data.lead_id,
-      author_id: user.id,
+      author_id: profileRes.data.id,
       event_type: "status_change",
       content: `El pedido del cliente pasó a estado "${status}".`,
     });

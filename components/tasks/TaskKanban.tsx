@@ -53,7 +53,7 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
   const getDueDateLabel = (task: TaskWithDetails) => {
     if (!task.due_date) return "Sin fecha";
     const d = new Date(task.due_date);
-    const formattedDate = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+    const formattedDate = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", timeZone: "Europe/Madrid" });
     
     if (isOverdue(task)) {
       return `Vencido (${formattedDate})`;
@@ -286,7 +286,7 @@ export default function TaskKanban({ tasks, currentUser, comerciales }: TaskKanb
                           }`}
                         >
                           <span className="material-symbols-outlined text-[15px]">schedule</span>
-                          <span>{getDueDateLabel(task)}</span>
+                          <span suppressHydrationWarning>{getDueDateLabel(task)}</span>
                         </div>
 
                         {task.assignee && (

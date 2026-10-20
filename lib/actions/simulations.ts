@@ -5,7 +5,7 @@ import type { Simulation } from "@/types/simulations";
 import type { CreateSimulationInput } from "@/lib/validations/simulations";
 import { createClient } from "../supabase/server";
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "./auth";
+import { getCurrentProfile, getCurrentUserId } from "./auth";
 
 // Obtener todas las simulaciones a las que el usuario tiene acceso
 export async function getSimulations(): Promise<ActionResult<Simulation[]>> {
@@ -67,8 +67,8 @@ export async function getSimulationById(
 ): Promise<ActionResult<Simulation>> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
@@ -98,14 +98,14 @@ export async function createSimulation(
 ): Promise<ActionResult<Simulation>> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
     const simData = {
       lead_id: input.lead_id || null,
-      created_by: user.id,
+      created_by: userId,
       vehicle_price: input.vehicle_price,
       down_payment: input.down_payment,
       financed_capital: input.financed_capital,
@@ -133,7 +133,7 @@ export async function createSimulation(
     if (input.lead_id) {
       await supabase.from("lead_events").insert({
         lead_id: input.lead_id,
-        author_id: user.id,
+        author_id: userId,
         event_type: "note",
         content: `Simulación guardada para este lead: cuota de ${input.monthly_payment} €/mes a ${input.term_months} meses con ${input.entity_name}.`,
       });
@@ -158,8 +158,8 @@ export async function updateSimulation(
 ): Promise<ActionResult<Simulation>> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
@@ -206,7 +206,7 @@ export async function updateSimulation(
     if (targetLeadId) {
       await supabase.from("lead_events").insert({
         lead_id: targetLeadId,
-        author_id: user.id,
+        author_id: userId,
         event_type: "note",
         content: `Simulación modificada para este lead: cuota de ${data.monthly_payment} €/mes a ${data.term_months} meses con ${data.entity_name}.`,
       });
@@ -234,8 +234,8 @@ export async function deleteSimulation(
 ): Promise<ActionResult<void>> {
   try {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const userId = await getCurrentUserId();
+    if (!userId) {
       return { success: false, data: null, error: "No autorizado" };
     }
 
@@ -248,7 +248,7 @@ export async function deleteSimulation(
 
     const profileResult = await getCurrentProfile();
     const isAdmin = profileResult.success && profileResult.data.role === "admin";
-    const isOwner = currentSim && currentSim.created_by === user.id;
+    const isOwner = currentSim && currentSim.created_by === userId;
 
     if (!isAdmin && !isOwner) {
       return {
@@ -267,7 +267,7 @@ export async function deleteSimulation(
     if (currentSim && currentSim.lead_id) {
       await supabase.from("lead_events").insert({
         lead_id: currentSim.lead_id,
-        author_id: user.id,
+        author_id: userId,
         event_type: "note",
         content: `Simulación eliminada.`,
       });

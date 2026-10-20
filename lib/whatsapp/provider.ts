@@ -1,4 +1,5 @@
 import { createClient } from "../supabase/server";
+import { getCurrentUserId } from "../actions/auth";
 
 type SendWhatsAppParams = {
   leadId: string;
@@ -18,8 +19,8 @@ export async function sendWhatsAppMessage(params: SendWhatsAppParams) {
 
 async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const userId = await getCurrentUserId();
+  if (!userId) {
     throw new Error("No autorizado");
   }
 
@@ -62,7 +63,7 @@ async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
     .from("whatsapp_messages")
     .insert({
       lead_id: params.leadId,
-      sent_by: user.id,
+      sent_by: userId,
       template_name: params.templateName,
       message_body: body,
       provider: "mock",
@@ -78,7 +79,7 @@ async function sendWhatsAppMessageMock(params: SendWhatsAppParams) {
   // 4. Crear lead_event
   await supabase.from("lead_events").insert({
     lead_id: params.leadId,
-    author_id: user.id,
+    author_id: userId,
     event_type: "whatsapp_sent",
     content: body,
   });

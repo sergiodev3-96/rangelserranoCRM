@@ -1,12 +1,11 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getCurrentUserId } from "@/lib/actions/auth";
 
 export async function getTikTokVerifyToken() {
-  const supabase = await createClient();
-  const { data: { session } } = await supabase.auth.getSession();
+  const userId = await getCurrentUserId();
 
-  if (!session) {
+  if (!userId) {
     return { success: false, error: "No autorizado" };
   }
 

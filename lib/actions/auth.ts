@@ -65,6 +65,23 @@ function getChunkIndex(name: string): number {
   return 0;
 }
 
+function extractSubFromJwt(jwt: string): string | null {
+  try {
+    if (!jwt || !jwt.includes(".")) return null;
+    const parts = jwt.split(".");
+    if (parts.length >= 2) {
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = Buffer.from(base64, "base64").toString("utf-8");
+      const payload = JSON.parse(jsonPayload);
+      if (payload?.sub && typeof payload.sub === "string") {
+        return payload.sub;
+      }
+    }
+  } catch {}
+  return null;
+}
+
 // Extract user ID from session cookies without making Auth API network requests
 export async function getUserIdFromSessionCookies(): Promise<string | null> {
   try {
@@ -80,61 +97,58 @@ export async function getUserIdFromSessionCookies(): Promise<string | null> {
       return null;
     }
 
-    // 2. Concatenate chunk values
+    // 2. Concatenate chunk values and decode
     let raw = tokenCookies.map((c) => c.value).join("");
+    if (raw.includes("%")) {
+      try {
+        raw = decodeURIComponent(raw);
+      } catch {}
+    }
+    if (raw.startsWith('"') && raw.endsWith('"')) {
+      raw = raw.slice(1, -1);
+    }
     if (raw.startsWith("base64-")) {
-      raw = Buffer.from(raw.slice(7), "base64").toString("utf-8");
+      try {
+        raw = Buffer.from(raw.slice(7), "base64").toString("utf-8");
+      } catch {}
     }
 
-    let parsed: Record<string, unknown> | unknown[] | null = null;
+    // 3. Try parsing as JSON
+    let parsed: any = null;
     try {
       parsed = JSON.parse(raw);
-    } catch {
-      // not JSON directly
-    }
+    } catch {}
 
-    // 3. Check direct user object in session JSON
+    // Check direct user object or token in session JSON
     if (parsed && typeof parsed === "object") {
-      const userObj = (parsed as { user?: { id?: string } }).user;
-      if (userObj?.id) {
-        return userObj.id;
+      if (parsed.user?.id) {
+        return parsed.user.id;
       }
       if (Array.isArray(parsed)) {
-        const first = parsed[0] as { user?: { id?: string } } | undefined;
-        if (typeof first === "object" && first?.user?.id) {
-          return first.user.id;
+        if (parsed[0]?.user?.id) {
+          return parsed[0].user.id;
         }
+        if (typeof parsed[0] === "string") {
+          const sub = extractSubFromJwt(parsed[0]);
+          if (sub) return sub;
+        }
+      }
+      if (typeof parsed.access_token === "string") {
+        const sub = extractSubFromJwt(parsed.access_token);
+        if (sub) return sub;
       }
     }
 
-    // 4. Check JWT access_token
-    let token: string | undefined = undefined;
-    if (parsed && typeof parsed === "object") {
-      if ("access_token" in parsed && typeof (parsed as { access_token?: unknown }).access_token === "string") {
-        token = (parsed as { access_token: string }).access_token;
-      } else if (Array.isArray(parsed) && typeof parsed[0] === "string") {
-        token = parsed[0];
-      }
-    }
-    if (!token && typeof raw === "string" && raw.includes(".")) {
-      token = raw;
-    }
+    // 4. Try extracting from raw string if it contains JWT or regex
+    const jwtSub = extractSubFromJwt(raw);
+    if (jwtSub) return jwtSub;
 
-    if (typeof token === "string" && token.includes(".")) {
-      const parts = token.split(".");
-      if (parts.length >= 2) {
-        const base64Url = parts[1];
-        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-        const jsonPayload = Buffer.from(base64, "base64").toString("utf-8");
-        const payload = JSON.parse(jsonPayload);
-        if (payload?.sub) {
-          const now = Math.floor(Date.now() / 1000);
-          if (!payload.exp || payload.exp > now) {
-            return payload.sub;
-          }
-        }
-      }
-    }
+    // Fast regex match for UUID in "sub" or "id"
+    const subMatch = raw.match(/"sub"\s*:\s*"([a-f0-9\-]{36})"/i);
+    if (subMatch) return subMatch[1];
+
+    const idMatch = raw.match(/"id"\s*:\s*"([a-f0-9\-]{36})"/i);
+    if (idMatch) return idMatch[1];
   } catch {
     // Cookie parsing fallback
   }
@@ -159,19 +173,8 @@ export async function getCurrentUserId(): Promise<string | null> {
     }
   } catch {}
 
-  // 3. Fallback to Supabase Auth getUser (makes network call, guarded against rate limit)
-  try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    if (!userError && user?.id) {
-      return user.id;
-    }
-  } catch {}
-
+  // If no user ID can be found locally from cookies/session, user is not authenticated.
+  // We NEVER call supabase.auth.getUser() here to prevent hitting Supabase rate limit (429).
   return null;
 }
 

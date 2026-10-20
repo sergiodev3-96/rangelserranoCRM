@@ -117,6 +117,7 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
       <div className="mt-auto border-t border-border-default p-3 space-y-1 bg-surface-container">
         <Link
           href="/settings"
+          prefetch={false}
           onClick={onClose}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200"
         >
@@ -127,6 +128,7 @@ export default function Sidebar({ isAdmin, isOpen = false, onClose }: SidebarPro
         </Link>
         <Link
           href="/support"
+          prefetch={false}
           onClick={onClose}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-container-high transition-colors duration-200"
         >
