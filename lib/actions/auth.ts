@@ -114,26 +114,31 @@ export async function getUserIdFromSessionCookies(): Promise<string | null> {
     }
 
     // 3. Try parsing as JSON
-    let parsed: any = null;
+    let parsed: Record<string, unknown> | unknown[] | null = null;
     try {
       parsed = JSON.parse(raw);
     } catch {}
 
     // Check direct user object or token in session JSON
     if (parsed && typeof parsed === "object") {
-      if (parsed.user?.id) {
-        return parsed.user.id;
+      if (!Array.isArray(parsed) && "user" in parsed) {
+        const userObj = parsed.user as { id?: string } | undefined;
+        if (userObj?.id) {
+          return userObj.id;
+        }
       }
       if (Array.isArray(parsed)) {
-        if (parsed[0]?.user?.id) {
-          return parsed[0].user.id;
+        const first = parsed[0];
+        if (typeof first === "object" && first !== null && "user" in first) {
+          const userObj = (first as { user?: { id?: string } }).user;
+          if (userObj?.id) return userObj.id;
         }
-        if (typeof parsed[0] === "string") {
-          const sub = extractSubFromJwt(parsed[0]);
+        if (typeof first === "string") {
+          const sub = extractSubFromJwt(first);
           if (sub) return sub;
         }
       }
-      if (typeof parsed.access_token === "string") {
+      if (!Array.isArray(parsed) && "access_token" in parsed && typeof parsed.access_token === "string") {
         const sub = extractSubFromJwt(parsed.access_token);
         if (sub) return sub;
       }

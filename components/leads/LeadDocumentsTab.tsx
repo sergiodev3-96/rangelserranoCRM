@@ -147,11 +147,10 @@ export default function LeadDocumentsTab({
           <button
             type="button"
             onClick={() => setSelectedDoc("reserva_venta")}
-            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              selectedDoc === "reserva_venta"
+            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${selectedDoc === "reserva_venta"
                 ? "bg-primary text-on-primary shadow-sm"
                 : "bg-surface-container hover:bg-surface-container-high text-text-secondary hover:text-text-primary border border-border-default"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[18px]">bookmark</span>
             <span>1. Reserva de Compra</span>
@@ -160,11 +159,10 @@ export default function LeadDocumentsTab({
           <button
             type="button"
             onClick={() => setSelectedDoc("contrato_compraventa")}
-            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              selectedDoc === "contrato_compraventa"
+            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${selectedDoc === "contrato_compraventa"
                 ? "bg-primary text-on-primary shadow-sm"
                 : "bg-surface-container hover:bg-surface-container-high text-text-secondary hover:text-text-primary border border-border-default"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[18px]">history_edu</span>
             <span>2. Contrato Compraventa</span>
@@ -173,11 +171,10 @@ export default function LeadDocumentsTab({
           <button
             type="button"
             onClick={() => setSelectedDoc("garantia_delegada")}
-            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-              selectedDoc === "garantia_delegada"
+            className={`px-4 py-2 rounded-lg font-body-sm text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${selectedDoc === "garantia_delegada"
                 ? "bg-primary text-on-primary shadow-sm"
                 : "bg-surface-container hover:bg-surface-container-high text-text-secondary hover:text-text-primary border border-border-default"
-            }`}
+              }`}
           >
             <span className="material-symbols-outlined text-[18px]">verified_user</span>
             <span>3. Garantía Delegada</span>
@@ -215,11 +212,10 @@ export default function LeadDocumentsTab({
       {/* Notification banner */}
       {statusMessage && (
         <div
-          className={`no-print px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-all ${
-            statusMessage.type === "success"
+          className={`no-print px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-all ${statusMessage.type === "success"
               ? "bg-success/15 text-success border border-success/20"
               : "bg-danger/15 text-danger border border-danger/20"
-          }`}
+            }`}
         >
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px]">
@@ -567,7 +563,7 @@ export default function LeadDocumentsTab({
 
           {/* Printable Document Container */}
           <div className="print-document-container w-full bg-white text-[#111827] shadow-xl rounded-sm border border-slate-200 p-8 sm:p-12 font-sans text-left text-[12px] leading-relaxed transition-all">
-            
+
             {/* DOCUMENT 1: RESERVA DE COMPRA */}
             {selectedDoc === "reserva_venta" && (
               <table className="print-table w-full border-collapse border-0">

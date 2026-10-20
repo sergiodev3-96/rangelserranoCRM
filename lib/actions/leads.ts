@@ -67,10 +67,11 @@ export async function getLeads(params: {
       return { success: false, data: null, error: error.message };
     }
 
-    const normalizedLeads = (data || []).map((lead: any) => ({
+    const rawList = (data || []) as unknown as Array<Record<string, unknown>>;
+    const normalizedLeads = rawList.map((lead) => ({
       ...lead,
       assignee: Array.isArray(lead.assignee) ? (lead.assignee[0] || null) : (lead.assignee || null),
-    })) as LeadWithAssignee[];
+    })) as unknown as LeadWithAssignee[];
 
     return {
       success: true,
