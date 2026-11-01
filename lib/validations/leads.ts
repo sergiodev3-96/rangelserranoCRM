@@ -33,6 +33,7 @@ export const updateLeadStatusSchema = z.object({
     "rechazado",
     "seguir_insistiendo",
     "ocupado",
+    "posponer",
   ]),
 });
 

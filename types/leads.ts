@@ -11,7 +11,8 @@ export type LeadStatus =
   | "asnef"
   | "rechazado"
   | "seguir_insistiendo"
-  | "ocupado";
+  | "ocupado"
+  | "posponer";
 
 export type LeadSource =
   | "tiktok_lead_ads"
@@ -152,5 +153,12 @@ export const LEAD_STATUS_CONFIG: Record<
     textClass: "text-purple-400",
     borderClass: "border-purple-500/20",
     dotClass: "bg-purple-400",
+  },
+  posponer: {
+    label: "Posponer",
+    bgClass: "bg-sky-500/10",
+    textClass: "text-sky-400",
+    borderClass: "border-sky-500/20",
+    dotClass: "bg-sky-400",
   },
 } as const;

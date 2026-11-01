@@ -43,669 +43,691 @@ export default function SimulationClient({
   const entitiesList = React.useMemo(() => {
     const baseList =
       initialEntities && initialEntities.length > 0
-        ? initialEntities.map((e) => ({ name: e.name, tin: Number(e.tin) }))
-        : DEFAULT_ENTITIES_FALLBACK;
+        ? initialEntities.map((e) => ({
+          name: e.name,
+          tin: Number(e.tin),
+          isDefault: Boolean(e.is_default),
+          isActive: e.is_active,
+        }))
+    : DEFAULT_ENTITIES_FALLBACK.map((e, idx) => ({
+      name: e.name,
+      tin: e.tin,
+      isDefault: idx === 0,
+      isActive: true,
+    }));
 
-    return [...baseList, { name: "Personalizado", tin: 0 }];
-  }, [initialEntities]);
+  return [...baseList, { name: "Personalizado", tin: 0, isDefault: false, isActive: true }];
+}, [initialEntities]);
 
-  // Find entity index from initialSimulation
-  const initialEntityIdx = initialSimulation
-    ? entitiesList.findIndex((e) => e.name === initialSimulation.entity_name)
-    : 0;
+// Find default entity index:
+// If editing an existing simulation: use that simulation's entity
+// Otherwise, use the entity marked as default (is_default === true && is_active === true)
+const defaultEntityIdx = React.useMemo(() => {
+  if (initialSimulation) {
+    const idx = entitiesList.findIndex((e) => e.name === initialSimulation.entity_name);
+    return idx === -1 ? entitiesList.length - 1 : idx;
+  }
+  const defEntity = initialEntities.find((e) => e.is_default && e.is_active);
+  if (defEntity) {
+    const idx = entitiesList.findIndex((e) => e.name === defEntity.name);
+    if (idx !== -1) return idx;
+  }
+  return 0;
+}, [initialSimulation, entitiesList, initialEntities]);
 
-  // Compute initial insurance monthly if we have an initial simulation
-  const getInitialInsurance = () => {
-    if (!initialSimulation) return 0;
-    const price = Number(initialSimulation.vehicle_price);
-    const down = Number(initialSimulation.down_payment);
-    const tin = Number(initialSimulation.tin_rate);
-    const term = Number(initialSimulation.term_months);
-    const savedMonthly = Number(initialSimulation.monthly_payment);
+// Compute initial insurance monthly if we have an initial simulation
+const getInitialInsurance = () => {
+  if (!initialSimulation) return 0;
+  const price = Number(initialSimulation.vehicle_price);
+  const down = Number(initialSimulation.down_payment);
+  const tin = Number(initialSimulation.tin_rate);
+  const term = Number(initialSimulation.term_months);
+  const savedMonthly = Number(initialSimulation.monthly_payment);
 
-    const { options: initialOpts } = calculateAmortization(price, down, tin);
-    const baseOpt = initialOpts.find((o) => o.termMonths === term);
-    if (!baseOpt) return 0;
+  const { options: initialOpts } = calculateAmortization(price, down, tin);
+  const baseOpt = initialOpts.find((o) => o.termMonths === term);
+  if (!baseOpt) return 0;
 
-    return Math.max(0, Math.round((savedMonthly - baseOpt.monthlyPayment) * 100) / 100);
-  };
+  return Math.max(0, Math.round((savedMonthly - baseOpt.monthlyPayment) * 100) / 100);
+};
 
-  // Input states
-  const [vehiclePrice, setVehiclePrice] = useState<number | "">(
-    initialSimulation ? Number(initialSimulation.vehicle_price) : 32500
-  );
-  const [downPayment, setDownPayment] = useState<number | "">(
-    initialSimulation ? Number(initialSimulation.down_payment) : 6500
-  );
-  const [entityIndex, setEntityIndex] = useState<number>(
-    initialEntityIdx === -1 ? entitiesList.length - 1 : initialEntityIdx
-  );
-  const [customTin, setCustomTin] = useState<number | "">(
-    initialSimulation ? Number(initialSimulation.tin_rate) : 6.5
-  );
-  const [selectedLeadId, setSelectedLeadId] = useState<string>(
-    initialSimulation?.lead_id || initialLeadId || ""
-  );
-  const [selectedTerm, setSelectedTerm] = useState<number>(
-    initialSimulation ? Number(initialSimulation.term_months) : 84
-  );
+// Input states: Por defecto precio 0 y entrada 0 al entrar
+const [vehiclePrice, setVehiclePrice] = useState<number | "">(
+    initialSimulation ? Number(initialSimulation.vehicle_price) : 0
+);
+const [downPayment, setDownPayment] = useState<number | "">(
+    initialSimulation ? Number(initialSimulation.down_payment) : 0
+);
+const [entityIndex, setEntityIndex] = useState<number>(defaultEntityIdx);
+const [customTin, setCustomTin] = useState<number | "">(
+  initialSimulation ? Number(initialSimulation.tin_rate) : 6.5
+);
+const [selectedLeadId, setSelectedLeadId] = useState<string>(
+  initialSimulation?.lead_id || initialLeadId || ""
+);
+const [selectedTerm, setSelectedTerm] = useState<number>(
+  initialSimulation ? Number(initialSimulation.term_months) : 84
+);
 
-  // Feedback states
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [optionsViewMode, setOptionsViewMode] = useState<"cards" | "list">("cards");
-  const [insuranceMonthly, setInsuranceMonthly] = useState<number | "">(getInitialInsurance());
+// Feedback states
+const [successMsg, setSuccessMsg] = useState<string | null>(null);
+const [errorMsg, setErrorMsg] = useState<string | null>(null);
+const [optionsViewMode, setOptionsViewMode] = useState<"cards" | "list">("cards");
+const [insuranceMonthly, setInsuranceMonthly] = useState<number | "">(getInitialInsurance());
 
-  // Limpiar mensajes tras cualquier modificación para permitir guardar de nuevo
-  const clearAlerts = () => {
-    if (successMsg) setSuccessMsg(null);
-    if (errorMsg) setErrorMsg(null);
-  };
+// Limpiar mensajes tras cualquier modificación para permitir guardar de nuevo
+const clearAlerts = () => {
+  if (successMsg) setSuccessMsg(null);
+  if (errorMsg) setErrorMsg(null);
+};
 
-  // Sync if initialSimulation or initialLeadId changes
-  useEffect(() => {
-    if (initialSimulation) {
-      setCurrentSimulationId(initialSimulation.id);
-      setVehiclePrice(Number(initialSimulation.vehicle_price));
-      setDownPayment(Number(initialSimulation.down_payment));
-      const entIdx = entitiesList.findIndex((e) => e.name === initialSimulation.entity_name);
-      setEntityIndex(entIdx === -1 ? entitiesList.length - 1 : entIdx);
-      setCustomTin(Number(initialSimulation.tin_rate));
-      setSelectedLeadId(initialSimulation.lead_id || initialLeadId || "");
-      setSelectedTerm(Number(initialSimulation.term_months));
-    } else if (initialLeadId) {
+// Sync if initialSimulation or initialLeadId changes
+useEffect(() => {
+  if (initialSimulation) {
+    setCurrentSimulationId(initialSimulation.id);
+    setVehiclePrice(Number(initialSimulation.vehicle_price));
+    setDownPayment(Number(initialSimulation.down_payment));
+    const entIdx = entitiesList.findIndex((e) => e.name === initialSimulation.entity_name);
+    setEntityIndex(entIdx === -1 ? entitiesList.length - 1 : entIdx);
+    setCustomTin(Number(initialSimulation.tin_rate));
+    setSelectedLeadId(initialSimulation.lead_id || initialLeadId || "");
+    setSelectedTerm(Number(initialSimulation.term_months));
+  } else {
+    setEntityIndex(defaultEntityIdx);
+    if (initialLeadId) {
       setSelectedLeadId(initialLeadId);
     }
-  }, [initialSimulation, initialLeadId, entitiesList]);
+  }
+  }, [initialSimulation, initialLeadId, entitiesList, defaultEntityIdx]);
 
-  // Lead seleccionado actual
-  const selectedLead = leads.find((l) => l.id === selectedLeadId);
+// Lead seleccionado actual
+const selectedLead = leads.find((l) => l.id === selectedLeadId);
 
-  // Derived values
-  const numericVehiclePrice = typeof vehiclePrice === "number" ? vehiclePrice : 0;
-  const numericDownPayment = typeof downPayment === "number" ? downPayment : 0;
-  const numericCustomTin = typeof customTin === "number" ? customTin : 0;
-  const numericInsurance = typeof insuranceMonthly === "number" ? insuranceMonthly : 0;
+// Derived values
+const numericVehiclePrice = typeof vehiclePrice === "number" ? vehiclePrice : 0;
+const numericDownPayment = typeof downPayment === "number" ? downPayment : 0;
+const numericCustomTin = typeof customTin === "number" ? customTin : 0;
+const numericInsurance = typeof insuranceMonthly === "number" ? insuranceMonthly : 0;
 
-  const currentEntity = entitiesList[entityIndex] || entitiesList[0];
-  const tinRate = currentEntity.name === "Personalizado" ? numericCustomTin : currentEntity.tin;
+const currentEntity = entitiesList[entityIndex] || entitiesList[0];
+const tinRate = currentEntity.name === "Personalizado" ? numericCustomTin : currentEntity.tin;
 
-  const { financedCapital, taeRate, options } = calculateAmortization(
-    numericVehiclePrice,
-    numericDownPayment,
-    tinRate
-  );
+const { financedCapital, taeRate, options } = calculateAmortization(
+  numericVehiclePrice,
+  numericDownPayment,
+  tinRate
+);
 
-  // Depósito: porcentaje y recomendación (sin bloquear guardado si es menor al 10%)
-  const minDeposit = numericVehiclePrice * 0.1;
-  const isDepositRecommended = numericDownPayment >= minDeposit;
-  const isValidToSave = numericVehiclePrice > 0 && numericDownPayment >= 0 && financedCapital > 0;
+// Depósito: porcentaje y recomendación (sin bloquear guardado si es menor al 10%)
+const minDeposit = numericVehiclePrice * 0.1;
+const isDepositRecommended = numericDownPayment >= minDeposit;
+const isValidToSave = numericVehiclePrice > 0 && numericDownPayment >= 0 && financedCapital > 0;
 
-  // Selected option details
-  const selectedOption = options.find((o) => o.termMonths === selectedTerm) || options[2]; // Fallback to 84m
+// Selected option details
+const selectedOption = options.find((o) => o.termMonths === selectedTerm) || options[2]; // Fallback to 84m
 
-  const handleSave = () => {
-    if (numericVehiclePrice <= 0) {
-      setErrorMsg("El precio del vehículo debe ser mayor a 0.");
-      return;
-    }
-    if (numericDownPayment < 0) {
-      setErrorMsg("La entrada no puede ser negativa.");
-      return;
-    }
-    if (numericDownPayment >= numericVehiclePrice) {
-      setErrorMsg("La entrada no puede ser igual o superior al precio total del vehículo.");
-      return;
-    }
-    if (financedCapital <= 0) {
-      setErrorMsg("El capital financiado debe ser mayor a 0.");
-      return;
-    }
+const handleSave = () => {
+  if (numericVehiclePrice <= 0) {
+    setErrorMsg("El precio del vehículo debe ser mayor a 0.");
+    return;
+  }
+  if (numericDownPayment < 0) {
+    setErrorMsg("La entrada no puede ser negativa.");
+    return;
+  }
+  if (numericDownPayment >= numericVehiclePrice) {
+    setErrorMsg("La entrada no puede ser igual o superior al precio total del vehículo.");
+    return;
+  }
+  if (financedCapital <= 0) {
+    setErrorMsg("El capital financiado debe ser mayor a 0.");
+    return;
+  }
 
-    setErrorMsg(null);
-    setSuccessMsg(null);
+  setErrorMsg(null);
+  setSuccessMsg(null);
 
-    startTransition(async () => {
-      const input: CreateSimulationInput = {
-        lead_id: selectedLeadId || null,
-        vehicle_price: numericVehiclePrice,
-        down_payment: numericDownPayment,
-        financed_capital: financedCapital,
-        entity_name: currentEntity.name === "Personalizado" ? "Personalizado" : currentEntity.name,
-        tin_rate: tinRate,
-        tae_rate: taeRate,
-        term_months: selectedTerm,
-        monthly_payment: selectedOption.monthlyPayment + numericInsurance,
-        total_interest: selectedOption.totalInterest,
-        total_payable: selectedOption.totalPayable + (numericInsurance * selectedTerm),
-        is_draft: !selectedLeadId, // If lead selected, not draft. Otherwise, draft.
-      };
+  startTransition(async () => {
+    const input: CreateSimulationInput = {
+      lead_id: selectedLeadId || null,
+      vehicle_price: numericVehiclePrice,
+      down_payment: numericDownPayment,
+      financed_capital: financedCapital,
+      entity_name: currentEntity.name === "Personalizado" ? "Personalizado" : currentEntity.name,
+      tin_rate: tinRate,
+      tae_rate: taeRate,
+      term_months: selectedTerm,
+      monthly_payment: selectedOption.monthlyPayment + numericInsurance,
+      total_interest: selectedOption.totalInterest,
+      total_payable: selectedOption.totalPayable + (numericInsurance * selectedTerm),
+      is_draft: !selectedLeadId, // If lead selected, not draft. Otherwise, draft.
+    };
 
-      let result;
-      if (currentSimulationId) {
-        result = await updateSimulation(currentSimulationId, input);
-      } else {
-        result = await createSimulation(input);
-        if (result.success && result.data) {
-          setCurrentSimulationId(result.data.id);
-          // Actualizar URL sin recargar para que las siguientes modificaciones actualicen esta misma simulación
-          const url = new URL(window.location.href);
-          url.searchParams.set("id", result.data.id);
-          if (selectedLeadId) {
-            url.searchParams.set("leadId", selectedLeadId);
-          }
-          window.history.replaceState({}, "", url.toString());
+    let result;
+    if (currentSimulationId) {
+      result = await updateSimulation(currentSimulationId, input);
+    } else {
+      result = await createSimulation(input);
+      if (result.success && result.data) {
+        setCurrentSimulationId(result.data.id);
+        // Actualizar URL sin recargar para que las siguientes modificaciones actualicen esta misma simulación
+        const url = new URL(window.location.href);
+        url.searchParams.set("id", result.data.id);
+        if (selectedLeadId) {
+          url.searchParams.set("leadId", selectedLeadId);
         }
+        window.history.replaceState({}, "", url.toString());
       }
+    }
 
-      if (result.success) {
-        setSuccessMsg(
-          selectedLeadId
-            ? "Simulación guardada y vinculada al lead con éxito."
-            : "Simulación libre guardada con éxito."
-        );
-      } else {
-        setErrorMsg(result.error || "No se pudo guardar la simulación.");
-      }
-    });
-  };
+    if (result.success) {
+      setSuccessMsg(
+        selectedLeadId
+          ? "Simulación guardada y vinculada al lead con éxito."
+          : "Simulación libre guardada con éxito."
+      );
+    } else {
+      setErrorMsg(result.error || "No se pudo guardar la simulación.");
+    }
+  });
+};
 
 
-  return (
-    <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left bg-bg-base text-text-primary md:h-full">
-      {/* Title */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
-              Simulador Financiero
-            </h1>
-            {currentSimulationId && (
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
-                Editando simulación
-              </span>
-            )}
-          </div>
-          <p className="font-body-sm text-[13px] text-text-secondary">
-            Configura los parámetros para cotizar opciones de financiación y guardarlas en el CRM.
-          </p>
+return (
+  <div className="flex-1 overflow-y-auto p-6 space-y-6 text-left bg-bg-base text-text-primary md:h-full">
+    {/* Title */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-3">
+          <h1 className="font-headline-lg text-[28px] text-primary tracking-tight leading-tight mb-1">
+            Simulador Financiero
+          </h1>
+          {currentSimulationId && (
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
+              Editando simulación
+            </span>
+          )}
         </div>
-
-        {selectedLead && (
-          <div className="flex items-center gap-2">
-            <Link
-              href={`/leads/${selectedLead.id}`}
-              className="px-3 py-1.5 rounded-lg border border-border-default hover:border-primary/50 text-[12px] font-medium text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5"
-            >
-              <span className="material-symbols-outlined text-[16px] text-primary">person</span>
-              Lead: <strong className="text-text-primary">{selectedLead.full_name}</strong>
-              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-            </Link>
-          </div>
-        )}
+        <p className="font-body-sm text-[13px] text-text-secondary">
+          Configura los parámetros para cotizar opciones de financiación y guardarlas en el CRM.
+        </p>
       </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1400px] mx-auto items-start">
+      {selectedLead && (
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/leads/${selectedLead.id}`}
+            className="px-3 py-1.5 rounded-lg border border-border-default hover:border-primary/50 text-[12px] font-medium text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-[16px] text-primary">person</span>
+            Lead: <strong className="text-text-primary">{selectedLead.full_name}</strong>
+            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+          </Link>
+        </div>
+      )}
+    </div>
 
-        {/* Left Form: Inputs */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="glass-card-lead border border-border-default rounded-xl p-5 relative overflow-hidden group">
-            <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500 pointer-events-none"></div>
+    {/* Grid */}
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1400px] mx-auto items-start">
 
-            <h3 className="text-[17px] font-medium text-text-primary mb-4 flex items-center gap-2 select-none">
-              <span className="material-symbols-outlined text-primary text-xl">settings_applications</span>
-              Parámetros de Entrada
-            </h3>
+      {/* Left Form: Inputs */}
+      <div className="lg:col-span-4 space-y-6">
+        <div className="glass-card-lead border border-border-default rounded-xl p-5 relative overflow-hidden group">
+          <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500 pointer-events-none"></div>
 
-            <div className="space-y-4">
-              {/* Lead Association */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Vincular a Lead (Opcional)
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
-                    person
-                  </span>
-                  <select
-                    value={selectedLeadId}
-                    onChange={(e) => {
-                      setSelectedLeadId(e.target.value);
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    <option value="">Simulación Libre (Borrador)</option>
-                    {leads.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.full_name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none">
-                    expand_more
-                  </span>
-                </div>
-              </div>
+          <h3 className="text-[17px] font-medium text-text-primary mb-4 flex items-center gap-2 select-none">
+            <span className="material-symbols-outlined text-primary text-xl">settings_applications</span>
+            Parámetros de Entrada
+          </h3>
 
-              {/* Price */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Precio del Vehículo (€)
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
-                    euro
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={vehiclePrice}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setVehiclePrice(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
-                  />
-                </div>
-              </div>
-
-              {/* Initial deposit */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Entrada Inicial (€)
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
-                    payments
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={downPayment}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setDownPayment(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
-                  />
-                </div>
-                <div className="mt-1 flex justify-between items-center text-xs text-text-tertiary">
-                  <span>Min. 10% recomendado</span>
-                  <span className={isDepositRecommended ? "text-success font-medium" : "text-warning font-medium"}>
-                    {numericVehiclePrice > 0 ? `${((numericDownPayment / numericVehiclePrice) * 100).toFixed(1)}% de entrada` : "0.0%"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Financing entity */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Entidad Financiera (Tasa)
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
-                    account_balance
-                  </span>
-                  <select
-                    value={entityIndex}
-                    onChange={(e) => {
-                      setEntityIndex(parseInt(e.target.value));
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
-                  >
-                    {entitiesList.map((ent, idx) => (
-                      <option key={`${ent.name}-${idx}`} value={idx}>
-                        {ent.name} {ent.tin > 0 ? `(TIN ${ent.tin}%)` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none">
-                    expand_more
-                  </span>
-                </div>
-              </div>
-
-              {/* Custom TIN (Shown only when 'Personalizado' selected) */}
-              {currentEntity.name === "Personalizado" && (
-                <div className="space-y-1 transition-all duration-300">
-                  <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                    TIN Personalizado (%)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={customTin}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setCustomTin(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 px-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
-                  />
-                </div>
-              )}
-
-              {/* Seguro */}
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Seguro Mensual (€)
-                </label>
-                <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
-                    shield
-                  </span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    value={insuranceMonthly}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setInsuranceMonthly(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
-                      clearAlerts();
-                    }}
-                    className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Summary Card */}
-          <div className="bg-bg-elevated/80 backdrop-blur-md border border-border-subtle rounded-xl p-5 flex flex-col gap-4">
-            <div>
-              <span className="text-[11px] font-medium text-text-secondary uppercase tracking-wider block select-none">
-                Capital Financiado
-              </span>
-              <div className="text-[28px] font-bold text-text-primary mt-1 font-data-mono tracking-tight">
-                {financedCapital.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default select-none">
-                <span className="text-[11px] text-text-secondary">TIN</span>
-                <div className="text-[15px] text-text-primary font-data-mono font-medium mt-0.5">
-                  {tinRate.toFixed(2)}%
-                </div>
-              </div>
-              <div className="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default relative overflow-hidden select-none">
-                <div className="absolute top-0 right-0 w-1 h-full bg-warning"></div>
-                <span className="text-[11px] text-text-secondary">
-                  TAE <span className="text-text-tertiary">(+0.3%)</span>
+          <div className="space-y-4">
+            {/* Lead Association */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Vincular a Lead (Opcional)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                  person
                 </span>
-                <div className="text-[15px] text-warning font-data-mono font-medium mt-0.5">
-                  {taeRate.toFixed(2)}%
-                </div>
-              </div>
-            </div>
-            <div className="pt-2 border-t border-border-subtle select-none">
-              <div className="flex justify-between items-end">
-                <span className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
-                  Total Intereses ({selectedTerm} meses)
-                </span>
-                <span className="text-[17px] font-semibold text-danger font-data-mono">
-                  {selectedOption.totalInterest.toLocaleString("es-ES", {
-                    style: "currency",
-                    currency: "EUR",
-                  })}
+                <select
+                  value={selectedLeadId}
+                  onChange={(e) => {
+                    setSelectedLeadId(e.target.value);
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
+                >
+                  <option value="">Simulación Libre (Borrador)</option>
+                  {leads.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.full_name}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none">
+                  expand_more
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* Formula */}
-          <div className="bg-surface-container-lowest border border-border-default border-dashed rounded-lg p-4 flex items-center justify-center select-none">
-            <div className="font-data-mono text-text-secondary text-xs tracking-wider opacity-60">
-              PMT = P × (r / n) / [1 - (1 + r/n)<sup>-nt</sup>]
+            {/* Price */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Precio del Vehículo (€)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                  euro
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={vehiclePrice}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setVehiclePrice(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
+                />
+              </div>
+            </div>
+
+            {/* Initial deposit */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Entrada Inicial (€)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                  payments
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={downPayment}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setDownPayment(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
+                />
+              </div>
+              <div className="mt-1 flex justify-between items-center text-xs text-text-tertiary">
+                <span>Min. 10% recomendado</span>
+                <span className={isDepositRecommended ? "text-success font-medium" : "text-warning font-medium"}>
+                  {numericVehiclePrice > 0 ? `${((numericDownPayment / numericVehiclePrice) * 100).toFixed(1)}% de entrada` : "0.0%"}
+                </span>
+              </div>
+            </div>
+
+            {/* Financing entity */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Entidad Financiera (Tasa)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                  account_balance
+                </span>
+                <select
+                  value={entityIndex}
+                  onChange={(e) => {
+                    setEntityIndex(parseInt(e.target.value));
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-8 text-[13px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors appearance-none cursor-pointer"
+                >
+                  {entitiesList.map((ent, idx) => (
+                    <option key={`${ent.name}-${idx}`} value={idx}>
+                      {ent.name} {ent.tin > 0 ? `(TIN ${ent.tin}%)` : ""} {ent.isDefault ? "★ (Por defecto)" : ""}
+                    </option>
+                  ))}
+                </select>
+                <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary pointer-events-none">
+                  expand_more
+                </span>
+              </div>
+            </div>
+
+            {/* Custom TIN (Shown only when 'Personalizado' selected) */}
+            {currentEntity.name === "Personalizado" && (
+              <div className="space-y-1 transition-all duration-300">
+                <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                  TIN Personalizado (%)
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={customTin}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCustomTin(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 px-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
+                />
+              </div>
+            )}
+
+            {/* Seguro */}
+            <div className="space-y-1">
+              <label className="block text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Seguro Mensual (€)
+              </label>
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-[18px]">
+                  shield
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={insuranceMonthly}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setInsuranceMonthly(val === "" ? "" : Math.max(0, parseFloat(val) || 0));
+                    clearAlerts();
+                  }}
+                  className="w-full bg-bg-input border border-border-default rounded-lg py-2 pl-10 pr-3 font-data-mono text-[14px] text-text-primary focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors text-right"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Right Content: Results */}
-        <div className="lg:col-span-8 flex flex-col gap-4">
-          <div className="flex justify-between items-end mb-2 select-none">
-            <h3 className="text-[17px] font-medium text-text-primary">Opciones de Amortización</h3>
-            <div className="flex items-center gap-3 select-none">
-              <div className="flex items-center gap-1.5 mr-1.5">
-                <span className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
-                <span className="text-[11px] text-text-secondary">Plazo Recomendado</span>
+        {/* Summary Card */}
+        <div className="bg-bg-elevated/80 backdrop-blur-md border border-border-subtle rounded-xl p-5 flex flex-col gap-4">
+          <div>
+            <span className="text-[11px] font-medium text-text-secondary uppercase tracking-wider block select-none">
+              Capital Financiado
+            </span>
+            <div className="text-[28px] font-bold text-text-primary mt-1 font-data-mono tracking-tight">
+              {financedCapital.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default select-none">
+              <span className="text-[11px] text-text-secondary">TIN</span>
+              <div className="text-[15px] text-text-primary font-data-mono font-medium mt-0.5">
+                {tinRate.toFixed(2)}%
               </div>
-
-              {/* View Switcher Toggle */}
-              <div className="flex bg-surface-container-high/85 p-1 rounded-lg border border-border-default select-none shrink-0 text-[13px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setOptionsViewMode("cards")}
-                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "cards"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-text-secondary hover:text-text-primary"
-                    }`}
-                >
-                  Tarjetas
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setOptionsViewMode("list")}
-                  className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "list"
-                      ? "bg-primary text-white shadow-sm"
-                      : "text-text-secondary hover:text-text-primary"
-                    }`}
-                >
-                  Listado
-                </button>
+            </div>
+            <div className="flex-1 bg-surface-container-low rounded-lg p-3 border border-border-default relative overflow-hidden select-none">
+              <div className="absolute top-0 right-0 w-1 h-full bg-warning"></div>
+              <span className="text-[11px] text-text-secondary">
+                TAE <span className="text-text-tertiary">(+0.3%)</span>
+              </span>
+              <div className="text-[15px] text-warning font-data-mono font-medium mt-0.5">
+                {taeRate.toFixed(2)}%
               </div>
             </div>
           </div>
+          <div className="pt-2 border-t border-border-subtle select-none">
+            <div className="flex justify-between items-end">
+              <span className="text-[11px] font-medium text-text-secondary uppercase tracking-wider">
+                Total Intereses ({selectedTerm} meses)
+              </span>
+              <span className="text-[17px] font-semibold text-danger font-data-mono">
+                {selectedOption.totalInterest.toLocaleString("es-ES", {
+                  style: "currency",
+                  currency: "EUR",
+                })}
+              </span>
+            </div>
+          </div>
+        </div>
 
-          {/* Options Grid or List */}
-          {optionsViewMode === "cards" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {options.map((opt) => {
-                const isSelected = selectedTerm === opt.termMonths;
-                const { isRecommended } = opt;
-                const totalMonthly = opt.monthlyPayment + numericInsurance;
+        {/* Formula */}
+        <div className="bg-surface-container-lowest border border-border-default border-dashed rounded-lg p-4 flex items-center justify-center select-none">
+          <div className="font-data-mono text-text-secondary text-xs tracking-wider opacity-60">
+            PMT = P × (r / n) / [1 - (1 + r/n)<sup>-nt</sup>]
+          </div>
+        </div>
+      </div>
 
-                return (
-                  <div
-                    key={opt.termMonths}
-                    onClick={() => {
-                      setSelectedTerm(opt.termMonths);
-                      clearAlerts();
-                    }}
-                    className={`relative overflow-hidden rounded-xl p-5 cursor-pointer transition-all duration-300 border flex flex-col justify-between h-full ${isSelected
-                        ? "border-primary bg-surface-container-high ring-1 ring-primary shadow-[0_0_20px_rgba(108,99,255,0.2)]"
-                        : isRecommended
-                          ? "border-primary/40 bg-surface-container-low hover:border-primary"
-                          : "border-border-default bg-surface-container hover:border-strong"
-                      }`}
-                  >
-                    {isRecommended && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
-                    )}
+      {/* Right Content: Results */}
+      <div className="lg:col-span-8 flex flex-col gap-4">
+        <div className="flex justify-between items-end mb-2 select-none">
+          <h3 className="text-[17px] font-medium text-text-primary">Opciones de Amortización</h3>
+          <div className="flex items-center gap-3 select-none">
+            <div className="flex items-center gap-1.5 mr-1.5">
+              <span className="w-3 h-3 rounded-full bg-primary shadow-[0_0_8px_rgba(108,99,255,0.6)]"></span>
+              <span className="text-[11px] text-text-secondary">Plazo Recomendado</span>
+            </div>
 
-                    <div>
-                      <div className="flex justify-between items-center mb-3 select-none">
-                        <div className="text-[15px] text-text-primary font-medium flex items-center gap-1.5">
-                          {opt.termMonths} Meses
-                        </div>
-                        <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-bg-base border border-border-default rounded-full">
-                          {opt.termMonths / 12} Años
-                        </div>
+            {/* View Switcher Toggle */}
+            <div className="flex bg-surface-container-high/85 p-1 rounded-lg border border-border-default select-none shrink-0 text-[13px] font-bold">
+              <button
+                type="button"
+                onClick={() => setOptionsViewMode("cards")}
+                className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "cards"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-text-secondary hover:text-text-primary"
+                  }`}
+              >
+                Tarjetas
+              </button>
+              <button
+                type="button"
+                onClick={() => setOptionsViewMode("list")}
+                className={`px-4 py-1.5 rounded-md transition-all cursor-pointer ${optionsViewMode === "list"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-text-secondary hover:text-text-primary"
+                  }`}
+              >
+                Listado
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Options Grid or List */}
+        {optionsViewMode === "cards" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {options.map((opt) => {
+              const isSelected = selectedTerm === opt.termMonths;
+              const { isRecommended } = opt;
+              const totalMonthly = opt.monthlyPayment + numericInsurance;
+
+              return (
+                <div
+                  key={opt.termMonths}
+                  onClick={() => {
+                    setSelectedTerm(opt.termMonths);
+                    clearAlerts();
+                  }}
+                  className={`relative overflow-hidden rounded-xl p-5 cursor-pointer transition-all duration-300 border flex flex-col justify-between h-full ${isSelected
+                    ? "border-primary bg-surface-container-high ring-1 ring-primary shadow-[0_0_20px_rgba(108,99,255,0.2)]"
+                    : isRecommended
+                      ? "border-primary/40 bg-surface-container-low hover:border-primary"
+                      : "border-border-default bg-surface-container hover:border-strong"
+                    }`}
+                >
+                  {isRecommended && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none"></div>
+                  )}
+
+                  <div>
+                    <div className="flex justify-between items-center mb-3 select-none">
+                      <div className="text-[15px] text-text-primary font-medium flex items-center gap-1.5">
+                        {opt.termMonths} Meses
                       </div>
-
-                      <div className="text-[26px] font-bold text-text-primary font-data-mono mb-4">
-                        {opt.monthlyPayment.toLocaleString("es-ES", {
-                          style: "currency",
-                          currency: "EUR",
-                        })}
-                        <span className="text-[14px] text-text-secondary font-body-base font-normal">/mes</span>
+                      <div className="text-[11px] text-text-secondary px-2 py-0.5 bg-bg-base border border-border-default rounded-full">
+                        {opt.termMonths / 12} Años
                       </div>
                     </div>
 
-                    <div className="bg-surface-container-lowest rounded-lg p-3 space-y-2 select-none mt-auto">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Cuota mensual</span>
-                        <span className="font-data-mono text-text-primary">
-                          {opt.monthlyPayment.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-text-secondary">Seguro de vida</span>
-                        <span className="font-data-mono text-text-primary">
-                          {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
-                      <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
-                        <span className="text-text-primary font-semibold">Cuota + Seguro</span>
-                        <span className="font-data-mono text-primary font-bold">
-                          {totalMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
+                    <div className="text-[26px] font-bold text-text-primary font-data-mono mb-4">
+                      {opt.monthlyPayment.toLocaleString("es-ES", {
+                        style: "currency",
+                        currency: "EUR",
+                      })}
+                      <span className="text-[14px] text-text-secondary font-body-base font-normal">/mes</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            // List/Table View
-            <div className="overflow-x-auto bg-surface border border-border-default rounded-xl p-4">
-              <table className="w-full text-left text-[12px] border-collapse min-w-[500px]">
-                <thead>
-                  <tr className="border-b border-border-default/60 text-text-secondary select-none">
-                    <th className="py-2.5 px-2 font-semibold">Plazo</th>
-                    <th className="py-2.5 px-2 font-semibold">Cuota Mensual</th>
-                    <th className="py-2.5 px-2 font-semibold">Seguro</th>
-                    <th className="py-2.5 px-2 font-semibold">Cuota Total</th>
-                    <th className="py-2.5 px-2 text-right font-semibold">Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {options.map((opt) => {
-                    const isSelected = selectedTerm === opt.termMonths;
-                    const totalPaymentWithInsurance = opt.monthlyPayment + numericInsurance;
 
-                    return (
-                      <tr
-                        key={opt.termMonths}
-                        onClick={() => {
-                          setSelectedTerm(opt.termMonths);
-                          clearAlerts();
-                        }}
-                        className={`border-b border-border-default/30 transition-all cursor-pointer ${isSelected
-                            ? "bg-primary/10 hover:bg-primary/15 font-semibold text-primary"
-                            : "hover:bg-surface-container-high/40 text-text-secondary"
-                          }`}
-                      >
-                        <td className="py-3 px-2 flex items-center gap-2">
-                          <span className={isSelected ? "text-primary font-bold" : "text-text-primary"}>
-                            {opt.termMonths} Meses ({opt.termMonths / 12} Años)
-                          </span>
-                        </td>
-                        <td className="py-3 px-2">
-                          <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
-                            {opt.monthlyPayment.toLocaleString("es-ES", {
-                              style: "currency",
-                              currency: "EUR",
-                            })}
-                          </span>
-                          <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
-                        </td>
-                        <td className="py-3 px-2 font-data-mono text-text-secondary">
-                          {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}/mes
-                        </td>
-                        <td className="py-3 px-2">
-                          <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
-                            {totalPaymentWithInsurance.toLocaleString("es-ES", {
-                              style: "currency",
-                              currency: "EUR",
-                            })}
-                          </span>
-                          <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
-                        </td>
-                        <td className="py-3 px-2 text-right">
-                          <div className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-current">
-                            {isSelected && <span className="w-2.5 h-2.5 bg-current rounded-full" />}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Action Alert Message */}
-          {errorMsg && (
-            <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">error</span>
-              <span>{errorMsg}</span>
-            </div>
-          )}
-          {successMsg && (
-            <div className="bg-success/10 border border-success/30 text-success rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[18px]">check_circle</span>
-                <span>{successMsg}</span>
-              </div>
-              {selectedLeadId && (
-                <Link
-                  href={`/leads/${selectedLeadId}`}
-                  className="px-3.5 py-1.5 bg-success text-white hover:bg-success/90 font-medium rounded-lg text-[12px] transition-colors shrink-0 flex items-center gap-1.5 shadow-sm"
-                >
-                  <span className="material-symbols-outlined text-[16px]">person</span>
-                  Volver al Lead
-                </Link>
-              )}
-            </div>
-          )}
-
-          {/* Submit Action */}
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedLeadId) {
-                  router.push(`/leads/${selectedLeadId}`);
-                } else {
-                  router.back();
-                }
-              }}
-              className="px-5 py-2.5 border border-border-default text-text-secondary hover:text-text-primary rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
-            >
-              {selectedLeadId ? "Volver al Lead" : "Cancelar"}
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isPending || !isValidToSave}
-              className="bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] disabled:opacity-50 disabled:hover:shadow-none transition-all duration-300 rounded-lg py-2.5 px-6 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer"
-            >
-              {isPending ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-[16px]">save</span>
-                  {selectedLeadId ? "Guardar y Vincular al Lead" : "Guardar Simulación Libre"}
-                </>
-              )}
-            </button>
+                  <div className="bg-surface-container-lowest rounded-lg p-3 space-y-2 select-none mt-auto">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-text-secondary">Cuota mensual</span>
+                      <span className="font-data-mono text-text-primary">
+                        {opt.monthlyPayment.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-text-secondary">Seguro de vida</span>
+                      <span className="font-data-mono text-text-primary">
+                        {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                      </span>
+                    </div>
+                    <div className="border-t border-border-default pt-2 flex justify-between text-xs font-medium">
+                      <span className="text-text-primary font-semibold">Cuota + Seguro</span>
+                      <span className="font-data-mono text-primary font-bold">
+                        {totalMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        ) : (
+          // List/Table View
+          <div className="overflow-x-auto bg-surface border border-border-default rounded-xl p-4">
+            <table className="w-full text-left text-[12px] border-collapse min-w-[500px]">
+              <thead>
+                <tr className="border-b border-border-default/60 text-text-secondary select-none">
+                  <th className="py-2.5 px-2 font-semibold">Plazo</th>
+                  <th className="py-2.5 px-2 font-semibold">Cuota Mensual</th>
+                  <th className="py-2.5 px-2 font-semibold">Seguro</th>
+                  <th className="py-2.5 px-2 font-semibold">Cuota Total</th>
+                  <th className="py-2.5 px-2 text-right font-semibold">Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {options.map((opt) => {
+                  const isSelected = selectedTerm === opt.termMonths;
+                  const totalPaymentWithInsurance = opt.monthlyPayment + numericInsurance;
 
+                  return (
+                    <tr
+                      key={opt.termMonths}
+                      onClick={() => {
+                        setSelectedTerm(opt.termMonths);
+                        clearAlerts();
+                      }}
+                      className={`border-b border-border-default/30 transition-all cursor-pointer ${isSelected
+                        ? "bg-primary/10 hover:bg-primary/15 font-semibold text-primary"
+                        : "hover:bg-surface-container-high/40 text-text-secondary"
+                        }`}
+                    >
+                      <td className="py-3 px-2 flex items-center gap-2">
+                        <span className={isSelected ? "text-primary font-bold" : "text-text-primary"}>
+                          {opt.termMonths} Meses ({opt.termMonths / 12} Años)
+                        </span>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
+                          {opt.monthlyPayment.toLocaleString("es-ES", {
+                            style: "currency",
+                            currency: "EUR",
+                          })}
+                        </span>
+                        <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
+                      </td>
+                      <td className="py-3 px-2 font-data-mono text-text-secondary">
+                        {numericInsurance.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}/mes
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className={`font-data-mono font-bold ${isSelected ? "text-primary" : "text-text-primary"}`}>
+                          {totalPaymentWithInsurance.toLocaleString("es-ES", {
+                            style: "currency",
+                            currency: "EUR",
+                          })}
+                        </span>
+                        <span className="text-[10px] text-text-secondary font-normal font-body-base">/mes</span>
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        <div className="inline-flex items-center justify-center w-5 h-5 rounded-full border border-current">
+                          {isSelected && <span className="w-2.5 h-2.5 bg-current rounded-full" />}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Action Alert Message */}
+        {errorMsg && (
+          <div className="bg-error-container/20 border border-error/20 text-danger rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">error</span>
+            <span>{errorMsg}</span>
+          </div>
+        )}
+        {successMsg && (
+          <div className="bg-success/10 border border-success/30 text-success rounded-lg p-4 font-body-sm text-[13px] mt-4 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px]">check_circle</span>
+              <span>{successMsg}</span>
+            </div>
+            {selectedLeadId && (
+              <Link
+                href={`/leads/${selectedLeadId}`}
+                className="px-3.5 py-1.5 bg-success text-white hover:bg-success/90 font-medium rounded-lg text-[12px] transition-colors shrink-0 flex items-center gap-1.5 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-[16px]">person</span>
+                Volver al Lead
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Submit Action */}
+        <div className="flex justify-end gap-3 mt-6">
+          <button
+            type="button"
+            onClick={() => {
+              if (selectedLeadId) {
+                router.push(`/leads/${selectedLeadId}`);
+              } else {
+                router.back();
+              }
+            }}
+            className="px-5 py-2.5 border border-border-default text-text-secondary hover:text-text-primary rounded-lg text-[13px] font-medium transition-colors cursor-pointer"
+          >
+            {selectedLeadId ? "Volver al Lead" : "Cancelar"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={isPending || !isValidToSave}
+            className="bg-primary text-on-primary hover:shadow-[0_0_15px_rgba(108,99,255,0.4)] disabled:opacity-50 disabled:hover:shadow-none transition-all duration-300 rounded-lg py-2.5 px-6 flex items-center justify-center gap-2 font-body-sm font-medium text-[13px] cursor-pointer"
+          >
+            {isPending ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-[16px]">sync</span>
+                Guardando...
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[16px]">save</span>
+                {selectedLeadId ? "Guardar y Vincular al Lead" : "Guardar Simulación Libre"}
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
     </div>
-  );
+  </div>
+);
 }
 

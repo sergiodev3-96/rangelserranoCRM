@@ -44,6 +44,7 @@ export async function getFinancialEntities(onlyActive = false): Promise<ActionRe
         ...item,
         tin: Number(item.tin),
         sort_order: Number(item.sort_order),
+        is_default: Boolean(item.is_default),
       }))) as FinancialEntity[],
       error: null,
     };
@@ -62,6 +63,7 @@ export async function createFinancialEntity(params: {
   tin: number;
   is_active?: boolean;
   sort_order?: number;
+  is_default?: boolean;
 }): Promise<ActionResult<FinancialEntity>> {
   try {
     const adminCheck = await checkAdminAuth();
@@ -70,6 +72,11 @@ export async function createFinancialEntity(params: {
     }
 
     const supabase = await createClient();
+
+    if (params.is_default) {
+      await supabase.from("financial_entities").update({ is_default: false }).neq("id", "00000000-0000-0000-0000-000000000000");
+    }
+
     const { data, error } = await supabase
       .from("financial_entities")
       .insert({
@@ -77,6 +84,7 @@ export async function createFinancialEntity(params: {
         tin: params.tin,
         is_active: params.is_active ?? true,
         sort_order: params.sort_order ?? 0,
+        is_default: params.is_default ?? false,
       })
       .select()
       .single();
@@ -93,6 +101,7 @@ export async function createFinancialEntity(params: {
         ...data,
         tin: Number(data.tin),
         sort_order: Number(data.sort_order),
+        is_default: Boolean(data.is_default),
       } as FinancialEntity,
       error: null,
     };
@@ -112,6 +121,7 @@ export async function updateFinancialEntity(params: {
   tin: number;
   is_active?: boolean;
   sort_order?: number;
+  is_default?: boolean;
 }): Promise<ActionResult<FinancialEntity>> {
   try {
     const adminCheck = await checkAdminAuth();
@@ -120,6 +130,11 @@ export async function updateFinancialEntity(params: {
     }
 
     const supabase = await createClient();
+
+    if (params.is_default) {
+      await supabase.from("financial_entities").update({ is_default: false }).neq("id", params.id);
+    }
+
     const { data, error } = await supabase
       .from("financial_entities")
       .update({
@@ -127,6 +142,7 @@ export async function updateFinancialEntity(params: {
         tin: params.tin,
         ...(typeof params.is_active === "boolean" ? { is_active: params.is_active } : {}),
         ...(typeof params.sort_order === "number" ? { sort_order: params.sort_order } : {}),
+        ...(typeof params.is_default === "boolean" ? { is_default: params.is_default } : {}),
       })
       .eq("id", params.id)
       .select()
@@ -144,6 +160,7 @@ export async function updateFinancialEntity(params: {
         ...data,
         tin: Number(data.tin),
         sort_order: Number(data.sort_order),
+        is_default: Boolean(data.is_default),
       } as FinancialEntity,
       error: null,
     };
@@ -215,6 +232,44 @@ export async function deleteFinancialEntity(id: string): Promise<ActionResult<vo
       success: false,
       data: null,
       error: err instanceof Error ? err.message : "Error al eliminar la entidad financiera",
+    };
+  }
+}
+
+// Establecer entidad por defecto para las simulaciones (solo Admin)
+export async function setDefaultFinancialEntity(id: string): Promise<ActionResult<void>> {
+  try {
+    const adminCheck = await checkAdminAuth();
+    if (!adminCheck.success) {
+      return { success: false, data: null, error: adminCheck.error };
+    }
+
+    const supabase = await createClient();
+
+    // 1. Desmarcar las demás entidades
+    await supabase
+      .from("financial_entities")
+      .update({ is_default: false })
+      .neq("id", id);
+
+    // 2. Marcar la seleccionada como por defecto y asegurarse de que esté activa
+    const { error } = await supabase
+      .from("financial_entities")
+      .update({ is_default: true, is_active: true })
+      .eq("id", id);
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    revalidatePath("/admin/entidades-financieras");
+    revalidatePath("/simulaciones");
+    return { success: true, data: undefined, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al establecer la entidad por defecto",
     };
   }
 }

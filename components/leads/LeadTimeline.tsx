@@ -41,7 +41,7 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
       case "whatsapp_sent":
         return "chat";
       case "call_logged":
-        return "phone_in_talk";
+        return "call";
       default:
         return "event";
     }
@@ -88,7 +88,7 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
             {/* Event header */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="font-body-md text-[14px] font-semibold text-text-primary">
-                {event.author.full_name}
+                {event.author?.full_name || "Usuario"}
               </span>
               <span className="inline-flex items-center gap-1.5 text-[13px] text-text-primary bg-surface-container-high px-2.5 py-0.5 rounded-md border border-border-default font-medium">
                 <span className="material-symbols-outlined text-[15px] text-text-secondary">
@@ -101,18 +101,16 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
             {/* Event content */}
             <div className="font-body-sm text-[14px] text-text-secondary pl-0.5 mt-0.5">
               {isStatusChange &&
-              metadata?.from_status &&
-              metadata?.to_status ? (
+                metadata?.from_status &&
+                metadata?.to_status ? (
                 <div className="flex items-center gap-2 flex-wrap">
                   <span>Cambió el estado de</span>
                   <span
-                    className={`inline-block px-2 py-0.5 rounded text-[11px] ${
-                      LEAD_STATUS_CONFIG[metadata.from_status as LeadStatus]
+                    className={`inline-block px-2 py-0.5 rounded text-[11px] ${LEAD_STATUS_CONFIG[metadata.from_status as LeadStatus]
                         ?.bgClass
-                    } ${
-                      LEAD_STATUS_CONFIG[metadata.from_status as LeadStatus]
+                      } ${LEAD_STATUS_CONFIG[metadata.from_status as LeadStatus]
                         ?.textClass
-                    }`}
+                      }`}
                   >
                     {
                       LEAD_STATUS_CONFIG[metadata.from_status as LeadStatus]
@@ -123,13 +121,11 @@ export default function LeadTimeline({ events }: LeadTimelineProps) {
                     arrow_right_alt
                   </span>
                   <span
-                    className={`inline-block px-2 py-0.5 rounded text-[11px] ${
-                      LEAD_STATUS_CONFIG[metadata.to_status as LeadStatus]
+                    className={`inline-block px-2 py-0.5 rounded text-[11px] ${LEAD_STATUS_CONFIG[metadata.to_status as LeadStatus]
                         ?.bgClass
-                    } ${
-                      LEAD_STATUS_CONFIG[metadata.to_status as LeadStatus]
+                      } ${LEAD_STATUS_CONFIG[metadata.to_status as LeadStatus]
                         ?.textClass
-                    }`}
+                      }`}
                   >
                     {
                       LEAD_STATUS_CONFIG[metadata.to_status as LeadStatus]

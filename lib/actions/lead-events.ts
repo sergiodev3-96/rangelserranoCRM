@@ -110,3 +110,52 @@ export async function deleteNote(
   }
 }
 
+// Registrar llamada en el historial de eventos
+export async function logLeadCall(
+  leadId: string,
+  phone?: string | null
+): Promise<ActionResult<LeadEventWithAuthor>> {
+  try {
+    const supabase = await createClient();
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      return { success: false, data: null, error: "No autorizado" };
+    }
+
+    const { data: lead } = await supabase
+      .from("leads")
+      .select("phone, full_name")
+      .eq("id", leadId)
+      .maybeSingle();
+
+    const targetPhone = phone || lead?.phone;
+    const content = targetPhone
+      ? `Llamada telefónica realizada al ${targetPhone}`
+      : "Llamada telefónica realizada al cliente";
+
+    const { data, error } = await supabase
+      .from("lead_events")
+      .insert({
+        lead_id: leadId,
+        author_id: userId,
+        event_type: "call_logged",
+        content,
+      })
+      .select("*, author:profiles(id, full_name)")
+      .single();
+
+    if (error) {
+      return { success: false, data: null, error: error.message };
+    }
+
+    revalidatePath(`/leads/${leadId}`);
+    return { success: true, data: data as LeadEventWithAuthor, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al registrar la llamada",
+    };
+  }
+}
+

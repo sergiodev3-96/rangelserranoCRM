@@ -113,6 +113,16 @@ export async function saveLeadNote(
       return { success: false, data: null, error: error.message };
     }
 
+    // Registrar la nota en el historial de eventos
+    if (content.trim()) {
+      await supabase.from("lead_events").insert({
+        lead_id: leadId,
+        author_id: userId,
+        event_type: "note",
+        content: content.trim(),
+      });
+    }
+
     revalidatePath(`/leads/${leadId}`);
 
     const savedNote = {

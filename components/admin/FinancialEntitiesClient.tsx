@@ -8,6 +8,7 @@ import {
   updateFinancialEntity,
   deleteFinancialEntity,
   toggleFinancialEntityStatus,
+  setDefaultFinancialEntity,
 } from "@/lib/actions/financial-entities";
 import Modal from "../ui/Modal";
 
@@ -30,6 +31,7 @@ export default function FinancialEntitiesClient({
   const [tin, setTin] = useState<string>("6.00");
   const [sortOrder, setSortOrder] = useState<string>("1");
   const [isActive, setIsActive] = useState<boolean>(true);
+  const [isDefault, setIsDefault] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const openCreateModal = () => {
@@ -39,6 +41,7 @@ export default function FinancialEntitiesClient({
     setTin("6.00");
     setSortOrder((initialEntities.length + 1).toString());
     setIsActive(true);
+    setIsDefault(false);
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -50,8 +53,20 @@ export default function FinancialEntitiesClient({
     setTin(entity.tin.toString());
     setSortOrder(entity.sort_order.toString());
     setIsActive(entity.is_active);
+    setIsDefault(Boolean(entity.is_default));
     setErrorMsg(null);
     setIsModalOpen(true);
+  };
+
+  const handleSetDefault = (id: string) => {
+    startTransition(async () => {
+      const result = await setDefaultFinancialEntity(id);
+      if (result.success) {
+        router.refresh();
+      } else {
+        alert(result.error || "No se pudo establecer la entidad por defecto.");
+      }
+    });
   };
 
   const handleToggleStatus = (entity: FinancialEntity) => {
@@ -102,6 +117,7 @@ export default function FinancialEntitiesClient({
           tin: parsedTin,
           is_active: isActive,
           sort_order: parsedOrder,
+          is_default: isDefault,
         });
       } else {
         if (!selectedEntity) return;
@@ -111,6 +127,7 @@ export default function FinancialEntitiesClient({
           tin: parsedTin,
           is_active: isActive,
           sort_order: parsedOrder,
+          is_default: isDefault,
         });
       }
 
@@ -190,6 +207,9 @@ export default function FinancialEntitiesClient({
               <th className="px-5 py-3.5 font-field-label text-[11px] text-text-secondary uppercase tracking-wider">
                 Estado
               </th>
+              <th className="px-5 py-3.5 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-center">
+                Por Defecto
+              </th>
               <th className="px-5 py-3.5 font-field-label text-[11px] text-text-secondary uppercase tracking-wider text-right">
                 Acciones
               </th>
@@ -199,9 +219,8 @@ export default function FinancialEntitiesClient({
             {filteredEntities.map((entity) => (
               <tr
                 key={entity.id}
-                className={`hover:bg-surface-container-high/40 transition-colors ${
-                  !entity.is_active ? "opacity-60 bg-surface/30" : ""
-                }`}
+                className={`hover:bg-surface-container-high/40 transition-colors ${!entity.is_active ? "opacity-60 bg-surface/30" : ""
+                  }`}
               >
                 {/* Orden */}
                 <td className="px-5 py-4 text-center font-data-mono text-text-tertiary text-[13px]">
@@ -237,19 +256,38 @@ export default function FinancialEntitiesClient({
                     onClick={() => handleToggleStatus(entity)}
                     disabled={isPending}
                     title={entity.is_active ? "Desactivar entidad" : "Activar entidad"}
-                    className={`px-3 py-1 rounded-full text-[11px] font-medium border flex items-center gap-1.5 cursor-pointer transition-colors w-fit ${
-                      entity.is_active
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium border flex items-center gap-1.5 cursor-pointer transition-colors w-fit ${entity.is_active
                         ? "bg-success/10 text-success border-success/20 hover:bg-success/20"
                         : "bg-surface-container-highest text-text-secondary border-border-default hover:bg-surface-container"
-                    }`}
+                      }`}
                   >
                     <span
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        entity.is_active ? "bg-success" : "bg-text-tertiary"
-                      }`}
+                      className={`w-1.5 h-1.5 rounded-full ${entity.is_active ? "bg-success" : "bg-text-tertiary"
+                        }`}
                     />
                     {entity.is_active ? "Activo" : "Inactivo"}
                   </button>
+                </td>
+
+                {/* Default Entity Indicator & Action */}
+                <td className="px-5 py-4 text-center">
+                  {entity.is_default ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/25 select-none shadow-sm">
+                      <span className="material-symbols-outlined text-[14px]">star</span>
+                      Por Defecto
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleSetDefault(entity.id)}
+                      disabled={isPending}
+                      className="text-text-tertiary hover:text-amber-400 hover:bg-amber-500/10 px-2.5 py-1 rounded-lg border border-transparent hover:border-amber-500/20 text-[11px] font-medium transition-all inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                      title="Establecer como entidad por defecto para las simulaciones"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">star_border</span>
+                      <span>Hacer por defecto</span>
+                    </button>
+                  )}
                 </td>
 
                 {/* Actions */}
@@ -279,17 +317,17 @@ export default function FinancialEntitiesClient({
 
             {filteredEntities.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-text-secondary">
-                  <span className="material-symbols-outlined text-[36px] text-text-tertiary mb-1">
-                    search_off
-                  </span>
-                  <p className="font-medium text-[14px] text-text-primary">
-                    No se encontraron entidades financieras
-                  </p>
-                  <p className="text-[12px] text-text-tertiary mt-0.5">
-                    Prueba con otro término de búsqueda o crea una nueva entidad.
-                  </p>
-                </td>
+                  <td colSpan={6} className="p-8 text-center text-text-secondary">
+                    <span className="material-symbols-outlined text-[36px] text-text-tertiary mb-1">
+                      search_off
+                    </span>
+                    <p className="font-medium text-[14px] text-text-primary">
+                      No se encontraron entidades financieras
+                    </p>
+                    <p className="text-[12px] text-text-tertiary mt-0.5">
+                      Prueba con otro término de búsqueda o crea una nueva entidad.
+                    </p>
+                  </td>
               </tr>
             )}
           </tbody>
@@ -360,36 +398,49 @@ export default function FinancialEntitiesClient({
             </div>
           </div>
 
-          <div className="pt-2">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded text-primary focus:ring-primary border-border-default"
-              />
-              <span className="text-[13px] font-medium text-text-primary">
-                Entidad activa (visible en el desplegable de simulaciones)
-              </span>
-            </label>
-          </div>
+            <div className="pt-2 space-y-2.5">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary border-border-default"
+                />
+                <span className="text-[13px] font-medium text-text-primary">
+                  Entidad activa (visible en el desplegable de simulaciones)
+                </span>
+              </label>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-default">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 text-[13px] text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="bg-primary text-on-primary hover:bg-primary-hover transition-colors rounded-lg py-2 px-4 text-[13px] font-medium shadow-sm disabled:opacity-50 cursor-pointer"
-            >
-              {isPending ? "Guardando..." : modalMode === "create" ? "Crear Entidad" : "Guardar Cambios"}
-            </button>
-          </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isDefault}
+                  onChange={(e) => setIsDefault(e.target.checked)}
+                  className="w-4 h-4 rounded text-primary focus:ring-primary border-border-default"
+                />
+                <span className="text-[13px] font-medium text-text-primary flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-amber-500 text-[16px]">star</span>
+                  Establecer como entidad por defecto para las simulaciones
+                </span>
+              </label>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border-default">
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 text-[13px] text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-container transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="bg-primary text-on-primary hover:bg-primary-hover transition-colors rounded-lg py-2 px-4 text-[13px] font-medium shadow-sm disabled:opacity-50 cursor-pointer"
+              >
+                {isPending ? "Guardando..." : modalMode === "create" ? "Crear Entidad" : "Guardar Cambios"}
+              </button>
+            </div>
         </form>
       </Modal>
     </div>
