@@ -1,7 +1,7 @@
 "use server";
 
 import type { ActionResult } from "@/types/database";
-import type { FinancialEntity } from "@/types/financial-entities";
+import type { FinancialEntity, FinancingTableConfig } from "@/types/financial-entities";
 import { createClient } from "../supabase/server";
 import { getCurrentProfile } from "./auth";
 import { revalidatePath } from "next/cache";
@@ -45,6 +45,7 @@ export async function getFinancialEntities(onlyActive = false): Promise<ActionRe
         tin: Number(item.tin),
         sort_order: Number(item.sort_order),
         is_default: Boolean(item.is_default),
+        financing_table: (item.financing_table as FinancingTableConfig) || null,
       }))) as FinancialEntity[],
       error: null,
     };
@@ -270,6 +271,46 @@ export async function setDefaultFinancialEntity(id: string): Promise<ActionResul
       success: false,
       data: null,
       error: err instanceof Error ? err.message : "Error al establecer la entidad por defecto",
+    };
+  }
+}
+
+// Actualizar tabla de configuración de financiación comercial de una entidad
+export async function updateFinancialEntityFinancingTable(
+  id: string,
+  financingTable: FinancingTableConfig
+): Promise<ActionResult<void>> {
+  try {
+    const adminCheck = await checkAdminAuth();
+    if (!adminCheck.success) {
+      return { success: false, data: null, error: adminCheck.error };
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("financial_entities")
+      .update({ financing_table: financingTable })
+      .eq("id", id);
+
+    if (error) {
+      if (error.message && error.message.includes("column")) {
+        return {
+          success: false,
+          data: null,
+          error: "La columna 'financing_table' aún no existe en la base de datos. Por favor, ejecuta la migración 0023 en Supabase.",
+        };
+      }
+      return { success: false, data: null, error: error.message };
+    }
+
+    revalidatePath("/admin/entidades-financieras");
+    revalidatePath("/simulaciones");
+    return { success: true, data: undefined, error: null };
+  } catch (err) {
+    return {
+      success: false,
+      data: null,
+      error: err instanceof Error ? err.message : "Error al guardar la tabla de financiación",
     };
   }
 }

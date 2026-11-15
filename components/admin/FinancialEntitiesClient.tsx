@@ -11,6 +11,7 @@ import {
   setDefaultFinancialEntity,
 } from "@/lib/actions/financial-entities";
 import Modal from "../ui/Modal";
+import FinancingTableModal from "./FinancingTableModal";
 
 type FinancialEntitiesClientProps = {
   initialEntities: FinancialEntity[];
@@ -24,6 +25,7 @@ export default function FinancialEntitiesClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedEntity, setSelectedEntity] = useState<FinancialEntity | null>(null);
+  const [entityForTable, setEntityForTable] = useState<FinancialEntity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Form states
@@ -292,7 +294,21 @@ export default function FinancialEntitiesClient({
 
                 {/* Actions */}
                 <td className="px-5 py-4 text-right">
-                  <div className="flex items-center justify-end gap-1">
+                  <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setEntityForTable(entity)}
+                      className="p-1.5 text-primary hover:text-primary-hover hover:bg-primary/10 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 text-[12px] px-2.5 font-semibold border border-primary/20"
+                      title="Configurar tabla comercial de financiación"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">table_chart</span>
+                      <span>Tabla Financiación</span>
+                      {entity.financing_table?.rows?.length ? (
+                        <span className="ml-0.5 px-1.5 py-0.2 bg-primary/15 rounded-full text-[10px] font-bold">
+                          {entity.financing_table.rows.length} TIN
+                        </span>
+                      ) : null}
+                    </button>
                     <button
                       onClick={() => openEditModal(entity)}
                       className="p-1.5 text-text-secondary hover:text-primary rounded-lg hover:bg-surface-container transition-colors cursor-pointer flex items-center gap-1 text-[12px] px-2.5 font-medium"
@@ -443,6 +459,18 @@ export default function FinancialEntitiesClient({
             </div>
         </form>
       </Modal>
+
+      {/* Modal de Tabla de Financiación Comercial */}
+      {entityForTable && (
+        <FinancingTableModal
+          isOpen={Boolean(entityForTable)}
+          onClose={() => setEntityForTable(null)}
+          entity={entityForTable}
+          onSaved={() => {
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

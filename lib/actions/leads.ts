@@ -508,6 +508,18 @@ export async function updateLeadOperationDetails(
     reservation_amount?: number | null;
     phone?: string | null;
     email?: string | null;
+    cotitular_full_name?: string | null;
+    cotitular_first_surname?: string | null;
+    cotitular_second_surname?: string | null;
+    cotitular_dni_nie?: string | null;
+    cotitular_nationality?: string | null;
+    cotitular_birth_country?: string | null;
+    cotitular_phone?: string | null;
+    cotitular_email?: string | null;
+    cotitular_address?: string | null;
+    cotitular_postal_code?: string | null;
+    cotitular_city?: string | null;
+    cotitular_province?: string | null;
   }
 ): Promise<ActionResult<Lead>> {
   try {
@@ -682,7 +694,20 @@ export async function listLeadDocuments(
       });
     }
 
-    const categories = ["dni_nie", "dni_nie_2", "nomina", "vida_laboral", "banco", "otros"];
+    const categories = [
+      "dni_nie",
+      "dni_nie_2",
+      "nomina",
+      "vida_laboral",
+      "banco",
+      "otros",
+      "cotitular_dni_nie",
+      "cotitular_dni_nie_2",
+      "cotitular_nomina",
+      "cotitular_vida_laboral",
+      "cotitular_banco",
+      "cotitular_otros",
+    ];
     const filesMap: Record<string, { name: string; size: number; path: string; created_at: string }[]> = {};
 
     for (const cat of categories) {

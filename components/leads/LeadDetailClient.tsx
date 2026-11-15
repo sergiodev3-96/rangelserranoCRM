@@ -28,6 +28,24 @@ import type { LeadNote } from "@/types/lead-notes";
 import LeadNoteCard from "./LeadNoteCard";
 import { logLeadCall } from "@/lib/actions/lead-events";
 
+const CLIENT_DOC_CATEGORIES = [
+  { id: "dni_nie", label: "DNI/NIE", icon: "badge" },
+  { id: "dni_nie_2", label: "DNI/NIE (Segundo documento)", icon: "badge" },
+  { id: "nomina", label: "Nómina", icon: "receipt_long" },
+  { id: "vida_laboral", label: "Vida laboral", icon: "work" },
+  { id: "banco", label: "Banco", icon: "account_balance" },
+  { id: "otros", label: "Otros", icon: "folder_open" },
+];
+
+const COTITULAR_DOC_CATEGORIES = [
+  { id: "cotitular_dni_nie", label: "DNI/NIE", icon: "badge" },
+  { id: "cotitular_dni_nie_2", label: "DNI/NIE (Segundo documento)", icon: "badge" },
+  { id: "cotitular_nomina", label: "Nómina", icon: "receipt_long" },
+  { id: "cotitular_vida_laboral", label: "Vida laboral", icon: "work" },
+  { id: "cotitular_banco", label: "Banco", icon: "account_balance" },
+  { id: "cotitular_otros", label: "Otros", icon: "folder_open" },
+];
+
 type LeadDetailClientProps = {
   lead: LeadWithAssignee;
   currentUser: { id: string; role: "admin" | "comercial" };
@@ -74,6 +92,18 @@ export default function LeadDetailClient({
   const [downPayment, setDownPayment] = useState(lead.down_payment?.toString() || "");
   const [isSavingOps, setIsSavingOps] = useState(false);
 
+  // Fields for cotitular operation details
+  const [cotitularFullName, setCotitularFullName] = useState(lead.cotitular_full_name || "");
+  const [cotitularFirstSurname, setCotitularFirstSurname] = useState(lead.cotitular_first_surname || "");
+  const [cotitularSecondSurname, setCotitularSecondSurname] = useState(lead.cotitular_second_surname || "");
+  const [cotitularDniNie, setCotitularDniNie] = useState(lead.cotitular_dni_nie || "");
+  const [cotitularNationality, setCotitularNationality] = useState(lead.cotitular_nationality || "");
+  const [cotitularBirthCountry, setCotitularBirthCountry] = useState(lead.cotitular_birth_country || "");
+
+  // Sub-tabs in "Información del pedido"
+  const [opsOwnerTab, setOpsOwnerTab] = useState<"cliente" | "cotitular">("cliente");
+  const [docsOwnerTab, setDocsOwnerTab] = useState<"cliente" | "cotitular">("cliente");
+
   // States for documentation
   const [documents, setDocuments] = useState<
     Record<string, { name: string; size: number; path: string; created_at: string }[]>
@@ -99,6 +129,12 @@ export default function LeadDetailClient({
     setVehicleVin(lead.vehicle_vin || "");
     setVehiclePrice(lead.vehicle_price?.toString() || "");
     setDownPayment(lead.down_payment?.toString() || "");
+    setCotitularFullName(lead.cotitular_full_name || "");
+    setCotitularFirstSurname(lead.cotitular_first_surname || "");
+    setCotitularSecondSurname(lead.cotitular_second_surname || "");
+    setCotitularDniNie(lead.cotitular_dni_nie || "");
+    setCotitularNationality(lead.cotitular_nationality || "");
+    setCotitularBirthCountry(lead.cotitular_birth_country || "");
   }, [lead]);
 
   // Load documents
@@ -243,6 +279,10 @@ export default function LeadDetailClient({
   // Save operation details handler
   const handleSaveOps = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!fullName.trim()) {
+      alert("El nombre del cliente es obligatorio.");
+      return;
+    }
     setIsSavingOps(true);
     try {
       const parsedYear = vehicleYear ? parseInt(vehicleYear, 10) : null;
@@ -256,6 +296,12 @@ export default function LeadDetailClient({
         dni_nie: dniNie || null,
         nationality: nationality || null,
         birth_country: birthCountry || null,
+        cotitular_full_name: cotitularFullName || null,
+        cotitular_first_surname: cotitularFirstSurname || null,
+        cotitular_second_surname: cotitularSecondSurname || null,
+        cotitular_dni_nie: cotitularDniNie || null,
+        cotitular_nationality: cotitularNationality || null,
+        cotitular_birth_country: cotitularBirthCountry || null,
         vehicle_brand: vehicleBrand || null,
         vehicle_model: vehicleModel || null,
         vehicle_year: parsedYear,
@@ -866,87 +912,211 @@ export default function LeadDetailClient({
                             </h2>
 
                             <form onSubmit={handleSaveOps} className="space-y-6">
-                              {/* Datos del Cliente */}
-                              <div className="space-y-4">
-                                <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider select-none text-left">
+                              {/* Selector de Pestaña: Datos del Cliente vs Datos del Cotitular */}
+                              <div className="flex border-b border-border-default/60 pb-3 select-none gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setOpsOwnerTab("cliente")}
+                                  className={`py-2 px-3.5 rounded-lg font-body-sm text-[12px] uppercase tracking-wider font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                                    opsOwnerTab === "cliente"
+                                      ? "bg-primary text-white shadow-sm"
+                                      : "text-text-secondary hover:text-text-primary hover:bg-surface-container border border-border-default/40"
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">person</span>
                                   Datos del Cliente
-                                </h3>
-                                <div className="grid grid-cols-1 gap-4 text-left">
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      Nombre
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={fullName}
-                                      onChange={(e) => setFullName(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                      required
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      Primer Apellido
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={firstSurname}
-                                      onChange={(e) => setFirstSurname(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      Segundo Apellido
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={secondSurname}
-                                      onChange={(e) => setSecondSurname(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      DNI / NIE
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={dniNie}
-                                      onChange={(e) => setDniNie(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      Nacionalidad
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={nationality}
-                                      onChange={(e) => setNationality(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                    />
-                                  </div>
-                                  <div className="space-y-1">
-                                    <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
-                                      País de Nacimiento
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={birthCountry}
-                                      onChange={(e) => setBirthCountry(e.target.value)}
-                                      disabled={!canEdit || isSavingOps}
-                                      className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
-                                    />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setOpsOwnerTab("cotitular")}
+                                  className={`py-2 px-3.5 rounded-lg font-body-sm text-[12px] uppercase tracking-wider font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                                    opsOwnerTab === "cotitular"
+                                      ? "bg-primary text-white shadow-sm"
+                                      : "text-text-secondary hover:text-text-primary hover:bg-surface-container border border-border-default/40"
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-[18px]">group</span>
+                                  Datos del Cotitular
+                                  {cotitularFullName && (
+                                    <span className="w-2 h-2 rounded-full bg-success"></span>
+                                  )}
+                                </button>
+                              </div>
+
+                              {/* Datos del Cliente */}
+                              {opsOwnerTab === "cliente" ? (
+                                <div className="space-y-4">
+                                  <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider select-none text-left">
+                                    Datos del Cliente
+                                  </h3>
+                                  <div className="grid grid-cols-1 gap-4 text-left">
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Nombre
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Nombre del cliente"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Primer Apellido
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={firstSurname}
+                                        onChange={(e) => setFirstSurname(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Primer apellido"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Segundo Apellido
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={secondSurname}
+                                        onChange={(e) => setSecondSurname(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Segundo apellido"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        DNI / NIE
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={dniNie}
+                                        onChange={(e) => setDniNie(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="DNI o NIE"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Nacionalidad
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={nationality}
+                                        onChange={(e) => setNationality(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Ej. Española"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        País de Nacimiento
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={birthCountry}
+                                        onChange={(e) => setBirthCountry(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Ej. España"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
+                              ) : (
+                                <div className="space-y-4">
+                                  <h3 className="text-[12px] font-bold text-text-secondary uppercase tracking-wider select-none text-left">
+                                    Datos del Cotitular
+                                  </h3>
+                                  <div className="grid grid-cols-1 gap-4 text-left">
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Nombre
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularFullName}
+                                        onChange={(e) => setCotitularFullName(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Nombre del cotitular"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Primer Apellido
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularFirstSurname}
+                                        onChange={(e) => setCotitularFirstSurname(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Primer apellido"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Segundo Apellido
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularSecondSurname}
+                                        onChange={(e) => setCotitularSecondSurname(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Segundo apellido"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        DNI / NIE
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularDniNie}
+                                        onChange={(e) => setCotitularDniNie(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="DNI o NIE del cotitular"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        Nacionalidad
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularNationality}
+                                        onChange={(e) => setCotitularNationality(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Ej. Española"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <label className="font-field-label text-[11px] text-text-secondary uppercase tracking-wider block">
+                                        País de Nacimiento
+                                      </label>
+                                      <input
+                                        type="text"
+                                        value={cotitularBirthCountry}
+                                        onChange={(e) => setCotitularBirthCountry(e.target.value)}
+                                        disabled={!canEdit || isSavingOps}
+                                        className="w-full bg-bg-input text-text-primary border border-border-default rounded-lg px-3 py-2 font-body-sm text-[13px] focus:outline-none focus:border-primary disabled:opacity-60"
+                                        placeholder="Ej. España"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
 
                               {/* Datos del Vehiculo */}
                               <div className="space-y-4 pt-4 border-t border-border-default/40">
@@ -1076,15 +1246,42 @@ export default function LeadDetailClient({
                               )}
                             </div>
 
+                            {/* Pestañas: Documentos del Cliente vs Documentos del Cotitular */}
+                            <div className="flex border-b border-border-default/60 pb-3 select-none gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setDocsOwnerTab("cliente")}
+                                className={`py-2 px-3.5 rounded-lg font-body-sm text-[12px] uppercase tracking-wider font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                                  docsOwnerTab === "cliente"
+                                    ? "bg-primary text-white shadow-sm"
+                                    : "text-text-secondary hover:text-text-primary hover:bg-surface-container border border-border-default/40"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[18px]">person</span>
+                                Datos del Cliente
+                                {CLIENT_DOC_CATEGORIES.some((c) => (documents[c.id] || []).length > 0) && (
+                                  <span className="w-2 h-2 rounded-full bg-success"></span>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setDocsOwnerTab("cotitular")}
+                                className={`py-2 px-3.5 rounded-lg font-body-sm text-[12px] uppercase tracking-wider font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                                  docsOwnerTab === "cotitular"
+                                    ? "bg-primary text-white shadow-sm"
+                                    : "text-text-secondary hover:text-text-primary hover:bg-surface-container border border-border-default/40"
+                                }`}
+                              >
+                                <span className="material-symbols-outlined text-[18px]">group</span>
+                                Datos del Cotitular
+                                {COTITULAR_DOC_CATEGORIES.some((c) => (documents[c.id] || []).length > 0) && (
+                                  <span className="w-2 h-2 rounded-full bg-success"></span>
+                                )}
+                              </button>
+                            </div>
+
                             <div className="grid grid-cols-1 gap-4">
-                              {[
-                                { id: "dni_nie", label: "DNI/NIE", icon: "badge" },
-                                { id: "dni_nie_2", label: "DNI/NIE (Segundo documento)", icon: "badge" },
-                                { id: "nomina", label: "Nómina", icon: "receipt_long" },
-                                { id: "vida_laboral", label: "Vida laboral", icon: "work" },
-                                { id: "banco", label: "Banco", icon: "account_balance" },
-                                { id: "otros", label: "Otros", icon: "folder_open" },
-                              ].map((cat) => {
+                              {(docsOwnerTab === "cliente" ? CLIENT_DOC_CATEGORIES : COTITULAR_DOC_CATEGORIES).map((cat) => {
                                 const catFiles = documents[cat.id] || [];
                                 const isUploading = uploadingCategory === cat.id;
                                 const isDragging = dragOverCategory === cat.id;

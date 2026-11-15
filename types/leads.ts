@@ -57,6 +57,18 @@ export type Lead = {
   vehicle_reg_date?: string | null;
   vehicle_itv_date?: string | null;
   reservation_amount?: number | null;
+  cotitular_full_name?: string | null;
+  cotitular_first_surname?: string | null;
+  cotitular_second_surname?: string | null;
+  cotitular_dni_nie?: string | null;
+  cotitular_nationality?: string | null;
+  cotitular_birth_country?: string | null;
+  cotitular_phone?: string | null;
+  cotitular_email?: string | null;
+  cotitular_address?: string | null;
+  cotitular_postal_code?: string | null;
+  cotitular_city?: string | null;
+  cotitular_province?: string | null;
   created_at: string;
   updated_at: string;
 };
