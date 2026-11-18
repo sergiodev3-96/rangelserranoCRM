@@ -692,11 +692,6 @@ export default function SimulationClient({
                   : selectedTerm === opt.termMonths;
                 const { isRecommended } = opt;
 
-                const primaryMonthly =
-                  insuranceViewTab === "with_insurance"
-                    ? opt.totalPayableMonthly
-                    : opt.monthlyPayment;
-
                 return (
                   <div
                     key={optKey}
@@ -723,9 +718,6 @@ export default function SimulationClient({
                           {opt.termMonths} Meses
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold text-primary px-2 py-0.5 bg-primary/10 border border-primary/20 rounded-full">
-                            TIN {opt.tinRate.toFixed(2)}%
-                          </span>
                           <span className="text-[11px] text-text-secondary px-2 py-0.5 bg-bg-base border border-border-default rounded-full">
                             {opt.termMonths / 12} {opt.termMonths === 12 ? "Año" : "Años"}
                           </span>
@@ -733,24 +725,25 @@ export default function SimulationClient({
                       </div>
 
                       <div className="text-[26px] font-bold text-text-primary font-data-mono mb-3">
-                        {primaryMonthly.toLocaleString("es-ES", {
+                        {opt.monthlyPayment.toLocaleString("es-ES", {
                           style: "currency",
                           currency: "EUR",
                         })}
                         <span className="text-[13px] text-text-secondary font-body-base font-normal ml-1">
-                          /mes {insuranceViewTab === "with_insurance" ? "(con seguro)" : "(sin seguro)"}
+                          /mes {insuranceViewTab === "without_insurance" ? "(sin seguro)" : ""}
                         </span>
                       </div>
                     </div>
 
                     <div className="bg-surface-container-lowest rounded-lg p-3 space-y-1.5 select-none mt-auto text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-text-secondary">Cuota mensual:</span>
-                        <span className={`font-data-mono ${insuranceViewTab === "without_insurance" ? "font-bold text-primary" : "text-text-primary"}`}>
-                          {opt.monthlyPayment.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
-                        </span>
-                      </div>
-                      {insuranceViewTab === "with_insurance" && (
+                      {insuranceViewTab === "without_insurance" ? (
+                        <div className="flex justify-between">
+                          <span className="text-text-secondary">Cuota mensual:</span>
+                          <span className="font-data-mono font-bold text-primary">
+                            {opt.monthlyPayment.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
+                          </span>
+                        </div>
+                      ) : (
                         <>
                           <div className="flex justify-between">
                             <span className="text-text-secondary">Seguro:</span>
@@ -762,7 +755,7 @@ export default function SimulationClient({
                           </div>
                           <div className="border-t border-border-default pt-1.5 flex justify-between font-medium">
                             <span className="text-text-primary font-semibold">Cuota Total:</span>
-                            <span className="font-data-mono font-bold text-primary">
+                            <span className="font-data-mono font-bold text-text-primary">
                               {opt.totalPayableMonthly.toLocaleString("es-ES", { style: "currency", currency: "EUR" })}
                             </span>
                           </div>
@@ -774,24 +767,19 @@ export default function SimulationClient({
               })}
             </div>
           ) : (
-            /* Options Table (Listado) con las 5 columnas requeridas */
+            /* Options Table (Listado) */
             <div className="overflow-x-auto bg-surface border border-border-default rounded-xl p-4 shadow-sm">
               <table className="w-full text-left text-[12px] border-collapse min-w-[650px]">
                 <thead>
                   <tr className="border-b border-border-default/80 bg-surface-container-low select-none text-text-secondary">
                     <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px]">Plazo</th>
-                    <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px]">TIN</th>
-                    <th
-                      className={`py-3 px-3 font-semibold uppercase tracking-wider text-[11px] ${
-                        insuranceViewTab === "without_insurance" ? "text-primary font-bold" : ""
-                      }`}
-                    >
+                    <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px] text-primary font-bold">
                       Cuota Mensual
                     </th>
                     {insuranceViewTab === "with_insurance" && (
                       <>
                         <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px]">Seguro</th>
-                        <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px] text-primary font-bold">
+                        <th className="py-3 px-3 font-semibold uppercase tracking-wider text-[11px]">
                           Cuota Total (cuota + seguro)
                         </th>
                       </>
@@ -832,22 +820,9 @@ export default function SimulationClient({
                           </span>
                         </td>
 
-                        {/* 2. TIN */}
-                        <td className="py-3.5 px-3 font-data-mono font-bold text-text-primary">
-                          <span className="px-2 py-0.5 rounded bg-surface-container-high border border-border-default/60 text-[12px]">
-                            {opt.tinRate.toFixed(2)}%
-                          </span>
-                        </td>
-
-                        {/* 3. Cuota Mensual */}
+                        {/* 2. Cuota Mensual */}
                         <td className="py-3.5 px-3">
-                          <span
-                            className={`font-data-mono text-[14px] ${
-                              insuranceViewTab === "without_insurance"
-                                ? "font-bold text-primary"
-                                : "text-text-primary"
-                            }`}
-                          >
+                          <span className="font-data-mono text-[14px] font-bold text-primary">
                             {opt.monthlyPayment.toLocaleString("es-ES", {
                               style: "currency",
                               currency: "EUR",
@@ -858,7 +833,7 @@ export default function SimulationClient({
 
                         {insuranceViewTab === "with_insurance" && (
                           <>
-                            {/* 4. Seguro */}
+                            {/* 3. Seguro */}
                             <td className="py-3.5 px-3 font-data-mono text-text-secondary">
                               {opt.insuranceMonthly > 0 ? (
                                 <span>
@@ -873,9 +848,9 @@ export default function SimulationClient({
                               )}
                             </td>
 
-                            {/* 5. Cuota Total (cuota mensual + seguro) */}
+                            {/* 4. Cuota Total (cuota mensual + seguro) */}
                             <td className="py-3.5 px-3">
-                              <span className="font-data-mono text-[14px] font-bold text-primary">
+                              <span className="font-data-mono text-[14px] font-semibold text-text-primary">
                                 {opt.totalPayableMonthly.toLocaleString("es-ES", {
                                   style: "currency",
                                   currency: "EUR",
